@@ -1,12 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
 
-// Mock credentials database
-const DEMO_ACCOUNTS = [
-  { username: 'admin', password: 'password123', name: 'Admin User' },
-  { username: 'admin123', password: '123456', name: 'Default Admin' },
-  { username: 'pawfect_user', password: 'catlover2026', name: 'Cat Lover' },
-];
-
 export interface User {
   username: string;
   name: string;
@@ -23,12 +16,16 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [accounts, setAccounts] = useState(DEMO_ACCOUNTS);
+  const [accounts, setAccounts] = useState<
+    Array<{ username: string; password: string; name: string }>
+  >([]);
 
-  // Validates username and password against stored accounts
+  // Validates credentials against stored accounts
   const login = (username: string, password: string): boolean => {
     const matchedAccount = accounts.find(
-      (acc) => acc.username.toLowerCase() === username.trim().toLowerCase() && acc.password === password
+      (acc) =>
+        acc.username.toLowerCase() === username.trim().toLowerCase() &&
+        acc.password === password
     );
 
     if (matchedAccount) {
@@ -38,14 +35,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return false;
   };
 
-  // Allows registering a new account during runtime
+  // Saves a new user account dynamically in state without automatically logging them in
   const signup = (username: string, password: string, name?: string): boolean => {
     const exists = accounts.some(
       (acc) => acc.username.toLowerCase() === username.trim().toLowerCase()
     );
 
     if (exists) {
-      return false; // Account already exists
+      return false; // Account with this email/username already exists
     }
 
     const newAccount = {
@@ -55,7 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     setAccounts((prev) => [...prev, newAccount]);
-    setUser({ username: newAccount.username, name: newAccount.name });
+    // Removed setUser(...) here so the user remains logged out until they use the login screen
     return true;
   };
 

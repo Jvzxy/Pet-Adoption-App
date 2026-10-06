@@ -2,9 +2,8 @@ import React from 'react';
 import { Image, StyleSheet, View } from 'react-native';
 import BrandHeader from '../components/BrandHeader';
 import PillButton from '../components/PillButton';
-import ScreenLabel from '../components/ScreenLabel';
 import { colors, spacing } from '../constants/theme';
-import catOrange from '../images/cat1.png';
+import catOrange from '../images/Cats/Cat1.png';
 
 interface ScreenProps {
   go: (next: string) => void;
@@ -13,7 +12,6 @@ interface ScreenProps {
 export default function GetStartedScreen({ go }: ScreenProps) {
   return (
     <View style={styles.fillMint}>
-      <ScreenLabel>Get Start Page</ScreenLabel>
       
       <View style={styles.pagePadTop}>
         <BrandHeader />

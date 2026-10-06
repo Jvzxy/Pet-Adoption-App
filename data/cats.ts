@@ -92,4 +92,18 @@ export const CAT_DATA: CatItem[] = [
     imageUri:
       'https://images.unsplash.com/photo-1513245543132-31f507417b26?auto=format&fit=crop&w=800&q=80',
   },
+
+    {
+    id: '7',
+    name: 'Cleo',
+    breed: 'Siamese Purebred',
+    age: '5 months',
+    gender: 'Female',
+    location: 'Cagayan de Oro City',
+    price: '$310',
+    description:
+      'Cleo is vocal, highly intelligent, and loves being the center of attention wherever she goes.',
+    imageUri:
+      'https://images.unsplash.com/photo-1513245543132-31f507417b26?auto=format&fit=crop&w=800&q=80',
+  },
 ];

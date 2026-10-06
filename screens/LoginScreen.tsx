@@ -1,27 +1,36 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import BrandHeader from '../components/BrandHeader';
 import FieldInput from '../components/FieldInput';
 import FieldLabel from '../components/FieldLabel';
 import PillButton from '../components/PillButton';
-import ScreenLabel from '../components/ScreenLabel';
-import { useAuth } from '../services/AuthContext';
 import { colors, radii, spacing } from '../constants/theme';
+import googleIcon from '../images/Google icon.png';
+import { useAuth } from '../services/AuthContext';
 
 interface ScreenProps {
   go: (next: string) => void;
 }
 
 export default function LoginScreen({ go }: ScreenProps) {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const { login } = useAuth();
 
   const handleLogin = async () => {
-    if (!username || !password) {
-      Alert.alert('Missing Fields', 'Please enter both username and password.');
+    if (!email || !password) {
+      Alert.alert('Missing Fields', 'Please enter both email and password.');
       return;
     }
 
@@ -31,32 +40,44 @@ export default function LoginScreen({ go }: ScreenProps) {
     await new Promise((resolve) => setTimeout(resolve, 600));
 
     // Validate credentials using AuthContext
-    const isSuccess = login(username, password);
+    const isSuccess = login(email, password);
     setIsLoading(false);
 
     if (isSuccess) {
       go('main'); // Redirect to MainScreen on success
     } else {
-      Alert.alert('Authentication Failed', 'Invalid username or password. Please try again.');
+      Alert.alert(
+        'Authentication Failed',
+        'Invalid email or password. Please try again.'
+      );
     }
   };
 
   return (
     <View style={styles.fillMint}>
-      <ScreenLabel>Login</ScreenLabel>
-      <ScrollView contentContainerStyle={styles.scrollPad}>
-        <BrandHeader />
 
+      <ScrollView 
+        contentContainerStyle={styles.scrollPad}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Brand Header with top padding to prevent top overlap */}
+        <View style={styles.headerContainer}>
+          <BrandHeader />
+        </View>
+
+        {/* Floating White Card */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>LOGIN</Text>
 
-          <FieldLabel>Username</FieldLabel>
+          <FieldLabel>Email</FieldLabel>
           <FieldInput
-            placeholder="Username"
-            value={username}
-            onChangeText={setUsername}
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
             editable={!isLoading}
           />
+
+          <View style={styles.fieldSpacing} />
 
           <FieldLabel>Password</FieldLabel>
           <FieldInput
@@ -67,22 +88,42 @@ export default function LoginScreen({ go }: ScreenProps) {
             editable={!isLoading}
           />
 
-          <Pressable style={{ alignSelf: 'flex-end', marginTop: 6, marginBottom: 20 }}>
+          <Pressable style={styles.forgotBtn}>
             <Text style={styles.forgot}>Forgot Password?</Text>
           </Pressable>
 
           {isLoading ? (
-            <ActivityIndicator size="large" color={colors.ink} style={{ marginBottom: 16 }} />
+            <ActivityIndicator
+              size="large"
+              color={colors.ink}
+              style={styles.loader}
+            />
           ) : (
-            <PillButton title="LOGIN" onPress={handleLogin} style={{ marginBottom: 16 }} />
+            <PillButton
+              title="LOGIN"
+              onPress={handleLogin}
+              style={styles.loginBtn}
+            />
           )}
 
-          <Pressable style={({ pressed }) => [styles.googleBtn, pressed && { opacity: 0.85 }]}>
-            <Text style={styles.googleG}>G</Text>
+          <Pressable
+            style={({ pressed }) => [
+              styles.googleBtn,
+              pressed && { opacity: 0.85 },
+            ]}
+          >
+            <Image
+              source={googleIcon}
+              style={styles.googleIcon}
+              resizeMode="contain"
+            />
             <Text style={styles.googleText}>Continue with Google</Text>
           </Pressable>
 
-          <Pressable onPress={() => go('loginSignup')} style={styles.navigationLinkContainer}>
+          <Pressable
+            onPress={() => go('loginSignup')}
+            style={styles.navigationLinkContainer}
+          >
             <Text style={styles.backLink}>← Back to Welcome Screen</Text>
           </Pressable>
         </View>
@@ -92,14 +133,85 @@ export default function LoginScreen({ go }: ScreenProps) {
 }
 
 const styles = StyleSheet.create({
-  fillMint: { flex: 1, backgroundColor: colors.mint },
-  scrollPad: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xl },
-  card: { backgroundColor: colors.white, borderRadius: radii.lg, padding: spacing.lg, marginTop: spacing.sm },
-  cardTitle: { fontSize: 13, fontWeight: '800', letterSpacing: 0.5, color: colors.ink, marginBottom: 16, textAlign: 'center' },
-  forgot: { fontSize: 11, fontWeight: '700', color: colors.ink },
-  googleBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', height: 48, borderRadius: radii.pill, borderWidth: 1, borderColor: '#E0E0E0' },
-  googleG: { fontWeight: '800', color: '#4285F4', fontSize: 16, marginRight: 8 },
-  googleText: { fontSize: 13, fontWeight: '700', color: colors.ink },
-  navigationLinkContainer: { marginTop: 12, alignItems: 'center' },
-  backLink: { fontSize: 11, color: colors.textMuted, fontWeight: '600' },
+  fillMint: { 
+    flex: 1, 
+    backgroundColor: colors.mint 
+  },
+  scrollPad: { 
+    paddingHorizontal: spacing.lg, 
+    paddingTop: 50,
+    paddingBottom: spacing.xl 
+  },
+  headerContainer: {
+    paddingLeft: spacing.xs,
+    marginBottom: 20,
+  },
+  card: { 
+    backgroundColor: colors.white, 
+    borderRadius: 24, 
+    paddingHorizontal: 20,
+    paddingVertical: 24,
+    marginTop: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  cardTitle: { 
+    fontSize: 18, 
+    fontWeight: '900', 
+    letterSpacing: 0.8, 
+    color: colors.ink, 
+    marginBottom: 20, 
+    textAlign: 'center' 
+  },
+  fieldSpacing: {
+    height: 10,
+  },
+  forgotBtn: {
+    alignSelf: 'flex-end', 
+    marginTop: 6, 
+    marginBottom: 24 
+  },
+  forgot: { 
+    fontSize: 12, 
+    fontWeight: '800', 
+    color: colors.ink 
+  },
+  loader: {
+    marginBottom: 16,
+  },
+  loginBtn: {
+    marginBottom: 14,
+  },
+  googleBtn: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    height: 48, 
+    borderRadius: radii.pill, 
+    borderWidth: 1.5, 
+    borderColor: '#000000',
+    backgroundColor: colors.white,
+  },
+  googleIcon: {
+    width: 30,
+    height: 30,
+    marginRight: 10,
+  },
+  googleText: { 
+    fontSize: 14, 
+    fontWeight: '800', 
+    color: colors.ink 
+  },
+  navigationLinkContainer: { 
+    marginTop: 18, 
+    alignItems: 'center' 
+  },
+  backLink: { 
+    fontSize: 12, 
+    color: colors.textMuted, 
+    fontWeight: '600' 
+  },
 });
