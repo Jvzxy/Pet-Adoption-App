@@ -38,6 +38,7 @@ const SIDEBAR_MENU = [
 
 export default function MainScreen({ go }: ScreenProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [activeCategory, setActiveCategory] = useState('All'); // Added state for categories
 
   const renderHeader = () => (
     <>
@@ -65,12 +66,22 @@ export default function MainScreen({ go }: ScreenProps) {
         </View>
       </View>
 
+      {/* Interactive Categories */}
       <View style={styles.catRow}>
-        {CATEGORIES.map((c, index) => (
-          <View key={c} style={[styles.catPill, index === 0 ? styles.catPillActive : styles.catPillInactive]}>
-            <Text style={[styles.catPillText, index === 0 ? styles.catPillTextActive : styles.catPillTextInactive]}>{c}</Text>
-          </View>
-        ))}
+        {CATEGORIES.map((c) => {
+          const isActive = activeCategory === c;
+          return (
+            <Pressable 
+              key={c} 
+              onPress={() => setActiveCategory(c)}
+              style={[styles.catPill, isActive ? styles.catPillActive : styles.catPillInactive]}
+            >
+              <Text style={[styles.catPillText, isActive ? styles.catPillTextActive : styles.catPillTextInactive]}>
+                {c}
+              </Text>
+            </Pressable>
+          );
+        })}
       </View>
 
       <View style={styles.gridHeader}>
