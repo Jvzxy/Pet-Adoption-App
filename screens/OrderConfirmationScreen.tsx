@@ -2,6 +2,10 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, radii, spacing } from '../constants/theme';
 
+// SVG Imports
+import CircleCheckIcon from '../images/Icons/circle-check-solid-full.svg';
+import TruckIcon from '../images/Icons/truck-fast-solid-full.svg';
+
 interface ScreenProps {
   go: (next: string) => void;
 }
@@ -11,9 +15,7 @@ export default function OrderConfirmationScreen({ go }: ScreenProps) {
     <View style={styles.fillWhite}>
       {/* Order Checkmark Badge */}
       <View style={styles.topSection}>
-        <View style={styles.checkCircle}>
-          <Text style={styles.checkmarkIcon}>✓</Text>
-        </View>
+        <CircleCheckIcon width={130} height={130} fill="#B2DFDB" style={{ marginBottom: 24 }} />
 
         <Text style={styles.headingTitle}>Your order is made!</Text>
         <Text style={styles.headingSub}>
@@ -24,7 +26,7 @@ export default function OrderConfirmationScreen({ go }: ScreenProps) {
       {/* Receipt Card */}
       <View style={styles.receiptContainer}>
         <View style={styles.orderIdRow}>
-          <Text style={styles.truckIcon}>🚚</Text>
+          <TruckIcon width={22} height={22} fill={colors.ink} />
           <View>
             <Text style={styles.orderIdText}>Order ID #00000001</Text>
             <Text style={styles.courierSub}>J&T Express</Text>
@@ -78,13 +80,10 @@ export default function OrderConfirmationScreen({ go }: ScreenProps) {
 const styles = StyleSheet.create({
   fillWhite: { flex: 1, backgroundColor: colors.white, paddingHorizontal: spacing.lg, justifyContent: 'space-between', paddingTop: 60, paddingBottom: 40 },
   topSection: { alignItems: 'center', marginTop: 20 },
-  checkCircle: { width: 140, height: 140, borderRadius: 70, backgroundColor: '#B2DFDB', justifyContent: 'center', alignItems: 'center', marginBottom: 24 },
-  checkmarkIcon: { fontSize: 70, color: colors.white, fontWeight: 'bold' },
   headingTitle: { fontSize: 20, fontWeight: '900', color: colors.ink, marginBottom: 8 },
   headingSub: { fontSize: 12, color: colors.textMuted, textAlign: 'center', lineHeight: 18, paddingHorizontal: 10 },
   receiptContainer: { width: '100%' },
   orderIdRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 },
-  truckIcon: { fontSize: 22 },
   orderIdText: { fontSize: 13, fontWeight: '800', color: colors.ink },
   courierSub: { fontSize: 10, color: colors.textMuted },
   receiptBox: { borderWidth: 1, borderColor: '#E0E0E0', borderRadius: 16, padding: 16, gap: 14 },

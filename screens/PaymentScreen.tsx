@@ -9,8 +9,10 @@ import {
 } from 'react-native';
 import { colors, radii, spacing } from '../constants/theme';
 
-// SVG Import for American Express (prevents deepFreezeAndThrowOnMutationInDev error)
+// Fixed folder casing to "Icons" 
 import AmexIcon from '../images/img/American Express.svg';
+import TruckIcon from '../images/Icons/truck-fast-solid-full.svg'; 
+import LocationIcon from '../images/Icons/location-dot-solid-full.svg'; 
 
 interface ScreenProps {
   go: (next: string) => void;
@@ -39,7 +41,7 @@ export default function PaymentScreen({ go, totalAmount = 650 }: ScreenProps) {
         <Text style={styles.sectionHeading}>Order Summary</Text>
         <View style={styles.shippingCard}>
           <View style={styles.shippingLeft}>
-            <Text style={styles.truckIcon}>🚚</Text>
+            <TruckIcon width={20} height={20} fill={colors.ink} />
             <View>
               <Text style={styles.courierName}>J&T Express</Text>
               <Text style={styles.estimatedText}>Estimated arrival Oct 23 – 27</Text>
@@ -53,7 +55,7 @@ export default function PaymentScreen({ go, totalAmount = 650 }: ScreenProps) {
         {/* Recipient Address Card */}
         <View style={styles.card}>
           <View style={styles.addressRow}>
-            <Text style={styles.pinIcon}>📍</Text>
+            <LocationIcon width={16} height={16} fill={colors.ink} />
             <View style={styles.addressInfo}>
               <Text style={styles.recipientName}>Jussy Jay Durain   (+63)09*******79</Text>
               <Text style={styles.addressBody}>
@@ -179,14 +181,12 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   shippingLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  truckIcon: { fontSize: 20 },
   courierName: { fontSize: 12, fontWeight: '800', color: colors.ink },
   estimatedText: { fontSize: 10, color: colors.textMuted },
   changePill: { backgroundColor: colors.white, paddingHorizontal: 14, paddingVertical: 6, borderRadius: radii.pill },
   changeText: { fontSize: 11, fontWeight: '800', color: colors.ink },
   card: { backgroundColor: colors.white, borderRadius: 16, padding: 16, marginBottom: 14 },
   addressRow: { flexDirection: 'row', gap: 10 },
-  pinIcon: { fontSize: 16 },
   addressInfo: { flex: 1 },
   recipientName: { fontSize: 12, fontWeight: '800', color: colors.ink, marginBottom: 4 },
   addressBody: { fontSize: 11, color: colors.textMuted, lineHeight: 16 },
