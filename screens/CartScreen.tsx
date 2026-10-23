@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Image,
   Pressable,
@@ -6,16 +6,16 @@ import {
   StyleSheet,
   Text,
   View,
-} from 'react-native';
-import { colors, radii, spacing } from '../constants/theme';
+} from "react-native";
+import { colors, radii, spacing } from "../constants/theme";
 
 // SVG Icon Imports
-import CartIcon from '../images/Icons/cart-shopping-solid-full.svg';
-import CommentIcon from '../images/Icons/comment-solid-full.svg';
-import HouseIcon from '../images/Icons/house-solid-full.svg';
-import UserIcon from '../images/Icons/user-solid-full.svg';
-import BellIcon from '../images/Icons/bell-solid-full.svg';
-import HeartIcon from '../images/Icons/heart-regular-full.svg';
+import CartIcon from "../images/Icons/cart-shopping-solid-full.svg";
+import CommentIcon from "../images/Icons/comment-solid-full.svg";
+import HouseIcon from "../images/Icons/house-solid-full.svg";
+import UserIcon from "../images/Icons/user-solid-full.svg";
+import BellIcon from "../images/Icons/bell-solid-full.svg";
+import HeartIcon from "../images/Icons/heart-regular-full.svg";
 
 interface ScreenProps {
   go: (next: string) => void;
@@ -34,65 +34,65 @@ interface CartItem {
 const INITIAL_ITEMS: CartItem[] = [
   {
     id: 1,
-    title: 'Whiskas',
-    subtitle: 'Ocean Fish Flavour Loaf',
+    title: "Whiskas",
+    subtitle: "Ocean Fish Flavour Loaf",
     price: 650,
-    image: 'https://images.unsplash.com/photo-1589924691995-400dc9ecc119?w=200',
+    image: "https://images.unsplash.com/photo-1589924691995-400dc9ecc119?w=200",
     selected: true,
     quantity: 1,
   },
   {
     id: 2,
-    title: 'Collar',
-    subtitle: 'Cute Pink Collar Tag',
+    title: "Collar",
+    subtitle: "Cute Pink Collar Tag",
     price: 350,
-    image: 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=200',
+    image: "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=200",
     selected: false,
     quantity: 1,
   },
   {
     id: 3,
-    title: 'Whiskas',
-    subtitle: 'Ocean Fish Flavour Loaf',
+    title: "Whiskas",
+    subtitle: "Ocean Fish Flavour Loaf",
     price: 650,
-    image: 'https://images.unsplash.com/photo-1589924691995-400dc9ecc119?w=200',
+    image: "https://images.unsplash.com/photo-1589924691995-400dc9ecc119?w=200",
     selected: false,
     quantity: 1,
   },
   {
     id: 4,
-    title: 'Collar',
-    subtitle: 'Cute Pink Collar Tag',
+    title: "Collar",
+    subtitle: "Cute Pink Collar Tag",
     price: 350,
-    image: 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=200',
+    image: "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=200",
     selected: false,
     quantity: 1,
   },
   {
     id: 5,
-    title: 'Whiskas',
-    subtitle: 'Ocean Fish Flavour Loaf',
+    title: "Whiskas",
+    subtitle: "Ocean Fish Flavour Loaf",
     price: 650,
-    image: 'https://images.unsplash.com/photo-1589924691995-400dc9ecc119?w=200',
+    image: "https://images.unsplash.com/photo-1589924691995-400dc9ecc119?w=200",
     selected: false,
     quantity: 1,
   },
   {
     id: 6,
-    title: 'Collar',
-    subtitle: 'Cute Pink Collar Tag',
+    title: "Collar",
+    subtitle: "Cute Pink Collar Tag",
     price: 350,
-    image: 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=200',
+    image: "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=200",
     selected: false,
     quantity: 1,
   },
 ];
 
 const NAV_ITEMS = [
-  { key: 'main', Icon: HouseIcon, label: 'Home', active: false },
-  { key: 'chat', Icon: CommentIcon, label: 'Chat', active: false },
-  { key: 'cart', Icon: CartIcon, label: 'Cart', active: true },
-  { key: 'profile', Icon: UserIcon, label: 'Profile', active: false },
+  { key: "main", Icon: HouseIcon, label: "Home", active: false },
+  { key: "chat", Icon: CommentIcon, label: "Chat", active: false },
+  { key: "cart", Icon: CartIcon, label: "Cart", active: true },
+  { key: "profile", Icon: UserIcon, label: "Profile", active: false },
 ];
 
 export default function CartScreen({ go }: ScreenProps) {
@@ -101,8 +101,8 @@ export default function CartScreen({ go }: ScreenProps) {
   const toggleSelect = (id: number) => {
     setItems((prev) =>
       prev.map((item) =>
-        item.id === id ? { ...item, selected: !item.selected } : item
-      )
+        item.id === id ? { ...item, selected: !item.selected } : item,
+      ),
     );
   };
 
@@ -114,11 +114,12 @@ export default function CartScreen({ go }: ScreenProps) {
           return { ...item, quantity: newQty };
         }
         return item;
-      })
+      }),
     );
   };
 
-  const isAllSelected = items.length > 0 && items.every((item) => item.selected);
+  const isAllSelected =
+    items.length > 0 && items.every((item) => item.selected);
 
   const toggleSelectAll = () => {
     const nextState = !isAllSelected;
@@ -253,7 +254,7 @@ export default function CartScreen({ go }: ScreenProps) {
             <Text style={styles.shippingText}>Shipping: ₱ 100.00</Text>
           </View>
 
-          <Pressable style={styles.checkoutBtn}>
+          <Pressable style={styles.checkoutBtn} onPress={() => go("payment")}>
             <Text style={styles.checkoutBtnText}>Check out</Text>
           </Pressable>
         </View>
@@ -281,110 +282,110 @@ export default function CartScreen({ go }: ScreenProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.mint || '#A8DDD6',
+    backgroundColor: colors.mint || "#A8DDD6",
   },
 
   /* Header */
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingTop: 50,
     paddingBottom: 14,
     paddingHorizontal: 16,
-    backgroundColor: colors.mint || '#A8DDD6',
+    backgroundColor: colors.mint || "#A8DDD6",
   },
   hamburgerIcon: {
     fontSize: 22,
-    fontWeight: '700',
-    color: colors.ink || '#000',
+    fontWeight: "700",
+    color: colors.ink || "#000",
   },
   brandContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
   },
   pawIcon: {
     fontSize: 22,
   },
   brandTextWrapper: {
-    alignItems: 'flex-start',
+    alignItems: "flex-start",
   },
   brandTitle: {
     fontSize: 15,
-    fontWeight: '900',
+    fontWeight: "900",
     letterSpacing: 0.5,
-    color: colors.ink || '#000',
+    color: colors.ink || "#000",
   },
   brandSubtitle: {
     fontSize: 9,
-    fontWeight: '800',
-    color: colors.ink || '#000',
+    fontWeight: "800",
+    color: colors.ink || "#000",
   },
   headerIcons: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
   },
   iconWithBadge: {
-    position: 'relative',
+    position: "relative",
     padding: 2,
   },
   topIconText: {
     fontSize: 18,
-    color: colors.ink || '#000',
+    color: colors.ink || "#000",
   },
   badgeDot: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     right: 0,
     width: 7,
     height: 7,
     borderRadius: 4,
-    backgroundColor: '#FF2D55',
+    backgroundColor: "#FF2D55",
   },
 
   /* Black Location Bar */
   blackBanner: {
-    backgroundColor: colors.ink || '#000',
+    backgroundColor: colors.ink || "#000",
     paddingVertical: 10,
     paddingHorizontal: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   bannerCenter: {
-    alignItems: 'center',
+    alignItems: "center",
     flex: 1,
   },
   bannerTitle: {
-    color: colors.white || '#FFF',
+    color: colors.white || "#FFF",
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: "800",
     marginBottom: 2,
   },
   locationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 3,
   },
   locationPin: {
     fontSize: 10,
-    color: colors.white || '#FFF',
+    color: colors.white || "#FFF",
   },
   locationText: {
-    color: colors.white || '#FFF',
+    color: colors.white || "#FFF",
     fontSize: 10,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   editBtn: {
-    position: 'absolute',
+    position: "absolute",
     right: 16,
   },
   editText: {
-    color: colors.white || '#FFF',
+    color: colors.white || "#FFF",
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: "700",
   },
 
   /* Scrollable Item Area */
@@ -395,12 +396,12 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   cartRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.85)',
+    borderBottomColor: "rgba(0,0,0,0.85)",
   },
   checkboxContainer: {
     paddingRight: 10,
@@ -410,163 +411,163 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 10,
     borderWidth: 1.5,
-    borderColor: colors.white || '#FFF',
-    backgroundColor: 'transparent',
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderColor: colors.white || "#FFF",
+    backgroundColor: "transparent",
+    alignItems: "center",
+    justifyContent: "center",
   },
   checkboxSelected: {
-    backgroundColor: colors.white || '#FFF',
+    backgroundColor: colors.white || "#FFF",
   },
   checkmarkText: {
     fontSize: 12,
-    fontWeight: '900',
-    color: colors.ink || '#000',
+    fontWeight: "900",
+    color: colors.ink || "#000",
     marginTop: -2,
   },
   imageCard: {
     width: 75,
     height: 55,
-    backgroundColor: colors.white || '#FFF',
+    backgroundColor: colors.white || "#FFF",
     borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginRight: 12,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   productImage: {
-    width: '90%',
-    height: '90%',
+    width: "90%",
+    height: "90%",
   },
   itemInfo: {
     flex: 1,
   },
   itemTitle: {
     fontSize: 13,
-    fontWeight: '800',
-    color: colors.ink || '#000',
+    fontWeight: "800",
+    color: colors.ink || "#000",
   },
   itemSubtitle: {
     fontSize: 10,
-    fontWeight: '600',
-    color: colors.ink || '#000',
+    fontWeight: "600",
+    color: colors.ink || "#000",
     marginTop: 2,
   },
   itemPrice: {
     fontSize: 12,
-    fontWeight: '800',
-    color: colors.ink || '#000',
+    fontWeight: "800",
+    color: colors.ink || "#000",
     marginTop: 6,
   },
   quantityControls: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   qtyBtn: {
     width: 22,
     height: 22,
     borderRadius: 11,
-    backgroundColor: colors.ink || '#000',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: colors.ink || "#000",
+    alignItems: "center",
+    justifyContent: "center",
   },
   qtyBtnText: {
-    color: colors.white || '#FFF',
+    color: colors.white || "#FFF",
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: "800",
     lineHeight: 16,
   },
   qtyText: {
     fontSize: 12,
-    fontWeight: '800',
-    color: colors.ink || '#000',
+    fontWeight: "800",
+    color: colors.ink || "#000",
   },
 
   /* Fixed Bottom Section */
   bottomSection: {
-    backgroundColor: colors.mint || '#A8DDD6',
+    backgroundColor: colors.mint || "#A8DDD6",
   },
   checkoutBar: {
-    backgroundColor: colors.ink || '#000',
+    backgroundColor: colors.ink || "#000",
     paddingVertical: 12,
     paddingHorizontal: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   selectAllRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   allText: {
-    color: colors.white || '#FFF',
+    color: colors.white || "#FFF",
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   pricingSection: {
-    alignItems: 'flex-end',
+    alignItems: "flex-end",
     marginRight: 10,
   },
   totalPrice: {
-    color: colors.white || '#FFF',
+    color: colors.white || "#FFF",
     fontSize: 14,
-    fontWeight: '900',
+    fontWeight: "900",
   },
   shippingText: {
-    color: 'rgba(255,255,255,0.8)',
+    color: "rgba(255,255,255,0.8)",
     fontSize: 9,
-    fontWeight: '500',
+    fontWeight: "500",
     marginTop: 2,
   },
   checkoutBtn: {
-    backgroundColor: colors.mint || '#A8DDD6',
+    backgroundColor: colors.mint || "#A8DDD6",
     paddingHorizontal: 18,
     paddingVertical: 10,
     borderRadius: 20,
   },
   checkoutBtnText: {
-    color: colors.ink || '#000',
+    color: colors.ink || "#000",
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: "800",
   },
 
   /* Navigation Bar */
   bottomNavWrapper: {
     paddingVertical: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   bottomNav: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    backgroundColor: colors.white || '#FFF',
-    width: '85%',
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+    backgroundColor: colors.white || "#FFF",
+    width: "85%",
     borderRadius: 100,
     height: 55,
     paddingHorizontal: 12,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.15,
     shadowRadius: 15,
     elevation: 8,
   },
   navItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: radii?.pill || 20,
   },
   navItemActive: {
-    backgroundColor: colors.mint || '#A8DDD6',
+    backgroundColor: colors.mint || "#A8DDD6",
   },
   navLabel: {
     fontSize: 13,
-    fontWeight: '900',
-    color: colors.ink || '#000',
+    fontWeight: "900",
+    color: colors.ink || "#000",
   },
 });

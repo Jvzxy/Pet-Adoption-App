@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// Screen Imports
 import CartScreen from './screens/CartScreen';
 import ChatScreen from './screens/ChatScreen';
 import DetailsScreen from './screens/DetailsScreen';
@@ -15,6 +16,13 @@ import Splash1Screen from './screens/Splash1Screen';
 import Splash2Screen from './screens/Splash2Screen';
 import Splash3Screen from './screens/Splash3Screen';
 import AdminAddCatScreen from './screens/AdminAddCatScreen';
+import ProductDetailsScreen from './screens/ProductDetailsScreen';
+
+// Checkout Flow Imports
+import PaymentScreen from './screens/PaymentScreen';
+import AddCardScreen from './screens/AddCardScreen';
+import OrderConfirmationScreen from './screens/OrderConfirmationScreen';
+
 import { colors } from './constants/theme';
 import { AuthProvider } from './services/AuthContext';
 import { CAT_DATA } from './data/cats';
@@ -61,8 +69,16 @@ export default function App() {
         {screen === 'chat' && <ChatScreen go={go} />}
         {screen === 'cart' && <CartScreen go={go} />}
         {screen === 'profile' && <ProfileScreen go={go} />}
-        {screen === 'details' && <DetailsScreen go={go} id={selectedPetId} />}
         {screen === 'adminAddCat' && <AdminAddCatScreen go={go} />}
+        
+        {/* Detail Screens */}
+        {screen === 'details' && <DetailsScreen go={go} id={selectedPetId} />}
+        {screen === 'productDetails' && <ProductDetailsScreen go={go} productId={selectedPetId} />}
+
+        {/* Checkout Flow Screens */}
+        {screen === 'payment' && <PaymentScreen go={go} />}
+        {screen === 'addCard' && <AddCardScreen go={go} />}
+        {screen === 'orderConfirmation' && <OrderConfirmationScreen go={go} />}
       </View>
     </AuthProvider>
   );
