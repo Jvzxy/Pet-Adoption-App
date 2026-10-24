@@ -9,10 +9,13 @@ import {
 } from 'react-native';
 import { colors, radii, spacing } from '../constants/theme';
 
-// Fixed folder casing to "Icons" 
-import AmexIcon from '../images/img/American Express.svg';
-import TruckIcon from '../images/Icons/truck-fast-solid-full.svg'; 
-import LocationIcon from '../images/Icons/location-dot-solid-full.svg'; 
+// SVG Imports
+import AmexIcon from '../images/img/American-Express-Logo.png';
+import TruckIcon from '../images/Icons/truck-fast-solid-full.svg';
+import LocationIcon from '../images/Icons/location-dot-solid-full.svg';
+import CheckIcon from '../images/Icons/check-solid-full.svg'; // Updated for the active state
+import AngleRightIcon from '../images/Icons/angle-right-solid-full (1).svg'; // Updated for the chevron arrow
+import AngleLeftIcon from '../images/Icons/angle-left-solid-full.svg'; // Added for the back arrow
 
 interface ScreenProps {
   go: (next: string) => void;
@@ -30,7 +33,7 @@ export default function PaymentScreen({ go, totalAmount = 650 }: ScreenProps) {
       {/* Top Header */}
       <View style={styles.header}>
         <Pressable onPress={() => go('cart')} hitSlop={10}>
-          <Text style={styles.backArrow}>‹</Text>
+          <AngleLeftIcon width={24} height={24} fill={colors.ink} />
         </Pressable>
         <Text style={styles.headerTitle}>Payment</Text>
         <View style={{ width: 24 }} />
@@ -90,14 +93,16 @@ export default function PaymentScreen({ go, totalAmount = 650 }: ScreenProps) {
           {/* COD */}
           <Pressable style={styles.methodRow} onPress={() => setSelectedMethod('cod')}>
             <View style={styles.methodLeft}>
-              <Image 
-                source={require('../images/img/COD logo.png')} 
-                style={styles.methodIcon} 
-                resizeMode="contain" 
+              <Image
+                source={require('../images/img/COD logo.png')}
+                style={styles.methodIcon}
+                resizeMode="contain"
               />
               <Text style={styles.methodLabel}>Cash on delivery</Text>
             </View>
-            <View style={[styles.radio, selectedMethod === 'cod' && styles.radioActive]} />
+            <View style={[styles.radio, selectedMethod === 'cod' && styles.radioActive]}>
+               {selectedMethod === 'cod' && <CheckIcon width={12} height={12} fill={colors.ink} />}
+            </View>
           </Pressable>
 
           {/* Add Debit / Credit Card */}
@@ -108,37 +113,41 @@ export default function PaymentScreen({ go, totalAmount = 650 }: ScreenProps) {
                 <Image source={require('../images/img/Visa Icon.jpg')} style={styles.miniCardIcon} />
                 <Image source={require('../images/img/Mastercard Icon.webp')} style={styles.miniCardIcon} />
                 <Image source={require('../images/img/JCB.png')} style={styles.miniCardIcon} />
-                <AmexIcon width={24} height={16} />
+                <Image source={require('../images/img/American-Express-Logo.png')} style={styles.miniCardIcon} />
                 <Image source={require('../images/img/unionpay.jpg')} style={styles.miniCardIcon} />
               </View>
             </View>
-            <Text style={styles.chevron}>›</Text>
+            <AngleRightIcon width={16} height={16} fill={colors.textMuted} /> 
           </Pressable>
 
           {/* Maya */}
           <Pressable style={styles.methodRow} onPress={() => setSelectedMethod('maya')}>
             <View style={styles.methodLeft}>
-              <Image 
-                source={require('../images/img/Maya.png')} 
-                style={styles.methodIcon} 
-                resizeMode="contain" 
+              <Image
+                source={require('../images/img/Maya.png')}
+                style={styles.methodIcon}
+                resizeMode="contain"
               />
               <Text style={styles.methodLabel}>Maya</Text>
             </View>
-            <View style={[styles.radio, selectedMethod === 'maya' && styles.radioActive]} />
+            <View style={[styles.radio, selectedMethod === 'maya' && styles.radioActive]}>
+                {selectedMethod === 'maya' && <CheckIcon width={12} height={12} fill={colors.ink} />}
+            </View>
           </Pressable>
 
           {/* GCash */}
-          <Pressable style={styles.methodRow} onPress={() => setSelectedMethod('gcash')}>
+          <Pressable style={[styles.methodRow, { borderBottomWidth: 0 }]} onPress={() => setSelectedMethod('gcash')}>
             <View style={styles.methodLeft}>
-              <Image 
-                source={require('../images/img/Gcash.png')} 
-                style={styles.methodIcon} 
-                resizeMode="contain" 
+              <Image
+                source={require('../images/img/Gcash.png')}
+                style={styles.methodIcon}
+                resizeMode="contain"
               />
               <Text style={styles.methodLabel}>GCash</Text>
             </View>
-            <View style={[styles.radio, selectedMethod === 'gcash' && styles.radioActive]} />
+            <View style={[styles.radio, selectedMethod === 'gcash' && styles.radioActive]}>
+                {selectedMethod === 'gcash' && <CheckIcon width={12} height={12} fill={colors.ink} />}
+            </View>
           </Pressable>
         </View>
       </ScrollView>
@@ -167,7 +176,6 @@ const styles = StyleSheet.create({
     paddingTop: 50,
     paddingBottom: 16,
   },
-  backArrow: { fontSize: 28, fontWeight: '800', color: colors.ink },
   headerTitle: { fontSize: 18, fontWeight: '900', color: colors.ink },
   scrollPad: { paddingHorizontal: spacing.lg, paddingBottom: 110 },
   sectionHeading: { fontSize: 14, fontWeight: '800', color: colors.ink, marginBottom: 10 },
@@ -203,9 +211,8 @@ const styles = StyleSheet.create({
   methodLabel: { fontSize: 12, fontWeight: '700', color: colors.ink },
   cardIconsContainer: { flexDirection: 'row', gap: 4, marginLeft: 8, alignItems: 'center' },
   miniCardIcon: { width: 24, height: 16, resizeMode: 'contain' },
-  chevron: { fontSize: 18, color: colors.textMuted, fontWeight: '700' },
-  radio: { width: 18, height: 18, borderRadius: 9, borderWidth: 1.5, borderColor: colors.textMuted },
-  radioActive: { backgroundColor: colors.mint, borderColor: colors.ink },
+  radio: { width: 20, height: 20, borderRadius: 10, borderWidth: 1.5, borderColor: colors.textMuted, justifyContent: 'center', alignItems: 'center' },
+  radioActive: { backgroundColor: colors.mint, borderColor: colors.mint },
   bottomBar: {
     position: 'absolute',
     bottom: 0,

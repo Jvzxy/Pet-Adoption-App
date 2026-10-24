@@ -17,6 +17,8 @@ import Splash2Screen from './screens/Splash2Screen';
 import Splash3Screen from './screens/Splash3Screen';
 import AdminAddCatScreen from './screens/AdminAddCatScreen';
 import ProductDetailsScreen from './screens/ProductDetailsScreen';
+import NotificationScreen from './screens/NotificationScreen';
+import FavoritesScreen from './screens/FavoritesScreen'; // <-- Added Import
 
 // Checkout Flow Imports
 import PaymentScreen from './screens/PaymentScreen';
@@ -70,6 +72,10 @@ export default function App() {
         {screen === 'cart' && <CartScreen go={go} />}
         {screen === 'profile' && <ProfileScreen go={go} />}
         {screen === 'adminAddCat' && <AdminAddCatScreen go={go} />}
+        
+        {/* Added Routes */}
+        {screen === 'notifications' && <NotificationScreen go={go} />} 
+        {screen === 'favorites' && <FavoritesScreen go={go} />} 
         
         {/* Detail Screens */}
         {screen === 'details' && <DetailsScreen go={go} id={selectedPetId} />}

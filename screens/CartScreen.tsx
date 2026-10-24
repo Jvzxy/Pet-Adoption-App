@@ -14,8 +14,6 @@ import CartIcon from "../images/Icons/cart-shopping-solid-full.svg";
 import CommentIcon from "../images/Icons/comment-solid-full.svg";
 import HouseIcon from "../images/Icons/house-solid-full.svg";
 import UserIcon from "../images/Icons/user-solid-full.svg";
-import BellIcon from "../images/Icons/bell-solid-full.svg";
-import HeartIcon from "../images/Icons/heart-regular-full.svg";
 
 interface ScreenProps {
   go: (next: string) => void;
@@ -132,33 +130,7 @@ export default function CartScreen({ go }: ScreenProps) {
 
   return (
     <View style={styles.container}>
-      {/* 1. Fixed Header Bar */}
-      <View style={styles.header}>
-        <Pressable hitSlop={8}>
-          <Text style={styles.hamburgerIcon}>☰</Text>
-        </Pressable>
-
-        <View style={styles.brandContainer}>
-          <Text style={styles.pawIcon}>🐾</Text>
-          <View style={styles.brandTextWrapper}>
-            <Text style={styles.brandTitle}>PAWFECT CATS</Text>
-            <Text style={styles.brandSubtitle}>CAGAYAN DE ORO CITY</Text>
-          </View>
-        </View>
-
-        <View style={styles.headerIcons}>
-          <Pressable style={styles.iconWithBadge}>
-            <HeartIcon width={22} height={22} fill={colors.ink} />
-            <View style={styles.badgeDot} />
-          </Pressable>
-          <Pressable style={styles.iconWithBadge}>
-            <BellIcon width={22} height={22} fill={colors.ink} />
-            <View style={styles.badgeDot} />
-          </Pressable>
-        </View>
-      </View>
-
-      {/* 2. Fixed Cart Banner & Location Bar */}
+      {/* 1. Fixed Cart Banner & Location Bar at Top */}
       <View style={styles.blackBanner}>
         <View style={styles.bannerCenter}>
           <Text style={styles.bannerTitle}>Shopping cart</Text>
@@ -174,7 +146,7 @@ export default function CartScreen({ go }: ScreenProps) {
         </Pressable>
       </View>
 
-      {/* 3. Flexible Scrollable Item List */}
+      {/* 2. Flexible Scrollable Item List */}
       <ScrollView
         style={styles.scrollArea}
         contentContainerStyle={styles.scrollContent}
@@ -233,7 +205,7 @@ export default function CartScreen({ go }: ScreenProps) {
         ))}
       </ScrollView>
 
-      {/* 4. Fixed Bottom Area (Checkout Bar + Navigation Bar) */}
+      {/* 3. Fixed Bottom Area (Checkout Bar + Navigation Bar) */}
       <View style={styles.bottomSection}>
         {/* Checkout Bar */}
         <View style={styles.checkoutBar}>
@@ -285,70 +257,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.mint || "#A8DDD6",
   },
 
-  /* Header */
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingTop: 50,
-    paddingBottom: 14,
-    paddingHorizontal: 16,
-    backgroundColor: colors.mint || "#A8DDD6",
-  },
-  hamburgerIcon: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: colors.ink || "#000",
-  },
-  brandContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  pawIcon: {
-    fontSize: 22,
-  },
-  brandTextWrapper: {
-    alignItems: "flex-start",
-  },
-  brandTitle: {
-    fontSize: 15,
-    fontWeight: "900",
-    letterSpacing: 0.5,
-    color: colors.ink || "#000",
-  },
-  brandSubtitle: {
-    fontSize: 9,
-    fontWeight: "800",
-    color: colors.ink || "#000",
-  },
-  headerIcons: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  iconWithBadge: {
-    position: "relative",
-    padding: 2,
-  },
-  topIconText: {
-    fontSize: 18,
-    color: colors.ink || "#000",
-  },
-  badgeDot: {
-    position: "absolute",
-    top: 0,
-    right: 0,
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    backgroundColor: "#FF2D55",
-  },
-
-  /* Black Location Bar */
+  /* Top Black Location Bar */
   blackBanner: {
     backgroundColor: colors.ink || "#000",
-    paddingVertical: 10,
+    paddingTop: 50, // Added padding to clear the status bar
+    paddingBottom: 14,
     paddingHorizontal: 16,
     flexDirection: "row",
     alignItems: "center",
@@ -360,14 +273,14 @@ const styles = StyleSheet.create({
   },
   bannerTitle: {
     color: colors.white || "#FFF",
-    fontSize: 14,
-    fontWeight: "800",
-    marginBottom: 2,
+    fontSize: 16,
+    fontWeight: "900",
+    marginBottom: 4,
   },
   locationRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 3,
+    gap: 4,
   },
   locationPin: {
     fontSize: 10,
@@ -376,11 +289,12 @@ const styles = StyleSheet.create({
   locationText: {
     color: colors.white || "#FFF",
     fontSize: 10,
-    fontWeight: "500",
+    fontWeight: "600",
   },
   editBtn: {
     position: "absolute",
     right: 16,
+    bottom: 14,
   },
   editText: {
     color: colors.white || "#FFF",
@@ -393,6 +307,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
+    paddingTop: 8,
     paddingBottom: 16,
   },
   cartRow: {

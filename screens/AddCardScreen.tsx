@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import {
   Alert,
+  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -9,6 +10,10 @@ import {
   View,
 } from 'react-native';
 import { colors, radii, spacing } from '../constants/theme';
+
+// SVG Imports
+import AngleLeftIcon from '../images/Icons/angle-left-solid-full.svg';
+import CameraIcon from '../images/Icons/camera-regular-full.svg';
 
 interface ScreenProps {
   go: (next: string) => void;
@@ -35,7 +40,7 @@ export default function AddCardScreen({ go }: ScreenProps) {
       {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={() => go('payment')} hitSlop={10}>
-          <Text style={styles.backArrow}>‹</Text>
+          <AngleLeftIcon width={24} height={24} fill={colors.ink} />
         </Pressable>
         <Text style={styles.headerTitle}>Add card</Text>
         <View style={{ width: 24 }} />
@@ -46,7 +51,13 @@ export default function AddCardScreen({ go }: ScreenProps) {
         <View style={styles.fieldGroup}>
           <View style={styles.labelRow}>
             <Text style={styles.fieldLabel}>Card number</Text>
-            <Text style={styles.cardLogos}>VISA 🟧 🟦 🟩</Text>
+            <View style={styles.cardIconsContainer}>
+                <Image source={require('../images/img/Visa Icon.jpg')} style={styles.miniCardIcon} />
+                <Image source={require('../images/img/Mastercard Icon.webp')} style={styles.miniCardIcon} />
+                <Image source={require('../images/img/JCB.png')} style={styles.miniCardIcon} />
+                <Image source={require('../images/img/American-Express-Logo.png')} style={styles.miniCardIcon} />
+                <Image source={require('../images/img/unionpay.jpg')} style={styles.miniCardIcon} />
+            </View>
           </View>
           <View style={styles.inputBox}>
             <TextInput
@@ -57,7 +68,8 @@ export default function AddCardScreen({ go }: ScreenProps) {
               value={cardNumber}
               onChangeText={setCardNumber}
             />
-            <Text style={styles.cameraIcon}>📷</Text>
+            {/* Replaced Emoji with SVG Camera Component */}
+            <CameraIcon width={20} height={20} fill={colors.ink} />
           </View>
         </View>
 
@@ -131,13 +143,13 @@ const styles = StyleSheet.create({
     paddingTop: 50,
     paddingBottom: 20,
   },
-  backArrow: { fontSize: 28, fontWeight: '800', color: colors.ink },
   headerTitle: { fontSize: 18, fontWeight: '900', color: colors.ink },
   scrollPad: { paddingHorizontal: spacing.lg, paddingTop: 10 },
   fieldGroup: { marginBottom: 18 },
   labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
   fieldLabel: { fontSize: 12, fontWeight: '800', color: colors.ink, marginBottom: 6 },
-  cardLogos: { fontSize: 10 },
+  cardIconsContainer: { flexDirection: 'row', gap: 4, alignItems: 'center' },
+  miniCardIcon: { width: 24, height: 16, resizeMode: 'contain' },
   inputBox: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -149,7 +161,6 @@ const styles = StyleSheet.create({
     borderColor: '#E0E0E0',
   },
   textInput: { flex: 1, fontSize: 13, color: colors.ink },
-  cameraIcon: { fontSize: 16 },
   splitRow: { flexDirection: 'row', gap: 14 },
   disclaimerText: { fontSize: 11, color: colors.textMuted, lineHeight: 16, marginTop: 10 },
   bottomWrapper: { paddingHorizontal: spacing.lg, paddingBottom: 30 },
