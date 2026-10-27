@@ -11,13 +11,19 @@ import {
 } from 'react-native';
 import { colors, radii, spacing } from '../constants/theme';
 
-// SVG Icon Imports
-import ArrowLeftIcon from '../images/Icons/arrow-left-solid-full.svg';
+// SVG & Image Icon Imports
+import AngleLeftIcon from '../images/Icons/angle-left-solid-full.svg';
 import CartIcon from '../images/Icons/cart-shopping-solid-full.svg';
 import CommentIcon from '../images/Icons/comment-solid-full.svg';
 import HouseIcon from '../images/Icons/house-solid-full.svg';
 import LogoutIcon from '../images/Icons/right-from-bracket-solid-full.svg';
 import UserIcon from '../images/Icons/user-solid-full.svg';
+import LocationIcon from '../images/Icons/location-dot-solid-full.svg';
+import AngleRightIcon from '../images/Icons/angle-right-solid-full (1).svg';
+import CircleQuestionIcon from '../images/Icons/circle-question-regular-full.svg';
+import GearIcon from '../images/Icons/gear-solid-full.svg';
+import ClipboardListIcon from '../images/Icons/clipboard-list-solid-full.svg';
+import LockIcon from '../images/Icons/lock-solid-full.svg';
 
 interface ScreenProps {
   go: (next: string) => void;
@@ -55,11 +61,7 @@ export default function ProfileScreen({ go }: ScreenProps) {
     <View style={styles.fillMint}>
       {/* 1. Header Bar */}
       <View style={styles.topBar}>
-        <Pressable onPress={() => go('main')} style={styles.backBtn} hitSlop={10}>
-          <ArrowLeftIcon width={20} height={20} fill={colors.ink} />
-        </Pressable>
         <Text style={styles.headerTitle}>Profile</Text>
-        <View style={{ width: 40 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -67,7 +69,7 @@ export default function ProfileScreen({ go }: ScreenProps) {
         <View style={styles.profileHeader}>
           <View style={styles.avatarWrapper}>
             <View style={styles.avatarPlaceholder}>
-              <Text style={styles.avatarEmoji}>👤</Text>
+              <UserIcon width={36} height={36} fill={colors.ink} />
             </View>
           </View>
           <Text style={styles.userName}>{profile.fullName}</Text>
@@ -81,46 +83,50 @@ export default function ProfileScreen({ go }: ScreenProps) {
         {/* 3. Menu Options List */}
         <View style={styles.menuContainer}>
           <Pressable style={styles.menuItem}>
-            <Text style={styles.menuIcon}>⚙️</Text>
+            <GearIcon width={16} height={16} fill={colors.ink} style={styles.svgIcon} />
             <Text style={styles.menuLabel}>Settings</Text>
-            <Text style={styles.menuArrow}>›</Text>
+            <AngleRightIcon width={12} height={12} fill="rgba(0,0,0,0.3)" />
           </Pressable>
 
           <Pressable style={styles.menuItem}>
-            <Text style={styles.menuIcon}>📋</Text>
+            <ClipboardListIcon width={16} height={16} fill={colors.ink} style={styles.svgIcon} />
             <Text style={styles.menuLabel}>My Orders</Text>
-            <Text style={styles.menuArrow}>›</Text>
+            <AngleRightIcon width={12} height={12} fill="rgba(0,0,0,0.3)" />
           </Pressable>
 
           <Pressable style={styles.menuItem}>
-            <Text style={styles.menuIcon}>📍</Text>
+            <LocationIcon width={16} height={16} fill={colors.ink} style={styles.svgIcon} />
             <Text style={styles.menuLabel}>Address</Text>
-            <Text style={styles.menuArrow}>›</Text>
+            <AngleRightIcon width={12} height={12} fill="rgba(0,0,0,0.3)" />
           </Pressable>
 
           <Pressable style={styles.menuItem}>
-            <Text style={styles.menuIcon}>🔒</Text>
+            <LockIcon width={16} height={16} fill={colors.ink} style={styles.svgIcon} />
             <Text style={styles.menuLabel}>Change Password</Text>
-            <Text style={styles.menuArrow}>›</Text>
+            <AngleRightIcon width={12} height={12} fill="rgba(0,0,0,0.3)" />
           </Pressable>
 
           <View style={styles.divider} />
 
           <Pressable style={styles.menuItem}>
-            <Text style={styles.menuIcon}>❓</Text>
+            <CircleQuestionIcon width={16} height={16} fill={colors.ink} style={styles.svgIcon} />
             <Text style={styles.menuLabel}>Help & Support</Text>
-            <Text style={styles.menuArrow}>›</Text>
+            <AngleRightIcon width={12} height={12} fill="rgba(0,0,0,0.3)" />
           </Pressable>
 
-          {/* Admin Navigation Option */}
+          {/* Admin Navigation Option with Logo */}
           <Pressable style={styles.menuItem} onPress={() => go('adminAddCat')}>
-            <Text style={styles.menuIcon}>🐾</Text>
+            <Image
+              source={require('../images/Logo.png')}
+              style={styles.adminLogoIcon}
+              resizeMode="contain"
+            />
             <Text style={[styles.menuLabel, { color: colors.ink }]}>Admin: Add New Cat</Text>
-            <Text style={styles.menuArrow}>›</Text>
+            <AngleRightIcon width={12} height={12} fill="rgba(0,0,0,0.3)" />
           </Pressable>
 
           <Pressable style={[styles.menuItem, { borderBottomWidth: 0 }]} onPress={() => go('login')}>
-            <LogoutIcon width={18} height={18} fill="#D32F2F" style={{ marginRight: 12 }} />
+            <LogoutIcon width={18} height={18} fill="#D32F2F" style={{ marginRight: 12, marginLeft: 2 }} />
             <Text style={[styles.menuLabel, { color: '#D32F2F' }]}>Log out</Text>
           </Pressable>
         </View>
@@ -130,9 +136,9 @@ export default function ProfileScreen({ go }: ScreenProps) {
       <Modal visible={isEditModalOpen} animationType="slide" transparent={false}>
         <View style={styles.modalContainer}>
           {/* Modal Header */}
-          <View style={styles.topBar}>
+          <View style={styles.modalTopBar}>
             <Pressable onPress={() => setIsEditModalOpen(false)} style={styles.backBtn} hitSlop={10}>
-              <ArrowLeftIcon width={20} height={20} fill={colors.ink} />
+              <AngleLeftIcon width={18} height={18} fill={colors.ink} />
             </Pressable>
             <Text style={styles.headerTitle}>Edit Profile</Text>
             <View style={{ width: 40 }} />
@@ -143,7 +149,7 @@ export default function ProfileScreen({ go }: ScreenProps) {
             <View style={styles.profileHeader}>
               <View style={styles.avatarWrapper}>
                 <View style={styles.avatarPlaceholder}>
-                  <Text style={styles.avatarEmoji}>👤</Text>
+                  <UserIcon width={36} height={36} fill={colors.ink} />
                 </View>
                 <View style={styles.cameraBadge}>
                   <Text style={{ fontSize: 10 }}>📷</Text>
@@ -242,6 +248,13 @@ export default function ProfileScreen({ go }: ScreenProps) {
 const styles = StyleSheet.create({
   fillMint: { flex: 1, backgroundColor: colors.mint || '#A8DDD6' },
   topBar: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 60,
+    paddingBottom: 20,
+    paddingHorizontal: 24,
+  },
+  modalTopBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -285,9 +298,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 2,
     borderColor: colors.ink,
-  },
-  avatarEmoji: {
-    fontSize: 36,
   },
   cameraBadge: {
     position: 'absolute',
@@ -346,20 +356,21 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#F0F0F0',
   },
-  menuIcon: {
-    fontSize: 16,
+  svgIcon: {
     marginRight: 12,
+    marginLeft: 2,
+  },
+  adminLogoIcon: {
+    width: 18,
+    height: 18,
+    marginRight: 10,
+    marginLeft: 1,
   },
   menuLabel: {
     flex: 1,
     fontSize: 14,
     fontWeight: '700',
     color: colors.ink,
-  },
-  menuArrow: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: 'rgba(0,0,0,0.3)',
   },
   divider: {
     height: 1,

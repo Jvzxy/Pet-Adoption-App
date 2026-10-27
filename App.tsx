@@ -18,7 +18,8 @@ import Splash3Screen from './screens/Splash3Screen';
 import AdminAddCatScreen from './screens/AdminAddCatScreen';
 import ProductDetailsScreen from './screens/ProductDetailsScreen';
 import NotificationScreen from './screens/NotificationScreen';
-import FavoritesScreen from './screens/FavoritesScreen'; // <-- Added Import
+import FavoritesScreen from './screens/FavoritesScreen';
+import AdoptionFormScreen from './screens/AdoptionFormScreen'; // <-- Added AdoptionFormScreen import
 
 // Checkout Flow Imports
 import PaymentScreen from './screens/PaymentScreen';
@@ -76,6 +77,7 @@ export default function App() {
         {/* Added Routes */}
         {screen === 'notifications' && <NotificationScreen go={go} />} 
         {screen === 'favorites' && <FavoritesScreen go={go} />} 
+        {screen === 'adoptionForm' && <AdoptionFormScreen go={go} id={selectedPetId} />} 
         
         {/* Detail Screens */}
         {screen === 'details' && <DetailsScreen go={go} id={selectedPetId} />}

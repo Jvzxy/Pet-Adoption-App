@@ -1,8 +1,7 @@
 import React from 'react';
-import { Alert, Dimensions, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons'; 
+import { Dimensions, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
-// FIXED: Changed '../../' to '../'
 import { colors, radii, spacing } from '../constants/theme';
 import { CAT_DATA } from '../data/cats';
 
@@ -21,7 +20,7 @@ export default function DetailsScreen({ go, id }: DetailsProps) {
       <View style={[styles.fill, styles.center]}>
         <Text style={styles.errorText}>Item not found (ID: {id})</Text>
         <Pressable style={styles.adoptButton} onPress={() => go('main')}>
-           <Text style={styles.adoptButtonText}>Back to Home</Text>
+          <Text style={styles.adoptButtonText}>Back to Home</Text>
         </Pressable>
       </View>
     );
@@ -29,9 +28,19 @@ export default function DetailsScreen({ go, id }: DetailsProps) {
 
   return (
     <View style={styles.fill}>
-      {/* Background Cover Image Placeholder */}
-      <View style={[styles.imageContainer, { backgroundColor: '#D3D3D3', justifyContent: 'center', alignItems: 'center' }]}>
-        <Text style={{ color: '#888', fontWeight: 'bold' }}>IMAGE PLACEHOLDER</Text>
+      {/* Background Cat Image */}
+      <View style={styles.imageContainer}>
+        {item.imageUri ? (
+          <Image 
+            source={{ uri: item.imageUri }} 
+            style={styles.catCoverImage} 
+            resizeMode="cover"
+          />
+        ) : (
+          <View style={[styles.catCoverImage, styles.center, { backgroundColor: '#D3D3D3' }]}>
+            <Text style={{ color: '#888', fontWeight: 'bold' }}>NO IMAGE AVAILABLE</Text>
+          </View>
+        )}
       </View>
 
       {/* Floating Back Button */}
@@ -58,11 +67,11 @@ export default function DetailsScreen({ go, id }: DetailsProps) {
 
           {/* Subtitle & Location */}
           <Text style={styles.subtitle}>
-            {item.breed} • {item.age} • {item.gender}
+            {item.breed || 'Cat'} • {item.age || 'N/A'} • {item.gender || 'Unknown'}
           </Text>
           <View style={styles.locationRow}>
             <Ionicons name="location-sharp" size={14} color={colors.ink} />
-            <Text style={styles.locationText}>{item.location}</Text>
+            <Text style={styles.locationText}>{item.location || 'Location Pending'}</Text>
           </View>
 
           {/* Stats Row (Weight, Height, Health) */}
@@ -96,7 +105,7 @@ export default function DetailsScreen({ go, id }: DetailsProps) {
 
           {/* Traits Row */}
           <View style={styles.traitsContainer}>
-            {['Friendly', 'Playful', 'Gentle'].map((trait, index) => (
+            {(item.traits || ['Friendly', 'Playful', 'Gentle']).map((trait, index) => (
               <View key={index} style={styles.traitBox}>
                 <Ionicons name="happy-outline" size={16} color={colors.ink} />
                 <Text style={styles.traitText}>{trait}</Text>
@@ -104,10 +113,10 @@ export default function DetailsScreen({ go, id }: DetailsProps) {
             ))}
           </View>
 
-          {/* Action Button */}
+          {/* Action Button: Routes directly to Adoption Form */}
           <Pressable 
             style={styles.adoptButton}
-            onPress={() => Alert.alert('Adoption Request Sent!', `Thank you for inquiring about ${item.name}.`)}
+            onPress={() => go('adoptionForm')}
           >
             <Ionicons name="paw" size={20} color={colors.ink} />
             <Text style={styles.adoptButtonText}>Adopt {item.name}</Text>
@@ -133,6 +142,10 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: SCREEN_HEIGHT * 0.45,
+  },
+  catCoverImage: {
+    width: '100%',
+    height: '100%',
   },
   backButton: { 
     position: 'absolute',
