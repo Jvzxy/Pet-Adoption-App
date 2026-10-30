@@ -31,7 +31,20 @@ interface ScreenProps {
   favorites: string[];
   toggleFavorite: (id: string) => void;
 }
+
+interface DisplayItem {
+  id: string;
+  name: string;
+  category: "Breed" | "Toys" | "Accessories";
+  priceTag: string;
+  subText: string;
+  imageUri?: string | null;
+  emoji?: string;
+  isPet: boolean;
+}
+
 const CATEGORIES = ["All", "Breed", "Toys", "Accessories"];
+
 const NAV_ITEMS = [
   { key: "home", Icon: HouseIcon, label: "Home", active: true },
   { key: "chat", Icon: CommentIcon, label: "Chat", active: false },
@@ -47,27 +60,106 @@ const SIDEBAR_MENU = [
   { key: "profile", label: "My Profile", Icon: UserIcon },
 ];
 
-export default function MainScreen({ go, favorites, toggleFavorite }: ScreenProps) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [activeCategory, setActiveCategory] = useState("All");
-  const [searchQuery, setSearchQuery] = useState("");
+// Mock Products for Toys & Accessories in Philippine Peso (₱)
+const MOCK_PRODUCTS: DisplayItem[] = [
+  {
+    id: "toy-1",
+    name: "Interactive Laser Toy",
+    category: "Toys",
+    priceTag: "₱350.00",
+    subText: "Rating: ★ 4.9",
+    emoji: "🔦",
+    isPet: false,
+  },
+  {
+    id: "toy-2",
+    name: "Feather Wand Teaser",
+    category: "Toys",
+    priceTag: "₱180.00",
+    subText: "Rating: ★ 4.8",
+    emoji: "🪶",
+    isPet: false,
+  },
+  {
+    id: "toy-3",
+    name: "Catnip Mouse 3-Pack",
+    category: "Toys",
+    priceTag: "₱220.00",
+    subText: "Rating: ★ 4.7",
+    emoji: "🐭",
+    isPet: false,
+  },
+  {
+    id: "acc-1",
+    name: "Adjustable Bell Collar",
+    category: "Accessories",
+    priceTag: "₱150.00",
+    subText: "Rating: ★ 4.9",
+    emoji: "🔔",
+    isPet: false,
+  },
+  {
+    id: "acc-2",
+    name: "Cozy Plush Cat Bed",
+    category: "Accessories",
+    priceTag: "₱650.00",
+    subText: "Rating: ★ 5.0",
+    emoji: "🛏️",
+    isPet: false,
+  },
+  {
+    id: "acc-3",
+    name: "Travel Pet Carrier Backpack",
+    category: "Accessories",
+    priceTag: "₱890.00",
+    subText: "Rating: ★ 4.8",
+    emoji: "🎒",
+    isPet: false,
+  },
+];
 
-  const renderHeader = () => (
-    <>
-      {/* Functional Search Bar */}
+// Combine Cats and Products into one searchable store catalog
+const STORE_ITEMS: DisplayItem[] = [
+  ...CAT_DATA.map((cat) => ({
+    id: cat.id,
+    name: cat.name,
+    category: "Breed" as const,
+    priceTag: "Free Adoption",
+    subText: `Age: ${cat.age}`,
+    imageUri: cat.imageUri,
+    isPet: true,
+  })),
+  ...MOCK_PRODUCTS,
+];
+
+// Extracted Header Component (React.memo prevents focus-loss during typing)
+const ListHeader = React.memo(
+  ({
+    searchQuery,
+    setSearchQuery,
+    activeCategory,
+    setActiveCategory,
+  }: {
+    searchQuery: string;
+    setSearchQuery: (text: string) => void;
+    activeCategory: string;
+    setActiveCategory: (cat: string) => void;
+  }) => (
+    <View style={styles.headerWrapper}>
+      {/* Search Bar */}
       <View style={styles.searchBar}>
         <SearchIcon
           width={16}
           height={16}
-          fill={colors.textMuted}
+          fill={colors.textMuted || "rgba(0,0,0,0.4)"}
           style={{ marginRight: 10 }}
         />
         <TextInput
-          placeholder="Search"
-          placeholderTextColor={colors.textMuted}
+          placeholder="Search pets, toys, collars..."
+          placeholderTextColor="rgba(0,0,0,0.4)"
           value={searchQuery}
           onChangeText={setSearchQuery}
-          style={{ flex: 1, color: colors.ink, fontSize: 13, fontWeight: "500" }}
+          style={styles.searchInput}
           returnKeyType="search"
         />
       </View>
@@ -75,11 +167,12 @@ export default function MainScreen({ go, favorites, toggleFavorite }: ScreenProp
       {/* Hero Banner */}
       <View style={styles.heroCard}>
         <View style={styles.heroTextContainer}>
+          <Text style={styles.heroBadge}>PAWFECT STORE</Text>
           <Text style={styles.heroText}>
-            LIVE.{"\n"}LOVE.{"\n"}MEOW.
+            LIVE.{"\n"}LOVE.{"\n"}SHOP.
           </Text>
           <View style={styles.adoptBtn}>
-            <Text style={styles.adoptBtnText}>Adopt now ➔</Text>
+            <Text style={styles.adoptBtnText}>Explore Now ➔</Text>
           </View>
         </View>
 
@@ -93,7 +186,7 @@ export default function MainScreen({ go, favorites, toggleFavorite }: ScreenProp
         </View>
       </View>
 
-      {/* Interactive Categories */}
+      {/* Interactive Category Filter Pills */}
       <View style={styles.catRow}>
         {CATEGORIES.map((c) => {
           const isActive = activeCategory === c;
@@ -121,12 +214,39 @@ export default function MainScreen({ go, favorites, toggleFavorite }: ScreenProp
         })}
       </View>
 
+      {/* Dynamic Grid Header Title */}
       <View style={styles.gridHeader}>
-        <Text style={styles.gridTitle}>Adopt pet</Text>
+        <Text style={styles.gridTitle}>
+          {activeCategory === "All"
+            ? "Featured Catalog"
+            : activeCategory === "Breed"
+            ? "Adopt a Pet"
+            : activeCategory}
+        </Text>
         <Text style={styles.gridSeeAll}>See all</Text>
       </View>
-    </>
-  );
+    </View>
+  )
+);
+
+export default function MainScreen({
+  go,
+  favorites,
+  toggleFavorite,
+}: ScreenProps) {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [activeCategory, setActiveCategory] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Accurate Category + Search Query Filter
+  const filteredItems = STORE_ITEMS.filter((item) => {
+    const matchesSearch = item.name
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+    const matchesCategory =
+      activeCategory === "All" || item.category === activeCategory;
+    return matchesSearch && matchesCategory;
+  });
 
   return (
     <View style={styles.fillMint}>
@@ -136,7 +256,6 @@ export default function MainScreen({ go, favorites, toggleFavorite }: ScreenProp
           <Text style={styles.topIconMenu}>☰</Text>
         </Pressable>
 
-        {/* Restored Header Title with Balanced Black Logo */}
         <View style={styles.titleContainer}>
           <Image source={logoImg} style={styles.logo} resizeMode="contain" />
           <View style={styles.textColumn}>
@@ -147,10 +266,10 @@ export default function MainScreen({ go, favorites, toggleFavorite }: ScreenProp
 
         <View style={styles.rightIcons}>
           <Pressable onPress={() => go("favorites")} hitSlop={10}>
-            <HeartIcon width={22} height={22} fill={colors.ink} />
+            <HeartIcon width={22} height={22} fill={colors.ink || "#000"} />
           </Pressable>
           <Pressable onPress={() => go("notifications")} hitSlop={10}>
-            <BellIcon width={22} height={22} fill={colors.ink} />
+            <BellIcon width={22} height={22} fill={colors.ink || "#000"} />
           </Pressable>
         </View>
       </View>
@@ -163,19 +282,17 @@ export default function MainScreen({ go, favorites, toggleFavorite }: ScreenProp
         onRequestClose={() => setIsSidebarOpen(false)}
       >
         <View style={styles.modalOverlay}>
-          {/* Backdrop Click area */}
           <Pressable
             style={styles.backdrop}
             onPress={() => setIsSidebarOpen(false)}
           />
 
-          {/* Sidebar Menu Drawer */}
           <View style={styles.sidebar}>
             <View>
               <View style={styles.sidebarHeader}>
                 <View>
                   <Text style={styles.sidebarTitle}>🐾 PAWFECT</Text>
-                  <Text style={styles.sidebarSub}>CAT ADOPTION</Text>
+                  <Text style={styles.sidebarSub}>CAT ADOPTION & STORE</Text>
                 </View>
                 <Pressable onPress={() => setIsSidebarOpen(false)} hitSlop={10}>
                   <Text style={styles.closeBtn}>✕</Text>
@@ -192,14 +309,13 @@ export default function MainScreen({ go, favorites, toggleFavorite }: ScreenProp
                       go(key);
                     }}
                   >
-                    <Icon width={20} height={20} fill={colors.ink} />
+                    <Icon width={20} height={20} fill={colors.ink || "#000"} />
                     <Text style={styles.sidebarItemText}>{label}</Text>
                   </Pressable>
                 ))}
               </View>
             </View>
 
-            {/* Logout Button at Bottom */}
             <Pressable
               style={styles.logoutButton}
               onPress={() => {
@@ -214,23 +330,48 @@ export default function MainScreen({ go, favorites, toggleFavorite }: ScreenProp
         </View>
       </Modal>
 
+      {/* Product & Pet Catalog Grid */}
       <FlatList
-        data={[...CAT_DATA]}
+        data={filteredItems}
         keyExtractor={(item) => item.id}
         numColumns={2}
         columnWrapperStyle={styles.rowWrapper}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
-        ListHeaderComponent={renderHeader}
+        ListHeaderComponent={
+          <ListHeader
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            activeCategory={activeCategory}
+            setActiveCategory={setActiveCategory}
+          />
+        }
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyEmoji}>🐾</Text>
+            <Text style={styles.emptyText}>No items found in this category</Text>
+          </View>
+        }
         renderItem={({ item }) => {
           const isFavorite = favorites.includes(item.id);
-          
+
           return (
             <Pressable
               style={styles.gridItem}
-              onPress={() => go("details", item.id)}
+              onPress={() =>
+                item.isPet
+                  ? go("details", item.id)
+                  : go("productDetails", item.id)
+              }
             >
               <View style={styles.gridImageContainer}>
+                {/* Category Badge Tag */}
+                <View style={styles.categoryBadge}>
+                  <Text style={styles.categoryBadgeText}>
+                    {item.category.toUpperCase()}
+                  </Text>
+                </View>
+
                 {item.imageUri ? (
                   <Image
                     source={{ uri: item.imageUri }}
@@ -238,38 +379,37 @@ export default function MainScreen({ go, favorites, toggleFavorite }: ScreenProp
                     resizeMode="cover"
                   />
                 ) : (
-                  <Text style={{ fontSize: 32 }}>🐾</Text>
+                  <Text style={{ fontSize: 38 }}>{item.emoji || "🐾"}</Text>
                 )}
-                {/* Up-Right Favorites Icon Toggles Color */}
+
+                {/* Heart Toggle Icon */}
                 <Pressable
                   style={styles.cardFavoriteIcon}
                   onPress={() => toggleFavorite(item.id)}
                   hitSlop={10}
                 >
-                  <HeartIcon 
-                    width={14} 
-                    height={14} 
-                    fill={isFavorite ? "#FF2D55" : colors.ink} 
+                  <HeartIcon
+                    width={14}
+                    height={14}
+                    fill={isFavorite ? "#FF2D55" : colors.ink || "#000"}
                   />
                 </Pressable>
               </View>
+
+              {/* Product Info Section */}
               <View style={styles.gridMetaContainer}>
-                <View style={styles.gridMeta}>
-                  <Text style={styles.gridName} numberOfLines={1}>
-                    Name: {item.name}
-                  </Text>
-                  <Text style={styles.gridSub}>Age: {item.age}</Text>
-                </View>
-                <View style={styles.arrowIcon}>
-                  <Text
-                    style={{
-                      color: colors.white,
-                      fontSize: 10,
-                      fontWeight: "bold",
-                    }}
-                  >
-                    ↗
-                  </Text>
+                <Text style={styles.gridName} numberOfLines={1}>
+                  {item.name}
+                </Text>
+                <Text style={styles.gridSub}>{item.subText}</Text>
+
+                <View style={styles.priceRow}>
+                  <Text style={styles.priceText}>{item.priceTag}</Text>
+                  <View style={styles.actionBtn}>
+                    <Text style={styles.actionBtnText}>
+                      {item.isPet ? "↗" : "+"}
+                    </Text>
+                  </View>
                 </View>
               </View>
             </Pressable>
@@ -277,7 +417,7 @@ export default function MainScreen({ go, favorites, toggleFavorite }: ScreenProp
         }}
       />
 
-      {/* Floating Bottom Nav */}
+      {/* Floating Bottom Navigation Bar */}
       <View style={styles.bottomNavWrapper}>
         <View style={styles.bottomNav}>
           {NAV_ITEMS.map(({ key, Icon, label, active }) => (
@@ -286,7 +426,7 @@ export default function MainScreen({ go, favorites, toggleFavorite }: ScreenProp
               onPress={() => key !== "home" && go(key)}
               style={[styles.navItem, active && styles.navItemActive]}
             >
-              <Icon width={20} height={20} fill={colors.ink} />
+              <Icon width={20} height={20} fill={colors.ink || "#000"} />
               {active && <Text style={styles.navLabel}>{label}</Text>}
             </Pressable>
           ))}
@@ -297,50 +437,261 @@ export default function MainScreen({ go, favorites, toggleFavorite }: ScreenProp
 }
 
 const styles = StyleSheet.create({
-  fillMint: { flex: 1, backgroundColor: colors.mint },
+  fillMint: { flex: 1, backgroundColor: colors.mint || "#A8DDD6" },
   topBar: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.lg || 24,
     paddingTop: 60,
     paddingBottom: 20,
   },
-  topIconMenu: { fontSize: 24, color: colors.ink, fontWeight: "bold" },
-
+  topIconMenu: { fontSize: 24, color: colors.ink || "#000", fontWeight: "bold" },
   titleContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
   },
   textColumn: { alignItems: "flex-start", justifyContent: "center" },
-  logo: { width: 26, height: 26, marginRight: 6, tintColor: colors.ink },
+  logo: { width: 26, height: 26, marginRight: 6, tintColor: colors.ink || "#000" },
   titleText: {
     fontSize: 18,
     fontWeight: "900",
-    color: colors.ink,
+    color: colors.ink || "#000",
     letterSpacing: 0.5,
   },
   subtitleText: {
     fontSize: 9,
     fontWeight: "800",
-    color: colors.ink,
+    color: colors.ink || "#000",
     letterSpacing: 0.5,
     marginTop: 1,
   },
   rightIcons: { flexDirection: "row", alignItems: "center", gap: 16 },
-  listContent: { paddingHorizontal: spacing.lg, paddingBottom: 110 },
+  listContent: { paddingHorizontal: spacing.lg || 20, paddingBottom: 110 },
+  headerWrapper: { marginBottom: 8 },
   searchBar: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#E8F5E9",
-    height: 46,
-    borderRadius: radii.pill,
+    backgroundColor: "#FFFFFF",
+    height: 48,
+    borderRadius: radii.pill || 24,
     paddingHorizontal: 20,
-    marginBottom: 24,
+    marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  searchInput: {
+    flex: 1,
+    color: colors.ink || "#000",
+    fontSize: 13,
+    fontWeight: "600",
   },
 
-  // Sidebar Styles
+  // E-Commerce Hero Banner
+  heroCard: {
+    flexDirection: "row",
+    backgroundColor: colors.ink || "#000",
+    borderRadius: 24,
+    height: 165,
+    overflow: "hidden",
+    marginBottom: 20,
+    paddingLeft: 24,
+    alignItems: "center",
+    justifyContent: "space-between",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  heroTextContainer: { flex: 1, justifyContent: "center" },
+  heroBadge: {
+    fontSize: 9,
+    fontWeight: "900",
+    color: colors.mint || "#A8DDD6",
+    letterSpacing: 1,
+    marginBottom: 4,
+  },
+  heroText: {
+    fontSize: 22,
+    fontWeight: "900",
+    lineHeight: 26,
+    color: colors.white || "#FFF",
+    marginBottom: 12,
+  },
+  adoptBtn: {
+    backgroundColor: colors.white || "#FFF",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: radii.pill || 20,
+    alignSelf: "flex-start",
+  },
+  adoptBtnText: { fontSize: 11, fontWeight: "900", color: colors.ink || "#000" },
+  heroImageWrapper: {
+    width: 140,
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+    position: "relative",
+  },
+  heroCircle: {
+    width: 115,
+    height: 115,
+    borderRadius: 57.5,
+    backgroundColor: colors.mint || "#A8DDD6",
+    position: "absolute",
+    right: 12,
+  },
+  heroCatImage: {
+    width: 130,
+    height: 150,
+    position: "absolute",
+    bottom: 0,
+    right: 5,
+  },
+
+  // Category Filter Pills
+  catRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 20,
+  },
+  catPill: {
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: radii.pill || 20,
+  },
+  catPillActive: {
+    backgroundColor: colors.white || "#FFF",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  catPillInactive: { backgroundColor: colors.ink || "#000" },
+  catPillText: { fontSize: 12, fontWeight: "800" },
+  catPillTextActive: { color: colors.ink || "#000" },
+  catPillTextInactive: { color: colors.white || "#FFF" },
+
+  gridHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  gridTitle: { fontSize: 17, fontWeight: "900", color: colors.ink || "#000" },
+  gridSeeAll: { fontSize: 12, fontWeight: "800", color: colors.ink || "#000", opacity: 0.6 },
+
+  // E-Commerce Product Cards
+  rowWrapper: { justifyContent: "space-between" },
+  gridItem: {
+    width: "48%",
+    backgroundColor: colors.white || "#FFF",
+    borderRadius: 20,
+    padding: 10,
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  gridImageContainer: {
+    width: "100%",
+    height: 115,
+    borderRadius: 14,
+    marginBottom: 10,
+    backgroundColor: "#F4FAF8",
+    justifyContent: "center",
+    alignItems: "center",
+    overflow: "hidden",
+    position: "relative",
+  },
+  categoryBadge: {
+    position: "absolute",
+    top: 8,
+    left: 8,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 6,
+    zIndex: 2,
+  },
+  categoryBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 8,
+    fontWeight: "900",
+    letterSpacing: 0.5,
+  },
+  cardFavoriteIcon: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    backgroundColor: "rgba(255,255,255,0.9)",
+    padding: 6,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+    zIndex: 2,
+  },
+  catImage: { width: "100%", height: "100%" },
+  gridMetaContainer: { paddingHorizontal: 2 },
+  gridName: { fontSize: 13, fontWeight: "900", color: colors.ink || "#000" },
+  gridSub: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: "rgba(0,0,0,0.5)",
+    marginTop: 2,
+    marginBottom: 8,
+  },
+  priceRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 2,
+  },
+  priceText: {
+    fontSize: 13,
+    fontWeight: "900",
+    color: colors.ink || "#000",
+  },
+  actionBtn: {
+    backgroundColor: colors.mint || "#A8DDD6",
+    width: 24,
+    height: 24,
+    borderRadius: 8,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  actionBtnText: {
+    color: colors.ink || "#000",
+    fontSize: 12,
+    fontWeight: "900",
+  },
+
+  // Empty Search State
+  emptyContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 40,
+  },
+  emptyEmoji: { fontSize: 36, marginBottom: 8 },
+  emptyText: {
+    fontSize: 14,
+    fontWeight: "800",
+    color: colors.ink || "#000",
+    opacity: 0.5,
+  },
+
+  // Sidebar Menu Drawer
   modalOverlay: {
     flex: 1,
     flexDirection: "row",
@@ -353,7 +704,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     width: "75%",
-    backgroundColor: colors.white,
+    backgroundColor: colors.white || "#FFF",
     paddingTop: 60,
     paddingHorizontal: 24,
     paddingBottom: 40,
@@ -370,14 +721,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 36,
   },
-  sidebarTitle: { fontSize: 20, fontWeight: "900", color: colors.ink },
+  sidebarTitle: { fontSize: 20, fontWeight: "900", color: colors.ink || "#000" },
   sidebarSub: {
     fontSize: 10,
     fontWeight: "800",
-    color: colors.textMuted,
+    color: colors.textMuted || "rgba(0,0,0,0.4)",
     letterSpacing: 0.5,
   },
-  closeBtn: { fontSize: 22, fontWeight: "bold", color: colors.ink },
+  closeBtn: { fontSize: 22, fontWeight: "bold", color: colors.ink || "#000" },
   menuList: { gap: 12 },
   sidebarItem: {
     flexDirection: "row",
@@ -387,7 +738,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderRadius: 12,
   },
-  sidebarItemText: { fontSize: 15, fontWeight: "700", color: colors.ink },
+  sidebarItemText: { fontSize: 15, fontWeight: "700", color: colors.ink || "#000" },
   logoutButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -400,139 +751,7 @@ const styles = StyleSheet.create({
   },
   logoutText: { fontSize: 15, fontWeight: "800", color: "#D32F2F" },
 
-  // Hero Section Layout
-  heroCard: {
-    flexDirection: "row",
-    backgroundColor: colors.ink,
-    borderRadius: 24,
-    height: 160,
-    overflow: "hidden",
-    marginBottom: 24,
-    paddingLeft: 24,
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  heroTextContainer: { flex: 1, justifyContent: "center" },
-  heroText: {
-    fontSize: 22,
-    fontWeight: "900",
-    lineHeight: 28,
-    color: colors.white,
-    marginBottom: 12,
-  },
-  adoptBtn: {
-    backgroundColor: colors.white,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: radii.pill,
-    alignSelf: "flex-start",
-  },
-  adoptBtnText: { fontSize: 11, fontWeight: "900", color: colors.ink },
-
-  // Hero Image & Circle Layout
-  heroImageWrapper: {
-    width: 140,
-    height: "100%",
-    justifyContent: "center",
-    alignItems: "center",
-    position: "relative",
-  },
-  heroCircle: {
-    width: 115,
-    height: 115,
-    borderRadius: 57.5,
-    backgroundColor: colors.mint,
-    position: "absolute",
-    right: 12,
-  },
-  heroCatImage: {
-    width: 130,
-    height: 150,
-    position: "absolute",
-    bottom: 0,
-    right: 5,
-  },
-
-  catRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 24,
-  },
-  catPill: {
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: radii.pill,
-  },
-  catPillActive: { backgroundColor: colors.white },
-  catPillInactive: { backgroundColor: colors.ink },
-  catPillText: { fontSize: 12, fontWeight: "800" },
-  catPillTextActive: { color: colors.ink },
-  catPillTextInactive: { color: colors.white },
-  gridHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  gridTitle: { fontSize: 16, fontWeight: "900", color: colors.ink },
-  gridSeeAll: { fontSize: 12, fontWeight: "800", color: colors.ink },
-  rowWrapper: { justifyContent: "space-between" },
-  gridItem: {
-    width: "47%",
-    backgroundColor: colors.white,
-    borderRadius: 16,
-    padding: 8,
-    marginBottom: 16,
-  },
-  gridImageContainer: {
-    width: "100%",
-    height: 110,
-    borderRadius: 12,
-    marginBottom: 8,
-    backgroundColor: "#E0F2F1",
-    justifyContent: "center",
-    alignItems: "center",
-    overflow: "hidden",
-    position: "relative",
-  },
-  cardFavoriteIcon: {
-    position: "absolute",
-    top: 8,
-    right: 8,
-    backgroundColor: "rgba(255,255,255,0.85)",
-    padding: 6,
-    borderRadius: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
-    zIndex: 2, // ensures it stays clickable above image
-  },
-  catImage: { width: "100%", height: "100%" },
-  gridMetaContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-end",
-    paddingHorizontal: 4,
-    paddingBottom: 4,
-  },
-  gridMeta: { flex: 1 },
-  gridName: { fontSize: 11, fontWeight: "900", color: colors.ink },
-  gridSub: {
-    fontSize: 10,
-    fontWeight: "600",
-    color: colors.textMuted,
-    marginTop: 2,
-  },
-  arrowIcon: {
-    backgroundColor: "#B2DFDB",
-    width: 24,
-    height: 24,
-    borderRadius: 6,
-    justifyContent: "center",
-    alignItems: "center",
-  },
+  // Bottom Nav
   bottomNavWrapper: {
     position: "absolute",
     bottom: 35,
@@ -544,7 +763,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-around",
     alignItems: "center",
-    backgroundColor: colors.white,
+    backgroundColor: colors.white || "#FFF",
     width: "85%",
     borderRadius: 100,
     height: 65,
@@ -561,8 +780,8 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: radii.pill,
+    borderRadius: radii.pill || 20,
   },
-  navItemActive: { backgroundColor: colors.mint },
-  navLabel: { fontSize: 14, fontWeight: "900", color: colors.ink },
+  navItemActive: { backgroundColor: colors.mint || "#A8DDD6" },
+  navLabel: { fontSize: 14, fontWeight: "900", color: colors.ink || "#000" },
 });
