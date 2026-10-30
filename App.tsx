@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 // Screen Imports
 import CartScreen, { CartItem } from './screens/CartScreen';
@@ -79,8 +80,8 @@ export default function App() {
   };
 
   return (
-    <AuthProvider>
-      <View style={styles.container}>
+    <GestureHandlerRootView style={styles.container}>
+      <AuthProvider>
         {screen === 'splash1' && <Splash1Screen go={go} />}
         {screen === 'splash2' && <Splash2Screen go={go} />}
         {screen === 'splash3' && <Splash3Screen go={go} />}
@@ -149,8 +150,8 @@ export default function App() {
         {screen === 'payment' && <PaymentScreen go={go} />}
         {screen === 'addCard' && <AddCardScreen go={go} />}
         {screen === 'orderConfirmation' && <OrderConfirmationScreen go={go} />}
-      </View>
-    </AuthProvider>
+      </AuthProvider>
+    </GestureHandlerRootView>
   );
 }
 

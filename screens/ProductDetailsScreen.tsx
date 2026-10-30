@@ -1,20 +1,18 @@
 import React, { useState } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { colors, radii, spacing } from '../constants/theme';
-import { CartItem } from './CartScreen'; // Ensure this path matches where you placed the CartItem interface
 
 interface ScreenProps {
   go: (next: string) => void;
   productId?: string;
-  cartItems: CartItem[];
-  setCartItems: React.Dispatch<React.SetStateAction<CartItem[]>>;
+  cartItems: any[];
+  setCartItems: React.Dispatch<React.SetStateAction<any[]>>;
 }
 
 export default function ProductDetailsScreen({ go, productId, cartItems, setCartItems }: ScreenProps) {
   const [selectedVariation, setSelectedVariation] = useState<number>(0);
   const [quantity, setQuantity] = useState<number>(1);
 
-  // We are using fallback product data here, but in a real app you'd find it from your STORE_ITEMS via productId
   const product = {
     id: productId || 'prod-1',
     title: 'Friskies',
@@ -30,8 +28,8 @@ export default function ProductDetailsScreen({ go, productId, cartItems, setCart
 
   const handleAddToCart = () => {
     const selectedItem = variations[selectedVariation];
-    const newCartItem: CartItem = {
-      id: `${product.id}-${selectedVariation}`, // Unique ID for variations
+    const newCartItem = {
+      id: `${product.id}-${selectedVariation}`,
       title: product.title,
       subtitle: `Size: ${selectedItem.label}`,
       price: selectedItem.price,
@@ -53,7 +51,6 @@ export default function ProductDetailsScreen({ go, productId, cartItems, setCart
 
   return (
     <View style={styles.fillWhite}>
-      {/* Top Header Controls (Removed Heart and Bell Icons) */}
       <View style={styles.topHeader}>
         <Pressable onPress={() => go('main')} style={styles.closeBtn} hitSlop={10}>
           <Text style={styles.closeText}>✕</Text>
@@ -133,7 +130,7 @@ const styles = StyleSheet.create({
   radioContainer: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   radioCircle: { width: 22, height: 22, borderRadius: 11, borderWidth: 1.5, borderColor: '#888888', justifyContent: 'center', alignItems: 'center' },
   radioCircleSelected: { backgroundColor: '#80CBC4', borderColor: '#80CBC4' },
-  checkMark: { color: colors.white, fontSize: 12, fontWeight: 'bold' },
+  checkMark: { color: colors.white, fontSize: 12, fontWeight: "bold" },
   variationLabel: { fontSize: 14, fontWeight: '700', color: colors.ink },
   priceText: { fontSize: 14, fontWeight: '800', color: colors.ink },
   footerRow: { position: 'absolute', bottom: 30, left: spacing.lg, right: spacing.lg, flexDirection: 'row', alignItems: 'center', gap: 12 },
