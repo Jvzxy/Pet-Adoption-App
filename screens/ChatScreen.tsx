@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   FlatList,
   Image,
@@ -10,12 +10,9 @@ import {
 import { colors, radii, spacing } from '../constants/theme';
 
 // SVG Icon Imports
-import BellIcon from '../images/Icons/bell-solid-full.svg';
 import CartIcon from '../images/Icons/cart-shopping-solid-full.svg';
 import CommentIcon from '../images/Icons/comment-solid-full.svg';
-import HeartIcon from '../images/Icons/heart-regular-full.svg';
 import HouseIcon from '../images/Icons/house-solid-full.svg';
-import SearchIcon from '../images/Icons/magnifying-glass-solid-full.svg';
 import UserIcon from '../images/Icons/user-solid-full.svg';
 
 interface ScreenProps {
@@ -78,6 +75,11 @@ const NAV_ITEMS = [
 ];
 
 export default function ChatScreen({ go }: ScreenProps) {
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [chatFilter, setChatFilter] = useState<'recent' | 'old'>('recent');
+
+  const displayedChats = chatFilter === 'recent' ? CHATS_DATA : [...CHATS_DATA].reverse();
+
   const renderChatItem = ({ item }: { item: ChatItem }) => (
     <Pressable style={styles.chatRow}>
       <Image source={{ uri: item.avatar }} style={styles.avatar} />
@@ -104,26 +106,59 @@ export default function ChatScreen({ go }: ScreenProps) {
     <View style={styles.fillMint}>
       {/* Top Header Bar */}
       <View style={styles.topBar}>
-        <Text style={styles.title}>Jussy Jay</Text>
-        <View style={styles.headerIcons}>
-          <SearchIcon width={20} height={20} fill={colors.ink} />
-          <HeartIcon width={22} height={22} fill={colors.ink} />
-          <View style={styles.bellWrapper}>
-            <BellIcon width={22} height={22} fill={colors.ink} />
-            <View style={styles.notificationDot} />
-          </View>
-        </View>
+        <Text style={styles.title}>Messages</Text>
       </View>
 
-      {/* Sub Header: "Chats" & Options */}
+      {/* Sub Header: "Chats" & Dropdown Options */}
       <View style={styles.subHeader}>
-        <Text style={styles.sectionTitle}>Chats</Text>
-        <Text style={styles.moreOptions}>⋮</Text>
+        <Text style={styles.sectionTitle}>
+          {chatFilter === 'recent' ? 'Recent Chats' : 'Old Chats'}
+        </Text>
+        
+        <View style={styles.dropdownContainer}>
+          <Pressable 
+            onPress={() => setShowDropdown(!showDropdown)} 
+            hitSlop={15}
+            style={styles.moreOptionsHitbox}
+          >
+            <Text style={styles.moreOptions}>⋮</Text>
+          </Pressable>
+
+          {showDropdown && (
+            <View style={styles.dropdownMenu}>
+              <Pressable 
+                style={[styles.dropdownItem, chatFilter === 'recent' && styles.activeDropdownItem]} 
+                onPress={() => {
+                  setChatFilter('recent');
+                  setShowDropdown(false);
+                }}
+              >
+                <Text style={[styles.dropdownItemText, chatFilter === 'recent' && styles.activeDropdownText]}>
+                  Recent Chat
+                </Text>
+              </Pressable>
+              
+              <View style={styles.dropdownDivider} />
+              
+              <Pressable 
+                style={[styles.dropdownItem, chatFilter === 'old' && styles.activeDropdownItem]} 
+                onPress={() => {
+                  setChatFilter('old');
+                  setShowDropdown(false);
+                }}
+              >
+                <Text style={[styles.dropdownItemText, chatFilter === 'old' && styles.activeDropdownText]}>
+                  Old Chat
+                </Text>
+              </Pressable>
+            </View>
+          )}
+        </View>
       </View>
 
       {/* Chat List */}
       <FlatList
-        data={CHATS_DATA}
+        data={displayedChats}
         keyExtractor={(item) => item.id}
         renderItem={renderChatItem}
         contentContainerStyle={styles.listContent}
@@ -167,23 +202,6 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: colors.ink,
   },
-  headerIcons: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-  },
-  bellWrapper: {
-    position: 'relative',
-  },
-  notificationDot: {
-    position: 'absolute',
-    top: -2,
-    right: -2,
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    backgroundColor: '#FF3B30',
-  },
   subHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -191,16 +209,58 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     marginTop: 10,
     marginBottom: 16,
+    zIndex: 20,
   },
   sectionTitle: {
     fontSize: 15,
     fontWeight: '800',
     color: colors.ink,
   },
+  dropdownContainer: {
+    position: 'relative',
+  },
+  moreOptionsHitbox: {
+    paddingHorizontal: 8,
+  },
   moreOptions: {
     fontSize: 20,
     fontWeight: '900',
     color: colors.ink,
+  },
+  dropdownMenu: {
+    position: 'absolute',
+    top: 25,
+    right: 0,
+    backgroundColor: colors.white,
+    borderRadius: radii.md || 12,
+    width: 140,
+    paddingVertical: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 10,
+    zIndex: 100,
+  },
+  dropdownItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+  },
+  activeDropdownItem: {
+    backgroundColor: 'rgba(168, 221, 214, 0.3)',
+  },
+  dropdownItemText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.ink,
+  },
+  activeDropdownText: {
+    fontWeight: '900',
+  },
+  dropdownDivider: {
+    height: 1,
+    backgroundColor: 'rgba(0,0,0,0.05)',
   },
   listContent: {
     paddingHorizontal: spacing.lg,

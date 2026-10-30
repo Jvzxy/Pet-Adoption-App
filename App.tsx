@@ -17,6 +17,7 @@ import Splash1Screen from './screens/Splash1Screen';
 import Splash2Screen from './screens/Splash2Screen';
 import Splash3Screen from './screens/Splash3Screen';
 import AdminAddCatScreen from './screens/AdminAddCatScreen';
+import AddProductScreen from './screens/AddProductScreen'; 
 import ProductDetailsScreen from './screens/ProductDetailsScreen';
 import NotificationScreen from './screens/NotificationScreen';
 import FavoritesScreen from './screens/FavoritesScreen';
@@ -125,6 +126,8 @@ export default function App() {
         {screen === 'termsOfService' && <TermsOfServiceScreen go={go} />}
         
         {screen === 'adminAddCat' && <AdminAddCatScreen go={go} />}
+        {screen === 'adminAddProduct' && <AddProductScreen go={go} />}
+        
         {screen === 'notifications' && <NotificationScreen go={go} />} 
         
         {screen === 'favorites' && (

@@ -120,6 +120,13 @@ export default function ProfileScreen({ go }: ScreenProps) {
             <AngleRightIcon width={12} height={12} fill="rgba(0,0,0,0.3)" />
           </Pressable>
 
+          {/* ROUTES TO NEW SCREEN */}
+          <Pressable style={styles.menuItem} onPress={() => go('adminAddProduct')}>
+            <CartIcon width={16} height={16} fill={colors.ink} style={styles.svgIcon} />
+            <Text style={[styles.menuLabel, { color: colors.ink }]}>Admin: Add Product</Text>
+            <AngleRightIcon width={12} height={12} fill="rgba(0,0,0,0.3)" />
+          </Pressable>
+
           <Pressable style={[styles.menuItem, { borderBottomWidth: 0 }]} onPress={() => go('login')}>
             <LogoutIcon width={18} height={18} fill="#D32F2F" style={{ marginRight: 12, marginLeft: 2 }} />
             <Text style={[styles.menuLabel, { color: '#D32F2F' }]}>Log out</Text>

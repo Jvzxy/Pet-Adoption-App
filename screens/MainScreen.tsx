@@ -35,15 +35,13 @@ interface ScreenProps {
 interface DisplayItem {
   id: string;
   name: string;
-  category: "Pet" | "Toys" | "Accessories";
+  category: string;
   priceTag: string;
   subText: string;
   imageUri?: string | null;
   emoji?: string;
   isPet: boolean;
 }
-
-const CATEGORIES = ["All", "Pet", "Toys", "Accessories"];
 
 const NAV_ITEMS = [
   { key: "home", Icon: HouseIcon, label: "Home", active: true },
@@ -60,75 +58,14 @@ const SIDEBAR_MENU = [
   { key: "profile", label: "My Profile", Icon: UserIcon },
 ];
 
-const MOCK_PRODUCTS: DisplayItem[] = [
-  {
-    id: "toy-1",
-    name: "Interactive Laser Toy",
-    category: "Toys",
-    priceTag: "₱350.00",
-    subText: "Rating: ★ 4.9",
-    emoji: "🔦",
-    isPet: false,
-  },
-  {
-    id: "toy-2",
-    name: "Feather Wand Teaser",
-    category: "Toys",
-    priceTag: "₱180.00",
-    subText: "Rating: ★ 4.8",
-    emoji: "🪶",
-    isPet: false,
-  },
-  {
-    id: "toy-3",
-    name: "Catnip Mouse 3-Pack",
-    category: "Toys",
-    priceTag: "₱220.00",
-    subText: "Rating: ★ 4.7",
-    emoji: "🐭",
-    isPet: false,
-  },
-  {
-    id: "acc-1",
-    name: "Adjustable Bell Collar",
-    category: "Accessories",
-    priceTag: "₱150.00",
-    subText: "Rating: ★ 4.9",
-    emoji: "🔔",
-    isPet: false,
-  },
-  {
-    id: "acc-2",
-    name: "Cozy Plush Cat Bed",
-    category: "Accessories",
-    priceTag: "₱650.00",
-    subText: "Rating: ★ 5.0",
-    emoji: "🛏️",
-    isPet: false,
-  },
-  {
-    id: "acc-3",
-    name: "Travel Pet Carrier Backpack",
-    category: "Accessories",
-    priceTag: "₱890.00",
-    subText: "Rating: ★ 4.8",
-    emoji: "🎒",
-    isPet: false,
-  },
-];
-
 const ListHeader = React.memo(
   ({
     searchQuery,
     setSearchQuery,
-    activeCategory,
-    setActiveCategory,
     go,
   }: {
     searchQuery: string;
     setSearchQuery: (text: string) => void;
-    activeCategory: string;
-    setActiveCategory: (cat: string) => void;
     go: (next: string, id?: string) => void;
   }) => (
     <View style={styles.headerWrapper}>
@@ -140,7 +77,7 @@ const ListHeader = React.memo(
           style={{ marginRight: 10 }}
         />
         <TextInput
-          placeholder="Search pets, toys, collars..."
+          placeholder="Search pets, products..."
           placeholderTextColor="rgba(0,0,0,0.4)"
           value={searchQuery}
           onChangeText={setSearchQuery}
@@ -170,41 +107,8 @@ const ListHeader = React.memo(
         </View>
       </View>
 
-      <View style={styles.catRow}>
-        {CATEGORIES.map((c) => {
-          const isActive = activeCategory === c;
-          return (
-            <Pressable
-              key={c}
-              onPress={() => setActiveCategory(c)}
-              style={[
-                styles.catPill,
-                isActive ? styles.catPillActive : styles.catPillInactive,
-              ]}
-            >
-              <Text
-                style={[
-                  styles.catPillText,
-                  isActive
-                    ? styles.catPillTextActive
-                    : styles.catPillTextInactive,
-                ]}
-              >
-                {c}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
-
       <View style={styles.gridHeader}>
-        <Text style={styles.gridTitle}>
-          {activeCategory === "All"
-            ? "Featured Catalog"
-            : activeCategory === "Pet"
-            ? "Adopt a Pet"
-            : activeCategory}
-        </Text>
+        <Text style={styles.gridTitle}>Featured Catalog</Text>
         <Text style={styles.gridSeeAll}>See all</Text>
       </View>
     </View>
@@ -217,31 +121,24 @@ export default function MainScreen({
   toggleFavorite,
 }: ScreenProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [activeCategory, setActiveCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
 
-  // STORE_ITEMS moved inside to capture AsyncData updates dynamically
-  const STORE_ITEMS: DisplayItem[] = [
-    ...CAT_DATA.map((cat) => ({
-      id: cat.id,
-      name: cat.name,
-      category: "Pet" as const,
-      priceTag: "Free Adoption",
-      subText: `Age: ${cat.age}`,
-      imageUri: cat.imageUri,
-      isPet: true,
-    })),
-    ...MOCK_PRODUCTS,
-  ];
-
-  const filteredItems = STORE_ITEMS.filter((item) => {
-    const matchesSearch = item.name
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
-    const matchesCategory =
-      activeCategory === "All" || item.category === activeCategory;
-    return matchesSearch && matchesCategory;
+  const STORE_ITEMS: DisplayItem[] = CAT_DATA.map((item) => {
+    const isProduct = item.type === "product";
+    return {
+      id: item.id,
+      name: item.name,
+      category: item.category || (isProduct ? "Product" : "Pet"),
+      priceTag: isProduct ? item.price : "Free Adoption",
+      subText: isProduct ? item.description : `Age: ${item.age}`,
+      imageUri: item.imageUri,
+      isPet: !isProduct,
+    };
   });
+
+  const filteredItems = STORE_ITEMS.filter((item) =>
+    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <View style={styles.fillMint}>
@@ -334,15 +231,13 @@ export default function MainScreen({
           <ListHeader
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
-            activeCategory={activeCategory}
-            setActiveCategory={setActiveCategory}
             go={go}
           />
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyEmoji}>🐾</Text>
-            <Text style={styles.emptyText}>No items found in this category</Text>
+            <Text style={styles.emptyText}>No items found</Text>
           </View>
         }
         renderItem={({ item }) => {
@@ -374,7 +269,6 @@ export default function MainScreen({
                   <Text style={{ fontSize: 38 }}>{item.emoji || "🐾"}</Text>
                 )}
 
-                {/* Conditional Heart Icon: Only shows if item.isPet is true */}
                 {item.isPet && (
                   <Pressable
                     style={styles.cardFavoriteIcon}
@@ -394,7 +288,9 @@ export default function MainScreen({
                 <Text style={styles.gridName} numberOfLines={1}>
                   {item.name}
                 </Text>
-                <Text style={styles.gridSub}>{item.subText}</Text>
+                <Text style={styles.gridSub} numberOfLines={1}>
+                  {item.subText}
+                </Text>
 
                 <View style={styles.priceRow}>
                   <Text style={styles.priceText}>{item.priceTag}</Text>
@@ -543,28 +439,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     right: 5,
   },
-  catRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 20,
-  },
-  catPill: {
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: radii.pill || 20,
-  },
-  catPillActive: {
-    backgroundColor: colors.white || "#FFF",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  catPillInactive: { backgroundColor: colors.ink || "#000" },
-  catPillText: { fontSize: 12, fontWeight: "800" },
-  catPillTextActive: { color: colors.ink || "#000" },
-  catPillTextInactive: { color: colors.white || "#FFF" },
   gridHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
