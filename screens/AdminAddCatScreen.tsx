@@ -73,8 +73,8 @@ export default function AdminAddCatScreen({ go }: ScreenProps) {
     const newCat: CatItem = {
       id: Date.now().toString(),
       name,
-      category: 'Breed', // Added missing required property
-      type: 'pet',       // Added missing required property
+      category: 'Pet', // Changed to Pet
+      type: 'pet',       
       breed,
       age,
       gender: gender || 'Unknown',
@@ -98,7 +98,7 @@ export default function AdminAddCatScreen({ go }: ScreenProps) {
       await AsyncStorage.setItem('saved_cats', JSON.stringify(CAT_DATA));
 
       Alert.alert('Success', `${name} has been listed for adoption!`, [
-        { text: 'OK', onPress: () => go('main') },
+        { text: 'OK', onPress: () => go('explorePets') }, // Redirects to new screen
       ]);
     } catch (error) {
       Alert.alert('Error', 'Failed to save the cat.');

@@ -35,7 +35,7 @@ interface ScreenProps {
 interface DisplayItem {
   id: string;
   name: string;
-  category: "Breed" | "Toys" | "Accessories";
+  category: "Pet" | "Toys" | "Accessories";
   priceTag: string;
   subText: string;
   imageUri?: string | null;
@@ -43,7 +43,7 @@ interface DisplayItem {
   isPet: boolean;
 }
 
-const CATEGORIES = ["All", "Breed", "Toys", "Accessories"];
+const CATEGORIES = ["All", "Pet", "Toys", "Accessories"];
 
 const NAV_ITEMS = [
   { key: "home", Icon: HouseIcon, label: "Home", active: true },
@@ -60,7 +60,6 @@ const SIDEBAR_MENU = [
   { key: "profile", label: "My Profile", Icon: UserIcon },
 ];
 
-// Mock Products for Toys & Accessories in Philippine Peso (₱)
 const MOCK_PRODUCTS: DisplayItem[] = [
   {
     id: "toy-1",
@@ -118,35 +117,21 @@ const MOCK_PRODUCTS: DisplayItem[] = [
   },
 ];
 
-// Combine Cats and Products into one searchable store catalog
-const STORE_ITEMS: DisplayItem[] = [
-  ...CAT_DATA.map((cat) => ({
-    id: cat.id,
-    name: cat.name,
-    category: "Breed" as const,
-    priceTag: "Free Adoption",
-    subText: `Age: ${cat.age}`,
-    imageUri: cat.imageUri,
-    isPet: true,
-  })),
-  ...MOCK_PRODUCTS,
-];
-
-// Extracted Header Component (React.memo prevents focus-loss during typing)
 const ListHeader = React.memo(
   ({
     searchQuery,
     setSearchQuery,
     activeCategory,
     setActiveCategory,
+    go,
   }: {
     searchQuery: string;
     setSearchQuery: (text: string) => void;
     activeCategory: string;
     setActiveCategory: (cat: string) => void;
+    go: (next: string, id?: string) => void;
   }) => (
     <View style={styles.headerWrapper}>
-      {/* Search Bar */}
       <View style={styles.searchBar}>
         <SearchIcon
           width={16}
@@ -164,16 +149,15 @@ const ListHeader = React.memo(
         />
       </View>
 
-      {/* Hero Banner */}
       <View style={styles.heroCard}>
         <View style={styles.heroTextContainer}>
           <Text style={styles.heroBadge}>PAWFECT STORE</Text>
           <Text style={styles.heroText}>
             LIVE.{"\n"}LOVE.{"\n"}SHOP.
           </Text>
-          <View style={styles.adoptBtn}>
+          <Pressable style={styles.adoptBtn} onPress={() => go("explorePets")}>
             <Text style={styles.adoptBtnText}>Explore Now ➔</Text>
-          </View>
+          </Pressable>
         </View>
 
         <View style={styles.heroImageWrapper}>
@@ -186,7 +170,6 @@ const ListHeader = React.memo(
         </View>
       </View>
 
-      {/* Interactive Category Filter Pills */}
       <View style={styles.catRow}>
         {CATEGORIES.map((c) => {
           const isActive = activeCategory === c;
@@ -214,12 +197,11 @@ const ListHeader = React.memo(
         })}
       </View>
 
-      {/* Dynamic Grid Header Title */}
       <View style={styles.gridHeader}>
         <Text style={styles.gridTitle}>
           {activeCategory === "All"
             ? "Featured Catalog"
-            : activeCategory === "Breed"
+            : activeCategory === "Pet"
             ? "Adopt a Pet"
             : activeCategory}
         </Text>
@@ -238,7 +220,20 @@ export default function MainScreen({
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Accurate Category + Search Query Filter
+  // STORE_ITEMS moved inside to capture AsyncData updates dynamically
+  const STORE_ITEMS: DisplayItem[] = [
+    ...CAT_DATA.map((cat) => ({
+      id: cat.id,
+      name: cat.name,
+      category: "Pet" as const,
+      priceTag: "Free Adoption",
+      subText: `Age: ${cat.age}`,
+      imageUri: cat.imageUri,
+      isPet: true,
+    })),
+    ...MOCK_PRODUCTS,
+  ];
+
   const filteredItems = STORE_ITEMS.filter((item) => {
     const matchesSearch = item.name
       .toLowerCase()
@@ -250,7 +245,6 @@ export default function MainScreen({
 
   return (
     <View style={styles.fillMint}>
-      {/* Top Bar */}
       <View style={styles.topBar}>
         <Pressable onPress={() => setIsSidebarOpen(true)} hitSlop={10}>
           <Text style={styles.topIconMenu}>☰</Text>
@@ -274,7 +268,6 @@ export default function MainScreen({
         </View>
       </View>
 
-      {/* Side Drawer Modal */}
       <Modal
         visible={isSidebarOpen}
         transparent
@@ -330,7 +323,6 @@ export default function MainScreen({
         </View>
       </Modal>
 
-      {/* Product & Pet Catalog Grid */}
       <FlatList
         data={filteredItems}
         keyExtractor={(item) => item.id}
@@ -344,6 +336,7 @@ export default function MainScreen({
             setSearchQuery={setSearchQuery}
             activeCategory={activeCategory}
             setActiveCategory={setActiveCategory}
+            go={go}
           />
         }
         ListEmptyComponent={
@@ -365,7 +358,6 @@ export default function MainScreen({
               }
             >
               <View style={styles.gridImageContainer}>
-                {/* Category Badge Tag */}
                 <View style={styles.categoryBadge}>
                   <Text style={styles.categoryBadgeText}>
                     {item.category.toUpperCase()}
@@ -382,21 +374,22 @@ export default function MainScreen({
                   <Text style={{ fontSize: 38 }}>{item.emoji || "🐾"}</Text>
                 )}
 
-                {/* Heart Toggle Icon */}
-                <Pressable
-                  style={styles.cardFavoriteIcon}
-                  onPress={() => toggleFavorite(item.id)}
-                  hitSlop={10}
-                >
-                  <HeartIcon
-                    width={14}
-                    height={14}
-                    fill={isFavorite ? "#FF2D55" : colors.ink || "#000"}
-                  />
-                </Pressable>
+                {/* Conditional Heart Icon: Only shows if item.isPet is true */}
+                {item.isPet && (
+                  <Pressable
+                    style={styles.cardFavoriteIcon}
+                    onPress={() => toggleFavorite(item.id)}
+                    hitSlop={10}
+                  >
+                    <HeartIcon
+                      width={14}
+                      height={14}
+                      fill={isFavorite ? "#FF2D55" : colors.ink || "#000"}
+                    />
+                  </Pressable>
+                )}
               </View>
 
-              {/* Product Info Section */}
               <View style={styles.gridMetaContainer}>
                 <Text style={styles.gridName} numberOfLines={1}>
                   {item.name}
@@ -417,7 +410,6 @@ export default function MainScreen({
         }}
       />
 
-      {/* Floating Bottom Navigation Bar */}
       <View style={styles.bottomNavWrapper}>
         <View style={styles.bottomNav}>
           {NAV_ITEMS.map(({ key, Icon, label, active }) => (
@@ -490,8 +482,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
   },
-
-  // E-Commerce Hero Banner
   heroCard: {
     flexDirection: "row",
     backgroundColor: colors.ink || "#000",
@@ -553,8 +543,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     right: 5,
   },
-
-  // Category Filter Pills
   catRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -577,7 +565,6 @@ const styles = StyleSheet.create({
   catPillText: { fontSize: 12, fontWeight: "800" },
   catPillTextActive: { color: colors.ink || "#000" },
   catPillTextInactive: { color: colors.white || "#FFF" },
-
   gridHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -586,8 +573,6 @@ const styles = StyleSheet.create({
   },
   gridTitle: { fontSize: 17, fontWeight: "900", color: colors.ink || "#000" },
   gridSeeAll: { fontSize: 12, fontWeight: "800", color: colors.ink || "#000", opacity: 0.6 },
-
-  // E-Commerce Product Cards
   rowWrapper: { justifyContent: "space-between" },
   gridItem: {
     width: "48%",
@@ -676,8 +661,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "900",
   },
-
-  // Empty Search State
   emptyContainer: {
     alignItems: "center",
     justifyContent: "center",
@@ -690,8 +673,6 @@ const styles = StyleSheet.create({
     color: colors.ink || "#000",
     opacity: 0.5,
   },
-
-  // Sidebar Menu Drawer
   modalOverlay: {
     flex: 1,
     flexDirection: "row",
@@ -750,8 +731,6 @@ const styles = StyleSheet.create({
     marginTop: "auto",
   },
   logoutText: { fontSize: 15, fontWeight: "800", color: "#D32F2F" },
-
-  // Bottom Nav
   bottomNavWrapper: {
     position: "absolute",
     bottom: 35,

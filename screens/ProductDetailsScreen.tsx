@@ -1,18 +1,26 @@
 import React, { useState } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { colors, radii, spacing } from '../constants/theme';
-
-import BellIcon from '../images/Icons/bell-solid-full.svg';
-import HeartIcon from '../images/Icons/heart-regular-full.svg';
+import { CartItem } from './CartScreen'; // Ensure this path matches where you placed the CartItem interface
 
 interface ScreenProps {
   go: (next: string) => void;
   productId?: string;
+  cartItems: CartItem[];
+  setCartItems: React.Dispatch<React.SetStateAction<CartItem[]>>;
 }
 
-export default function ProductDetailsScreen({ go }: ScreenProps) {
+export default function ProductDetailsScreen({ go, productId, cartItems, setCartItems }: ScreenProps) {
   const [selectedVariation, setSelectedVariation] = useState<number>(0);
-  const [quantity, setQuantity] = useState<number>(2);
+  const [quantity, setQuantity] = useState<number>(1);
+
+  // We are using fallback product data here, but in a real app you'd find it from your STORE_ITEMS via productId
+  const product = {
+    id: productId || 'prod-1',
+    title: 'Friskies',
+    description: 'Purina Friskies Gravy Swirlers is a dry cat food formula featuring the savory flavors of chicken and salmon, with savory chicken-flavored gravy baked directly into every crunchy kibble piece.',
+    imageUri: 'https://m.media-amazon.com/images/I/81M1v8uLgCL.jpg'
+  };
 
   const variations = [
     { label: 'Small', price: 300.00 },
@@ -20,46 +28,52 @@ export default function ProductDetailsScreen({ go }: ScreenProps) {
     { label: 'Large', price: 1300.00 },
   ];
 
+  const handleAddToCart = () => {
+    const selectedItem = variations[selectedVariation];
+    const newCartItem: CartItem = {
+      id: `${product.id}-${selectedVariation}`, // Unique ID for variations
+      title: product.title,
+      subtitle: `Size: ${selectedItem.label}`,
+      price: selectedItem.price,
+      image: product.imageUri,
+      selected: true,
+      quantity: quantity,
+    };
+
+    setCartItems(prev => {
+      const existing = prev.find(item => item.id === newCartItem.id);
+      if (existing) {
+        return prev.map(item => item.id === newCartItem.id ? { ...item, quantity: item.quantity + quantity } : item);
+      }
+      return [...prev, newCartItem];
+    });
+
+    go('cart');
+  };
+
   return (
     <View style={styles.fillWhite}>
-      {/* Top Header Controls */}
+      {/* Top Header Controls (Removed Heart and Bell Icons) */}
       <View style={styles.topHeader}>
-        <Pressable onPress={() => go('main')} style={styles.closeBtn}>
+        <Pressable onPress={() => go('main')} style={styles.closeBtn} hitSlop={10}>
           <Text style={styles.closeText}>✕</Text>
         </Pressable>
-        <View style={styles.rightIcons}>
-          <HeartIcon width={22} height={22} fill={colors.ink} />
-          <View style={styles.bellContainer}>
-            <BellIcon width={22} height={22} fill={colors.ink} />
-            <View style={styles.redDot} />
-          </View>
-        </View>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollPad}>
-        {/* Product Image Box */}
         <View style={styles.imageCard}>
           <Image
-            source={{ uri: 'https://m.media-amazon.com/images/I/81M1v8uLgCL.jpg' }}
+            source={{ uri: product.imageUri }}
             style={styles.productImg}
             resizeMode="contain"
           />
         </View>
 
-        {/* Product Title */}
-        <Text style={styles.productTitle}>Friskies</Text>
+        <Text style={styles.productTitle}>{product.title}</Text>
 
-        {/* Description */}
         <Text style={styles.descTitle}>Description</Text>
-        <Text style={styles.descBody}>
-          Purina Friskies Gravy Swirlers is a dry cat food formula featuring the savory
-          flavors of chicken and salmon, with savory chicken-flavored gravy baked directly
-          into every crunchy kibble piece. Formulated to deliver 100% complete and balanced
-          nutrition for cats of all life stages (from kittens to adults), it combines the crunch
-          of dry kibble with the rich taste of wet gravy.
-        </Text>
+        <Text style={styles.descBody}>{product.description}</Text>
 
-        {/* Variation Card */}
         <View style={styles.variationCard}>
           <Text style={styles.variationTitle}>Variation</Text>
           {variations.map((v, index) => {
@@ -83,7 +97,6 @@ export default function ProductDetailsScreen({ go }: ScreenProps) {
         </View>
       </ScrollView>
 
-      {/* Bottom Action Footer */}
       <View style={styles.footerRow}>
         <View style={styles.quantityBox}>
           <Pressable onPress={() => setQuantity(Math.max(1, quantity - 1))}>
@@ -95,7 +108,7 @@ export default function ProductDetailsScreen({ go }: ScreenProps) {
           </Pressable>
         </View>
 
-        <Pressable style={styles.addToCartBtn} onPress={() => go('cart')}>
+        <Pressable style={styles.addToCartBtn} onPress={handleAddToCart}>
           <Text style={styles.addToCartText}>Add to cart</Text>
         </Pressable>
       </View>
@@ -108,9 +121,6 @@ const styles = StyleSheet.create({
   topHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing.lg, paddingTop: 50, paddingBottom: 10 },
   closeBtn: { padding: 4 },
   closeText: { fontSize: 24, fontWeight: 'bold', color: colors.ink },
-  rightIcons: { flexDirection: 'row', alignItems: 'center', gap: 16 },
-  bellContainer: { position: 'relative' },
-  redDot: { position: 'absolute', top: -2, right: -2, width: 7, height: 7, borderRadius: 4, backgroundColor: '#FF3B30' },
   scrollPad: { paddingHorizontal: spacing.lg, paddingBottom: 100 },
   imageCard: { backgroundColor: colors.white, borderRadius: 20, height: 260, justifyContent: 'center', alignItems: 'center', marginBottom: 20, padding: 16 },
   productImg: { width: '100%', height: '100%' },

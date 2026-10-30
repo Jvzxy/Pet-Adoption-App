@@ -1,7 +1,7 @@
 export interface CatItem {
   id: string;
   name: string;
-  category: 'Breed' | 'Toys' | 'Accessories';
+  category: 'Pet' | 'Toys' | 'Accessories';
   type: 'pet' | 'product';
   breed?: string;
   age?: string;
@@ -16,6 +16,5 @@ export interface CatItem {
   traits?: string[];
   variations?: { size: string; price: number }[];
 }
-
 
 export let CAT_DATA: CatItem[] = [];

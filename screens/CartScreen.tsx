@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   Image,
   Pressable,
@@ -15,12 +15,8 @@ import CommentIcon from "../images/Icons/comment-solid-full.svg";
 import HouseIcon from "../images/Icons/house-solid-full.svg";
 import UserIcon from "../images/Icons/user-solid-full.svg";
 
-interface ScreenProps {
-  go: (next: string) => void;
-}
-
-interface CartItem {
-  id: number;
+export interface CartItem {
+  id: string;
   title: string;
   subtitle: string;
   price: number;
@@ -29,62 +25,11 @@ interface CartItem {
   quantity: number;
 }
 
-const INITIAL_ITEMS: CartItem[] = [
-  {
-    id: 1,
-    title: "Whiskas",
-    subtitle: "Ocean Fish Flavour Loaf",
-    price: 650,
-    image: "https://images.unsplash.com/photo-1589924691995-400dc9ecc119?w=200",
-    selected: true,
-    quantity: 1,
-  },
-  {
-    id: 2,
-    title: "Collar",
-    subtitle: "Cute Pink Collar Tag",
-    price: 350,
-    image: "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=200",
-    selected: false,
-    quantity: 1,
-  },
-  {
-    id: 3,
-    title: "Whiskas",
-    subtitle: "Ocean Fish Flavour Loaf",
-    price: 650,
-    image: "https://images.unsplash.com/photo-1589924691995-400dc9ecc119?w=200",
-    selected: false,
-    quantity: 1,
-  },
-  {
-    id: 4,
-    title: "Collar",
-    subtitle: "Cute Pink Collar Tag",
-    price: 350,
-    image: "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=200",
-    selected: false,
-    quantity: 1,
-  },
-  {
-    id: 5,
-    title: "Whiskas",
-    subtitle: "Ocean Fish Flavour Loaf",
-    price: 650,
-    image: "https://images.unsplash.com/photo-1589924691995-400dc9ecc119?w=200",
-    selected: false,
-    quantity: 1,
-  },
-  {
-    id: 6,
-    title: "Collar",
-    subtitle: "Cute Pink Collar Tag",
-    price: 350,
-    image: "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=200",
-    selected: false,
-    quantity: 1,
-  },
-];
+interface ScreenProps {
+  go: (next: string) => void;
+  cartItems: CartItem[];
+  setCartItems: React.Dispatch<React.SetStateAction<CartItem[]>>;
+}
 
 const NAV_ITEMS = [
   { key: "main", Icon: HouseIcon, label: "Home", active: false },
@@ -93,19 +38,17 @@ const NAV_ITEMS = [
   { key: "profile", Icon: UserIcon, label: "Profile", active: false },
 ];
 
-export default function CartScreen({ go }: ScreenProps) {
-  const [items, setItems] = useState<CartItem[]>(INITIAL_ITEMS);
-
-  const toggleSelect = (id: number) => {
-    setItems((prev) =>
+export default function CartScreen({ go, cartItems = [], setCartItems }: ScreenProps) {
+  const toggleSelect = (id: string) => {
+    setCartItems((prev) =>
       prev.map((item) =>
         item.id === id ? { ...item, selected: !item.selected } : item,
       ),
     );
   };
 
-  const updateQuantity = (id: number, delta: number) => {
-    setItems((prev) =>
+  const updateQuantity = (id: string, delta: number) => {
+    setCartItems((prev) =>
       prev.map((item) => {
         if (item.id === id) {
           const newQty = Math.max(1, item.quantity + delta);
@@ -117,20 +60,19 @@ export default function CartScreen({ go }: ScreenProps) {
   };
 
   const isAllSelected =
-    items.length > 0 && items.every((item) => item.selected);
+    cartItems.length > 0 && cartItems.every((item) => item.selected);
 
   const toggleSelectAll = () => {
     const nextState = !isAllSelected;
-    setItems((prev) => prev.map((item) => ({ ...item, selected: nextState })));
+    setCartItems((prev) => prev.map((item) => ({ ...item, selected: nextState })));
   };
 
-  const totalPrice = items
+  const totalPrice = cartItems
     .filter((item) => item.selected)
     .reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   return (
     <View style={styles.container}>
-      {/* 1. Fixed Cart Banner & Location Bar at Top */}
       <View style={styles.blackBanner}>
         <View style={styles.bannerCenter}>
           <Text style={styles.bannerTitle}>Shopping cart</Text>
@@ -146,68 +88,65 @@ export default function CartScreen({ go }: ScreenProps) {
         </Pressable>
       </View>
 
-      {/* 2. Flexible Scrollable Item List */}
       <ScrollView
         style={styles.scrollArea}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {items.map((item) => (
-          <View key={item.id} style={styles.cartRow}>
-            {/* Checkbox */}
-            <Pressable
-              onPress={() => toggleSelect(item.id)}
-              style={styles.checkboxContainer}
-            >
-              <View
-                style={[
-                  styles.checkboxCircle,
-                  item.selected && styles.checkboxSelected,
-                ]}
+        {cartItems.length === 0 ? (
+          <Text style={styles.emptyCartText}>Your cart is empty.</Text>
+        ) : (
+          cartItems.map((item) => (
+            <View key={item.id} style={styles.cartRow}>
+              <Pressable
+                onPress={() => toggleSelect(item.id)}
+                style={styles.checkboxContainer}
               >
-                {item.selected && <Text style={styles.checkmarkText}>✓</Text>}
+                <View
+                  style={[
+                    styles.checkboxCircle,
+                    item.selected && styles.checkboxSelected,
+                  ]}
+                >
+                  {item.selected && <Text style={styles.checkmarkText}>✓</Text>}
+                </View>
+              </Pressable>
+
+              <View style={styles.imageCard}>
+                <Image
+                  source={{ uri: item.image }}
+                  style={styles.productImage}
+                  resizeMode="contain"
+                />
               </View>
-            </Pressable>
 
-            {/* Product Image */}
-            <View style={styles.imageCard}>
-              <Image
-                source={{ uri: item.image }}
-                style={styles.productImage}
-                resizeMode="contain"
-              />
-            </View>
+              <View style={styles.itemInfo}>
+                <Text style={styles.itemTitle}>{item.title}</Text>
+                <Text style={styles.itemSubtitle}>{item.subtitle}</Text>
+                <Text style={styles.itemPrice}>₱ {item.price.toFixed(2)}</Text>
+              </View>
 
-            {/* Item Info */}
-            <View style={styles.itemInfo}>
-              <Text style={styles.itemTitle}>{item.title}</Text>
-              <Text style={styles.itemSubtitle}>{item.subtitle}</Text>
-              <Text style={styles.itemPrice}>₱ {item.price.toFixed(2)}</Text>
+              <View style={styles.quantityControls}>
+                <Pressable
+                  onPress={() => updateQuantity(item.id, 1)}
+                  style={styles.qtyBtn}
+                >
+                  <Text style={styles.qtyBtnText}>+</Text>
+                </Pressable>
+                <Text style={styles.qtyText}>{item.quantity}</Text>
+                <Pressable
+                  onPress={() => updateQuantity(item.id, -1)}
+                  style={styles.qtyBtn}
+                >
+                  <Text style={styles.qtyBtnText}>−</Text>
+                </Pressable>
+              </View>
             </View>
-
-            {/* Quantity Stepper */}
-            <View style={styles.quantityControls}>
-              <Pressable
-                onPress={() => updateQuantity(item.id, 1)}
-                style={styles.qtyBtn}
-              >
-                <Text style={styles.qtyBtnText}>+</Text>
-              </Pressable>
-              <Text style={styles.qtyText}>{item.quantity}</Text>
-              <Pressable
-                onPress={() => updateQuantity(item.id, -1)}
-                style={styles.qtyBtn}
-              >
-                <Text style={styles.qtyBtnText}>−</Text>
-              </Pressable>
-            </View>
-          </View>
-        ))}
+          ))
+        )}
       </ScrollView>
 
-      {/* 3. Fixed Bottom Area (Checkout Bar + Navigation Bar) */}
       <View style={styles.bottomSection}>
-        {/* Checkout Bar */}
         <View style={styles.checkoutBar}>
           <Pressable onPress={toggleSelectAll} style={styles.selectAllRow}>
             <View
@@ -231,7 +170,6 @@ export default function CartScreen({ go }: ScreenProps) {
           </Pressable>
         </View>
 
-        {/* Floating Navigation Pill */}
         <View style={styles.bottomNavWrapper}>
           <View style={styles.bottomNav}>
             {NAV_ITEMS.map(({ key, Icon, label, active }) => (
@@ -252,237 +190,45 @@ export default function CartScreen({ go }: ScreenProps) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.mint || "#A8DDD6",
-  },
-
-  /* Top Black Location Bar */
-  blackBanner: {
-    backgroundColor: colors.ink || "#000",
-    paddingTop: 50, // Added padding to clear the status bar
-    paddingBottom: 14,
-    paddingHorizontal: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  bannerCenter: {
-    alignItems: "center",
-    flex: 1,
-  },
-  bannerTitle: {
-    color: colors.white || "#FFF",
-    fontSize: 16,
-    fontWeight: "900",
-    marginBottom: 4,
-  },
-  locationRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  locationPin: {
-    fontSize: 10,
-    color: colors.white || "#FFF",
-  },
-  locationText: {
-    color: colors.white || "#FFF",
-    fontSize: 10,
-    fontWeight: "600",
-  },
-  editBtn: {
-    position: "absolute",
-    right: 16,
-    bottom: 14,
-  },
-  editText: {
-    color: colors.white || "#FFF",
-    fontSize: 12,
-    fontWeight: "700",
-  },
-
-  /* Scrollable Item Area */
-  scrollArea: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingTop: 8,
-    paddingBottom: 16,
-  },
-  cartRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(0,0,0,0.85)",
-  },
-  checkboxContainer: {
-    paddingRight: 10,
-  },
-  checkboxCircle: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 1.5,
-    borderColor: colors.white || "#FFF",
-    backgroundColor: "transparent",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  checkboxSelected: {
-    backgroundColor: colors.white || "#FFF",
-  },
-  checkmarkText: {
-    fontSize: 12,
-    fontWeight: "900",
-    color: colors.ink || "#000",
-    marginTop: -2,
-  },
-  imageCard: {
-    width: 75,
-    height: 55,
-    backgroundColor: colors.white || "#FFF",
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
-    overflow: "hidden",
-  },
-  productImage: {
-    width: "90%",
-    height: "90%",
-  },
-  itemInfo: {
-    flex: 1,
-  },
-  itemTitle: {
-    fontSize: 13,
-    fontWeight: "800",
-    color: colors.ink || "#000",
-  },
-  itemSubtitle: {
-    fontSize: 10,
-    fontWeight: "600",
-    color: colors.ink || "#000",
-    marginTop: 2,
-  },
-  itemPrice: {
-    fontSize: 12,
-    fontWeight: "800",
-    color: colors.ink || "#000",
-    marginTop: 6,
-  },
-  quantityControls: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  qtyBtn: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: colors.ink || "#000",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  qtyBtnText: {
-    color: colors.white || "#FFF",
-    fontSize: 14,
-    fontWeight: "800",
-    lineHeight: 16,
-  },
-  qtyText: {
-    fontSize: 12,
-    fontWeight: "800",
-    color: colors.ink || "#000",
-  },
-
-  /* Fixed Bottom Section */
-  bottomSection: {
-    backgroundColor: colors.mint || "#A8DDD6",
-  },
-  checkoutBar: {
-    backgroundColor: colors.ink || "#000",
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  selectAllRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  allText: {
-    color: colors.white || "#FFF",
-    fontSize: 13,
-    fontWeight: "700",
-  },
-  pricingSection: {
-    alignItems: "flex-end",
-    marginRight: 10,
-  },
-  totalPrice: {
-    color: colors.white || "#FFF",
-    fontSize: 14,
-    fontWeight: "900",
-  },
-  shippingText: {
-    color: "rgba(255,255,255,0.8)",
-    fontSize: 9,
-    fontWeight: "500",
-    marginTop: 2,
-  },
-  checkoutBtn: {
-    backgroundColor: colors.mint || "#A8DDD6",
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 20,
-  },
-  checkoutBtnText: {
-    color: colors.ink || "#000",
-    fontSize: 12,
-    fontWeight: "800",
-  },
-
-  /* Navigation Bar */
-  bottomNavWrapper: {
-    paddingVertical: 18,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  bottomNav: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "center",
-    backgroundColor: colors.white || "#FFF",
-    width: "85%",
-    borderRadius: 100,
-    height: 55,
-    paddingHorizontal: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.15,
-    shadowRadius: 15,
-    elevation: 8,
-  },
-  navItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: radii?.pill || 20,
-  },
-  navItemActive: {
-    backgroundColor: colors.mint || "#A8DDD6",
-  },
-  navLabel: {
-    fontSize: 13,
-    fontWeight: "900",
-    color: colors.ink || "#000",
-  },
+  container: { flex: 1, backgroundColor: colors.mint || "#A8DDD6" },
+  blackBanner: { backgroundColor: colors.ink || "#000", paddingTop: 50, paddingBottom: 14, paddingHorizontal: 16, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  bannerCenter: { alignItems: "center", flex: 1 },
+  bannerTitle: { color: colors.white || "#FFF", fontSize: 16, fontWeight: "900", marginBottom: 4 },
+  locationRow: { flexDirection: "row", alignItems: "center", gap: 4 },
+  locationPin: { fontSize: 10, color: colors.white || "#FFF" },
+  locationText: { color: colors.white || "#FFF", fontSize: 10, fontWeight: "600" },
+  editBtn: { position: "absolute", right: 16, bottom: 14 },
+  editText: { color: colors.white || "#FFF", fontSize: 12, fontWeight: "700" },
+  scrollArea: { flex: 1 },
+  scrollContent: { paddingTop: 8, paddingBottom: 16 },
+  emptyCartText: { textAlign: "center", marginTop: 40, fontSize: 16, fontWeight: "600", color: colors.ink || "#000" },
+  cartRow: { flexDirection: "row", alignItems: "center", paddingVertical: 12, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: "rgba(0,0,0,0.85)" },
+  checkboxContainer: { paddingRight: 10 },
+  checkboxCircle: { width: 20, height: 20, borderRadius: 10, borderWidth: 1.5, borderColor: colors.white || "#FFF", backgroundColor: "transparent", alignItems: "center", justifyContent: "center" },
+  checkboxSelected: { backgroundColor: colors.white || "#FFF" },
+  checkmarkText: { fontSize: 12, fontWeight: "900", color: colors.ink || "#000", marginTop: -2 },
+  imageCard: { width: 75, height: 55, backgroundColor: colors.white || "#FFF", borderRadius: 8, alignItems: "center", justifyContent: "center", marginRight: 12, overflow: "hidden" },
+  productImage: { width: "90%", height: "90%" },
+  itemInfo: { flex: 1 },
+  itemTitle: { fontSize: 13, fontWeight: "800", color: colors.ink || "#000" },
+  itemSubtitle: { fontSize: 10, fontWeight: "600", color: colors.ink || "#000", marginTop: 2 },
+  itemPrice: { fontSize: 12, fontWeight: "800", color: colors.ink || "#000", marginTop: 6 },
+  quantityControls: { flexDirection: "row", alignItems: "center", gap: 8 },
+  qtyBtn: { width: 22, height: 22, borderRadius: 11, backgroundColor: colors.ink || "#000", alignItems: "center", justifyContent: "center" },
+  qtyBtnText: { color: colors.white || "#FFF", fontSize: 14, fontWeight: "800", lineHeight: 16 },
+  qtyText: { fontSize: 12, fontWeight: "800", color: colors.ink || "#000" },
+  bottomSection: { backgroundColor: colors.mint || "#A8DDD6" },
+  checkoutBar: { backgroundColor: colors.ink || "#000", paddingVertical: 12, paddingHorizontal: 16, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  selectAllRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  allText: { color: colors.white || "#FFF", fontSize: 13, fontWeight: "700" },
+  pricingSection: { alignItems: "flex-end", marginRight: 10 },
+  totalPrice: { color: colors.white || "#FFF", fontSize: 14, fontWeight: "900" },
+  shippingText: { color: "rgba(255,255,255,0.8)", fontSize: 9, fontWeight: "500", marginTop: 2 },
+  checkoutBtn: { backgroundColor: colors.mint || "#A8DDD6", paddingHorizontal: 18, paddingVertical: 10, borderRadius: 20 },
+  checkoutBtnText: { color: colors.ink || "#000", fontSize: 12, fontWeight: "800" },
+  bottomNavWrapper: { paddingVertical: 18, alignItems: "center", justifyContent: "center" },
+  bottomNav: { flexDirection: "row", justifyContent: "space-around", alignItems: "center", backgroundColor: colors.white || "#FFF", width: "85%", borderRadius: 100, height: 55, paddingHorizontal: 12, shadowColor: "#000", shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.15, shadowRadius: 15, elevation: 8 },
+  navItem: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 14, paddingVertical: 8, borderRadius: radii?.pill || 20 },
+  navItemActive: { backgroundColor: colors.mint || "#A8DDD6" },
+  navLabel: { fontSize: 13, fontWeight: "900", color: colors.ink || "#000" },
 });

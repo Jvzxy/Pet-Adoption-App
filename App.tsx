@@ -3,7 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Screen Imports
-import CartScreen from './screens/CartScreen';
+import CartScreen, { CartItem } from './screens/CartScreen';
 import ChatScreen from './screens/ChatScreen';
 import DetailsScreen from './screens/DetailsScreen';
 import GetStartedScreen from './screens/GetStartedScreen';
@@ -20,8 +20,9 @@ import ProductDetailsScreen from './screens/ProductDetailsScreen';
 import NotificationScreen from './screens/NotificationScreen';
 import FavoritesScreen from './screens/FavoritesScreen';
 import AdoptionFormScreen from './screens/AdoptionFormScreen';
+import ExplorePetsScreen from './screens/ExplorePetsScreen'; 
 
-// New Profile Sub-Screens
+// Profile Sub-Screens
 import SettingsScreen from './screens/SettingsScreen';
 import MyOrdersScreen from './screens/MyOrdersScreen';
 import AddressScreen from './screens/AddressScreen';
@@ -43,8 +44,9 @@ export default function App() {
   const [screen, setScreen] = useState<string>('splash1');
   const [selectedPetId, setSelectedPetId] = useState<string>('1');
   
-  // Lifted Favorites State
+  // Lifted States
   const [favorites, setFavorites] = useState<string[]>([]);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
 
   // Load saved cats from device storage on app startup
   useEffect(() => {
@@ -95,18 +97,31 @@ export default function App() {
           />
         )}
         
+        {screen === 'explorePets' && (
+          <ExplorePetsScreen 
+            go={go} 
+            favorites={favorites} 
+            toggleFavorite={toggleFavorite} 
+          />
+        )}
+        
         {screen === 'chat' && <ChatScreen go={go} />}
-        {screen === 'cart' && <CartScreen go={go} />}
+        {screen === 'cart' && (
+          <CartScreen 
+            go={go} 
+            cartItems={cartItems} 
+            setCartItems={setCartItems} 
+          />
+        )}
         {screen === 'profile' && <ProfileScreen go={go} />}
         
-        {/* New Profile Sub-Screens */}
         {screen === 'settings' && <SettingsScreen go={go} />}
         {screen === 'myOrders' && <MyOrdersScreen go={go} />}
         {screen === 'address' && <AddressScreen go={go} />}
         {screen === 'changePassword' && <ChangePasswordScreen go={go} />}
         {screen === 'helpSupport' && <HelpSupportScreen go={go} />}
-        {screen === 'privacyPolicy' && <PrivacyPolicyScreen go={go} />}  {/* <-- Added */}
-        {screen === 'termsOfService' && <TermsOfServiceScreen go={go} />} {/* <-- Added */}
+        {screen === 'privacyPolicy' && <PrivacyPolicyScreen go={go} />}
+        {screen === 'termsOfService' && <TermsOfServiceScreen go={go} />}
         
         {screen === 'adminAddCat' && <AdminAddCatScreen go={go} />}
         {screen === 'notifications' && <NotificationScreen go={go} />} 
@@ -121,11 +136,16 @@ export default function App() {
         
         {screen === 'adoptionForm' && <AdoptionFormScreen go={go} id={selectedPetId} />} 
         
-        {/* Detail Screens */}
         {screen === 'details' && <DetailsScreen go={go} id={selectedPetId} />}
-        {screen === 'productDetails' && <ProductDetailsScreen go={go} productId={selectedPetId} />}
+        {screen === 'productDetails' && (
+          <ProductDetailsScreen 
+            go={go} 
+            productId={selectedPetId} 
+            cartItems={cartItems} 
+            setCartItems={setCartItems} 
+          />
+        )}
 
-        {/* Checkout Flow Screens */}
         {screen === 'payment' && <PaymentScreen go={go} />}
         {screen === 'addCard' && <AddCardScreen go={go} />}
         {screen === 'orderConfirmation' && <OrderConfirmationScreen go={go} />}
