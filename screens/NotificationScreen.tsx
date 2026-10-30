@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import {
+  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -14,6 +15,8 @@ import CartIcon from "../images/Icons/cart-shopping-solid-full.svg";
 import CommentIcon from "../images/Icons/comment-solid-full.svg";
 import HouseIcon from "../images/Icons/house-solid-full.svg";
 import UserIcon from "../images/Icons/user-solid-full.svg";
+import BoxIcon from "../images/Icons/box-solid-full.svg";
+import TagIcon from "../images/Icons/tag-solid-full.svg";
 
 interface ScreenProps {
   go: (next: string) => void;
@@ -21,7 +24,7 @@ interface ScreenProps {
 
 interface NotificationItem {
   id: number;
-  icon: string;
+  iconType: "box" | "tag" | "logo" | "comment";
   title: string;
   message: string;
   time: string;
@@ -31,7 +34,7 @@ interface NotificationItem {
 const INITIAL_NOTIFICATIONS: NotificationItem[] = [
   {
     id: 1,
-    icon: "📦",
+    iconType: "box",
     title: "Order Shipped!",
     message: "Your order for Whiskas Ocean Fish has been shipped and is on its way to Bulua.",
     time: "2 hours ago",
@@ -39,7 +42,7 @@ const INITIAL_NOTIFICATIONS: NotificationItem[] = [
   },
   {
     id: 2,
-    icon: "🏷️",
+    iconType: "tag",
     title: "Flash Sale on Accessories",
     message: "Get up to 50% off on cute pink collars and toys today only!",
     time: "5 hours ago",
@@ -47,7 +50,7 @@ const INITIAL_NOTIFICATIONS: NotificationItem[] = [
   },
   {
     id: 3,
-    icon: "🐾",
+    iconType: "logo",
     title: "Welcome to Pawfect Cats",
     message: "Thank you for joining us! Complete your profile to get personalized recommendations.",
     time: "1 day ago",
@@ -55,7 +58,7 @@ const INITIAL_NOTIFICATIONS: NotificationItem[] = [
   },
   {
     id: 4,
-    icon: "💬",
+    iconType: "comment",
     title: "New Message",
     message: "The seller has replied to your inquiry regarding the scratching post.",
     time: "2 days ago",
@@ -81,6 +84,28 @@ export default function NotificationScreen({ go }: ScreenProps) {
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, unread: false } : n))
     );
+  };
+
+  const renderIcon = (type: string) => {
+    const iconProps = { width: 22, height: 22, fill: colors.ink || "#000" };
+    switch (type) {
+      case "box":
+        return <BoxIcon {...iconProps} />;
+      case "tag":
+        return <TagIcon {...iconProps} />;
+      case "logo":
+        return (
+          <Image 
+            source={require("../images/Logo.png")} 
+            style={{ width: 26, height: 26, tintColor: colors.ink || "#000" }} 
+            resizeMode="contain" 
+          />
+        );
+      case "comment":
+        return <CommentIcon {...iconProps} />;
+      default:
+        return null;
+    }
   };
 
   return (
@@ -113,7 +138,7 @@ export default function NotificationScreen({ go }: ScreenProps) {
           >
             {/* Icon Card */}
             <View style={[styles.iconCard, item.unread ? styles.iconCardUnread : styles.iconCardRead]}>
-              <Text style={styles.emojiIcon}>{item.icon}</Text>
+              {renderIcon(item.iconType)}
             </View>
 
             {/* Notification Info */}
@@ -227,9 +252,6 @@ const styles = StyleSheet.create({
   },
   iconCardRead: {
     backgroundColor: "rgba(255,255,255,0.4)",
-  },
-  emojiIcon: {
-    fontSize: 22,
   },
   itemInfo: {
     flex: 1,

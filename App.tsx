@@ -19,7 +19,16 @@ import AdminAddCatScreen from './screens/AdminAddCatScreen';
 import ProductDetailsScreen from './screens/ProductDetailsScreen';
 import NotificationScreen from './screens/NotificationScreen';
 import FavoritesScreen from './screens/FavoritesScreen';
-import AdoptionFormScreen from './screens/AdoptionFormScreen'; // <-- Added AdoptionFormScreen import
+import AdoptionFormScreen from './screens/AdoptionFormScreen';
+
+// New Profile Sub-Screens
+import SettingsScreen from './screens/SettingsScreen';
+import MyOrdersScreen from './screens/MyOrdersScreen';
+import AddressScreen from './screens/AddressScreen';
+import ChangePasswordScreen from './screens/ChangePasswordScreen';
+import HelpSupportScreen from './screens/HelpSupportScreen';
+import PrivacyPolicyScreen from './screens/PrivacyPolicyScreen'; 
+import TermsOfServiceScreen from './screens/TermsOfServiceScreen'; 
 
 // Checkout Flow Imports
 import PaymentScreen from './screens/PaymentScreen';
@@ -33,6 +42,9 @@ import { CAT_DATA } from './data/cats';
 export default function App() {
   const [screen, setScreen] = useState<string>('splash1');
   const [selectedPetId, setSelectedPetId] = useState<string>('1');
+  
+  // Lifted Favorites State
+  const [favorites, setFavorites] = useState<string[]>([]);
 
   // Load saved cats from device storage on app startup
   useEffect(() => {
@@ -41,8 +53,8 @@ export default function App() {
         const stored = await AsyncStorage.getItem('saved_cats');
         if (stored) {
           const parsed = JSON.parse(stored);
-          CAT_DATA.length = 0; // Clear defaults
-          CAT_DATA.push(...parsed); // Populate with stored cats
+          CAT_DATA.length = 0; 
+          CAT_DATA.push(...parsed); 
         }
       } catch (e) {
         console.log('Error loading saved cats:', e);
@@ -58,6 +70,12 @@ export default function App() {
     }
   };
 
+  const toggleFavorite = (id: string) => {
+    setFavorites((prev) =>
+      prev.includes(id) ? prev.filter((favId) => favId !== id) : [...prev, id]
+    );
+  };
+
   return (
     <AuthProvider>
       <View style={styles.container}>
@@ -68,15 +86,39 @@ export default function App() {
         {screen === 'loginSignup' && <LoginSignupScreen go={go} />}
         {screen === 'login' && <LoginScreen go={go} />}
         {screen === 'signup' && <SignUpScreen go={go} />}
-        {(screen === 'main' || screen === 'home') && <MainScreen go={go} />}
+        
+        {(screen === 'main' || screen === 'home') && (
+          <MainScreen 
+            go={go} 
+            favorites={favorites} 
+            toggleFavorite={toggleFavorite} 
+          />
+        )}
+        
         {screen === 'chat' && <ChatScreen go={go} />}
         {screen === 'cart' && <CartScreen go={go} />}
         {screen === 'profile' && <ProfileScreen go={go} />}
-        {screen === 'adminAddCat' && <AdminAddCatScreen go={go} />}
         
-        {/* Added Routes */}
+        {/* New Profile Sub-Screens */}
+        {screen === 'settings' && <SettingsScreen go={go} />}
+        {screen === 'myOrders' && <MyOrdersScreen go={go} />}
+        {screen === 'address' && <AddressScreen go={go} />}
+        {screen === 'changePassword' && <ChangePasswordScreen go={go} />}
+        {screen === 'helpSupport' && <HelpSupportScreen go={go} />}
+        {screen === 'privacyPolicy' && <PrivacyPolicyScreen go={go} />}  {/* <-- Added */}
+        {screen === 'termsOfService' && <TermsOfServiceScreen go={go} />} {/* <-- Added */}
+        
+        {screen === 'adminAddCat' && <AdminAddCatScreen go={go} />}
         {screen === 'notifications' && <NotificationScreen go={go} />} 
-        {screen === 'favorites' && <FavoritesScreen go={go} />} 
+        
+        {screen === 'favorites' && (
+          <FavoritesScreen 
+            go={go} 
+            favorites={favorites} 
+            toggleFavorite={toggleFavorite} 
+          />
+        )} 
+        
         {screen === 'adoptionForm' && <AdoptionFormScreen go={go} id={selectedPetId} />} 
         
         {/* Detail Screens */}

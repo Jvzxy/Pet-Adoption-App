@@ -6,6 +6,7 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import { colors, radii, spacing } from "../constants/theme";
@@ -27,8 +28,9 @@ import UserIcon from "../images/Icons/user-solid-full.svg";
 
 interface ScreenProps {
   go: (next: string, id?: string) => void;
+  favorites: string[];
+  toggleFavorite: (id: string) => void;
 }
-
 const CATEGORIES = ["All", "Breed", "Toys", "Accessories"];
 const NAV_ITEMS = [
   { key: "home", Icon: HouseIcon, label: "Home", active: true },
@@ -45,12 +47,14 @@ const SIDEBAR_MENU = [
   { key: "profile", label: "My Profile", Icon: UserIcon },
 ];
 
-export default function MainScreen({ go }: ScreenProps) {
+export default function MainScreen({ go, favorites, toggleFavorite }: ScreenProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const renderHeader = () => (
     <>
+      {/* Functional Search Bar */}
       <View style={styles.searchBar}>
         <SearchIcon
           width={16}
@@ -58,11 +62,14 @@ export default function MainScreen({ go }: ScreenProps) {
           fill={colors.textMuted}
           style={{ marginRight: 10 }}
         />
-        <Text
-          style={{ color: colors.textMuted, fontSize: 13, fontWeight: "500" }}
-        >
-          Search
-        </Text>
+        <TextInput
+          placeholder="Search"
+          placeholderTextColor={colors.textMuted}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          style={{ flex: 1, color: colors.ink, fontSize: 13, fontWeight: "500" }}
+          returnKeyType="search"
+        />
       </View>
 
       {/* Hero Banner */}
@@ -215,43 +222,59 @@ export default function MainScreen({ go }: ScreenProps) {
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={renderHeader}
-        renderItem={({ item }) => (
-          <Pressable
-            style={styles.gridItem}
-            onPress={() => go("details", item.id)}
-          >
-            <View style={styles.gridImageContainer}>
-              {item.imageUri ? (
-                <Image
-                  source={{ uri: item.imageUri }}
-                  style={styles.catImage}
-                  resizeMode="cover"
-                />
-              ) : (
-                <Text style={{ fontSize: 32 }}>🐾</Text>
-              )}
-            </View>
-            <View style={styles.gridMetaContainer}>
-              <View style={styles.gridMeta}>
-                <Text style={styles.gridName} numberOfLines={1}>
-                  Name: {item.name}
-                </Text>
-                <Text style={styles.gridSub}>Age: {item.age}</Text>
-              </View>
-              <View style={styles.arrowIcon}>
-                <Text
-                  style={{
-                    color: colors.white,
-                    fontSize: 10,
-                    fontWeight: "bold",
-                  }}
+        renderItem={({ item }) => {
+          const isFavorite = favorites.includes(item.id);
+          
+          return (
+            <Pressable
+              style={styles.gridItem}
+              onPress={() => go("details", item.id)}
+            >
+              <View style={styles.gridImageContainer}>
+                {item.imageUri ? (
+                  <Image
+                    source={{ uri: item.imageUri }}
+                    style={styles.catImage}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <Text style={{ fontSize: 32 }}>🐾</Text>
+                )}
+                {/* Up-Right Favorites Icon Toggles Color */}
+                <Pressable
+                  style={styles.cardFavoriteIcon}
+                  onPress={() => toggleFavorite(item.id)}
+                  hitSlop={10}
                 >
-                  ↗
-                </Text>
+                  <HeartIcon 
+                    width={14} 
+                    height={14} 
+                    fill={isFavorite ? "#FF2D55" : colors.ink} 
+                  />
+                </Pressable>
               </View>
-            </View>
-          </Pressable>
-        )}
+              <View style={styles.gridMetaContainer}>
+                <View style={styles.gridMeta}>
+                  <Text style={styles.gridName} numberOfLines={1}>
+                    Name: {item.name}
+                  </Text>
+                  <Text style={styles.gridSub}>Age: {item.age}</Text>
+                </View>
+                <View style={styles.arrowIcon}>
+                  <Text
+                    style={{
+                      color: colors.white,
+                      fontSize: 10,
+                      fontWeight: "bold",
+                    }}
+                  >
+                    ↗
+                  </Text>
+                </View>
+              </View>
+            </Pressable>
+          );
+        }}
       />
 
       {/* Floating Bottom Nav */}
@@ -470,6 +493,21 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     overflow: "hidden",
+    position: "relative",
+  },
+  cardFavoriteIcon: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    backgroundColor: "rgba(255,255,255,0.85)",
+    padding: 6,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+    zIndex: 2, // ensures it stays clickable above image
   },
   catImage: { width: "100%", height: "100%" },
   gridMetaContainer: {

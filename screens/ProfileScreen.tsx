@@ -39,7 +39,6 @@ const NAV_ITEMS = [
 export default function ProfileScreen({ go }: ScreenProps) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  // User Profile State
   const [profile, setProfile] = useState({
     fullName: 'Parves Ahamad',
     username: '@parvesahamad',
@@ -49,7 +48,6 @@ export default function ProfileScreen({ go }: ScreenProps) {
     email: 'nirobparvesahammad@gmail.com',
   });
 
-  // Temporary Edit Form State
   const [editForm, setEditForm] = useState(profile);
 
   const handleSaveProfile = () => {
@@ -59,13 +57,11 @@ export default function ProfileScreen({ go }: ScreenProps) {
 
   return (
     <View style={styles.fillMint}>
-      {/* 1. Header Bar */}
       <View style={styles.topBar}>
         <Text style={styles.headerTitle}>Profile</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* 2. User Avatar & Info Header */}
         <View style={styles.profileHeader}>
           <View style={styles.avatarWrapper}>
             <View style={styles.avatarPlaceholder}>
@@ -80,27 +76,27 @@ export default function ProfileScreen({ go }: ScreenProps) {
           </Pressable>
         </View>
 
-        {/* 3. Menu Options List */}
+        {/* CLICKABLE MENU OPTIONS */}
         <View style={styles.menuContainer}>
-          <Pressable style={styles.menuItem}>
+          <Pressable style={styles.menuItem} onPress={() => go('settings')}>
             <GearIcon width={16} height={16} fill={colors.ink} style={styles.svgIcon} />
             <Text style={styles.menuLabel}>Settings</Text>
             <AngleRightIcon width={12} height={12} fill="rgba(0,0,0,0.3)" />
           </Pressable>
 
-          <Pressable style={styles.menuItem}>
+          <Pressable style={styles.menuItem} onPress={() => go('myOrders')}>
             <ClipboardListIcon width={16} height={16} fill={colors.ink} style={styles.svgIcon} />
             <Text style={styles.menuLabel}>My Orders</Text>
             <AngleRightIcon width={12} height={12} fill="rgba(0,0,0,0.3)" />
           </Pressable>
 
-          <Pressable style={styles.menuItem}>
+          <Pressable style={styles.menuItem} onPress={() => go('address')}>
             <LocationIcon width={16} height={16} fill={colors.ink} style={styles.svgIcon} />
             <Text style={styles.menuLabel}>Address</Text>
             <AngleRightIcon width={12} height={12} fill="rgba(0,0,0,0.3)" />
           </Pressable>
 
-          <Pressable style={styles.menuItem}>
+          <Pressable style={styles.menuItem} onPress={() => go('changePassword')}>
             <LockIcon width={16} height={16} fill={colors.ink} style={styles.svgIcon} />
             <Text style={styles.menuLabel}>Change Password</Text>
             <AngleRightIcon width={12} height={12} fill="rgba(0,0,0,0.3)" />
@@ -108,13 +104,12 @@ export default function ProfileScreen({ go }: ScreenProps) {
 
           <View style={styles.divider} />
 
-          <Pressable style={styles.menuItem}>
+          <Pressable style={styles.menuItem} onPress={() => go('helpSupport')}>
             <CircleQuestionIcon width={16} height={16} fill={colors.ink} style={styles.svgIcon} />
             <Text style={styles.menuLabel}>Help & Support</Text>
             <AngleRightIcon width={12} height={12} fill="rgba(0,0,0,0.3)" />
           </Pressable>
 
-          {/* Admin Navigation Option with Logo */}
           <Pressable style={styles.menuItem} onPress={() => go('adminAddCat')}>
             <Image
               source={require('../images/Logo.png')}
@@ -132,10 +127,9 @@ export default function ProfileScreen({ go }: ScreenProps) {
         </View>
       </ScrollView>
 
-      {/* 4. Edit Profile Modal */}
+      {/* Edit Profile Modal */}
       <Modal visible={isEditModalOpen} animationType="slide" transparent={false}>
         <View style={styles.modalContainer}>
-          {/* Modal Header */}
           <View style={styles.modalTopBar}>
             <Pressable onPress={() => setIsEditModalOpen(false)} style={styles.backBtn} hitSlop={10}>
               <AngleLeftIcon width={18} height={18} fill={colors.ink} />
@@ -145,7 +139,6 @@ export default function ProfileScreen({ go }: ScreenProps) {
           </View>
 
           <ScrollView contentContainerStyle={styles.modalScroll} showsVerticalScrollIndicator={false}>
-            {/* Modal Avatar */}
             <View style={styles.profileHeader}>
               <View style={styles.avatarWrapper}>
                 <View style={styles.avatarPlaceholder}>
@@ -159,7 +152,6 @@ export default function ProfileScreen({ go }: ScreenProps) {
               <Text style={styles.userHandle}>{editForm.username}</Text>
             </View>
 
-            {/* Form Fields */}
             <View style={styles.formGroup}>
               <Text style={styles.inputLabel}>Full name</Text>
               <TextInput
@@ -178,7 +170,6 @@ export default function ProfileScreen({ go }: ScreenProps) {
                   onChangeText={(text) => setEditForm({ ...editForm, gender: text })}
                 />
               </View>
-
               <View style={[styles.formGroup, { flex: 1, marginLeft: 8 }]}>
                 <Text style={styles.inputLabel}>Birthday</Text>
                 <TextInput
@@ -218,7 +209,6 @@ export default function ProfileScreen({ go }: ScreenProps) {
               />
             </View>
 
-            {/* Save Button */}
             <Pressable style={styles.saveBtn} onPress={handleSaveProfile}>
               <Text style={styles.saveBtnText}>Save</Text>
             </Pressable>
@@ -247,218 +237,36 @@ export default function ProfileScreen({ go }: ScreenProps) {
 
 const styles = StyleSheet.create({
   fillMint: { flex: 1, backgroundColor: colors.mint || '#A8DDD6' },
-  topBar: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: 60,
-    paddingBottom: 20,
-    paddingHorizontal: 24,
-  },
-  modalTopBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: 60,
-    paddingBottom: 20,
-    paddingHorizontal: 24,
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.5)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '900',
-    color: colors.ink || '#000',
-  },
-  scrollContent: {
-    paddingHorizontal: 24,
-    paddingBottom: 120,
-  },
-
-  /* Profile Header */
-  profileHeader: {
-    alignItems: 'center',
-    marginVertical: 16,
-  },
-  avatarWrapper: {
-    position: 'relative',
-    marginBottom: 12,
-  },
-  avatarPlaceholder: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: colors.white,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: colors.ink,
-  },
-  cameraBadge: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    backgroundColor: colors.white,
-    borderRadius: 12,
-    width: 24,
-    height: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.ink,
-  },
-  userName: {
-    fontSize: 18,
-    fontWeight: '900',
-    color: colors.ink,
-  },
-  userHandle: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: 'rgba(0,0,0,0.5)',
-    marginTop: 2,
-  },
-  editProfileBtn: {
-    backgroundColor: colors.ink,
-    paddingHorizontal: 28,
-    paddingVertical: 10,
-    borderRadius: radii?.pill || 20,
-    marginTop: 14,
-  },
-  editProfileBtnText: {
-    color: colors.white,
-    fontSize: 12,
-    fontWeight: '800',
-  },
-
-  /* Menu Item Styles */
-  menuContainer: {
-    backgroundColor: colors.white,
-    borderRadius: 24,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    marginTop: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 3,
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
-  svgIcon: {
-    marginRight: 12,
-    marginLeft: 2,
-  },
-  adminLogoIcon: {
-    width: 18,
-    height: 18,
-    marginRight: 10,
-    marginLeft: 1,
-  },
-  menuLabel: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.ink,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#EEEEEE',
-    marginVertical: 4,
-  },
-
-  /* Edit Modal Styles */
-  modalContainer: {
-    flex: 1,
-    backgroundColor: colors.mint || '#A8DDD6',
-  },
-  modalScroll: {
-    paddingHorizontal: 24,
-    paddingBottom: 40,
-  },
-  formGroup: {
-    backgroundColor: colors.white,
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    marginBottom: 12,
-  },
-  rowFields: {
-    flexDirection: 'row',
-  },
-  inputLabel: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: 'rgba(0,0,0,0.4)',
-    marginBottom: 2,
-  },
-  input: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: colors.ink,
-    padding: 0,
-  },
-  saveBtn: {
-    backgroundColor: colors.ink,
-    borderRadius: radii?.pill || 20,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  saveBtnText: {
-    color: colors.white,
-    fontSize: 14,
-    fontWeight: '900',
-  },
-
-  /* Floating Bottom Nav */
-  bottomNavWrapper: {
-    position: 'absolute',
-    bottom: 35,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-  },
-  bottomNav: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    backgroundColor: colors.white,
-    width: '85%',
-    borderRadius: 100,
-    height: 65,
-    paddingHorizontal: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
-    elevation: 10,
-  },
-  navItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: radii?.pill || 20,
-  },
-  navItemActive: {
-    backgroundColor: colors.mint || '#A8DDD6',
-  },
-  navLabel: {
-    fontSize: 14,
-    fontWeight: '900',
-    color: colors.ink,
-  },
+  topBar: { alignItems: 'center', justifyContent: 'center', paddingTop: 60, paddingBottom: 20, paddingHorizontal: 24 },
+  modalTopBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 60, paddingBottom: 20, paddingHorizontal: 24 },
+  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.5)', alignItems: 'center', justifyContent: 'center' },
+  headerTitle: { fontSize: 18, fontWeight: '900', color: colors.ink || '#000' },
+  scrollContent: { paddingHorizontal: 24, paddingBottom: 120 },
+  profileHeader: { alignItems: 'center', marginVertical: 16 },
+  avatarWrapper: { position: 'relative', marginBottom: 12 },
+  avatarPlaceholder: { width: 80, height: 80, borderRadius: 40, backgroundColor: colors.white, justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: colors.ink },
+  cameraBadge: { position: 'absolute', bottom: 0, right: 0, backgroundColor: colors.white, borderRadius: 12, width: 24, height: 24, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: colors.ink },
+  userName: { fontSize: 18, fontWeight: '900', color: colors.ink },
+  userHandle: { fontSize: 12, fontWeight: '600', color: 'rgba(0,0,0,0.5)', marginTop: 2 },
+  editProfileBtn: { backgroundColor: colors.ink, paddingHorizontal: 28, paddingVertical: 10, borderRadius: radii?.pill || 20, marginTop: 14 },
+  editProfileBtnText: { color: colors.white, fontSize: 12, fontWeight: '800' },
+  menuContainer: { backgroundColor: colors.white, borderRadius: 24, paddingVertical: 10, paddingHorizontal: 16, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 3 },
+  menuItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#F0F0F0' },
+  svgIcon: { marginRight: 12, marginLeft: 2 },
+  adminLogoIcon: { width: 18, height: 18, marginRight: 10, marginLeft: 1 },
+  menuLabel: { flex: 1, fontSize: 14, fontWeight: '700', color: colors.ink },
+  divider: { height: 1, backgroundColor: '#EEEEEE', marginVertical: 4 },
+  modalContainer: { flex: 1, backgroundColor: colors.mint || '#A8DDD6' },
+  modalScroll: { paddingHorizontal: 24, paddingBottom: 40 },
+  formGroup: { backgroundColor: colors.white, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 10, marginBottom: 12 },
+  rowFields: { flexDirection: 'row' },
+  inputLabel: { fontSize: 10, fontWeight: '700', color: 'rgba(0,0,0,0.4)', marginBottom: 2 },
+  input: { fontSize: 14, fontWeight: '800', color: colors.ink, padding: 0 },
+  saveBtn: { backgroundColor: colors.ink, borderRadius: radii?.pill || 20, paddingVertical: 16, alignItems: 'center', marginTop: 16 },
+  saveBtnText: { color: colors.white, fontSize: 14, fontWeight: '900' },
+  bottomNavWrapper: { position: 'absolute', bottom: 35, left: 0, right: 0, alignItems: 'center' },
+  bottomNav: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', backgroundColor: colors.white, width: '85%', borderRadius: 100, height: 65, paddingHorizontal: 15, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 20, elevation: 10 },
+  navItem: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 10, borderRadius: radii?.pill || 20 },
+  navItemActive: { backgroundColor: colors.mint || '#A8DDD6' },
+  navLabel: { fontSize: 14, fontWeight: '900', color: colors.ink },
 });
