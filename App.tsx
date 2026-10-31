@@ -4,43 +4,43 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 // Screen Imports
-import CartScreen, { CartItem } from './screens/CartScreen';
-import ChatScreen from './screens/ChatScreen';
-import DetailsScreen from './screens/DetailsScreen';
-import GetStartedScreen from './screens/GetStartedScreen';
-import LoginScreen from './screens/LoginScreen';
-import LoginSignupScreen from './screens/LoginSignupScreen';
-import MainScreen from './screens/MainScreen';
-import ProfileScreen from './screens/ProfileScreen';
-import SignUpScreen from './screens/SignUpScreen';
-import Splash1Screen from './screens/Splash1Screen';
-import Splash2Screen from './screens/Splash2Screen';
-import Splash3Screen from './screens/Splash3Screen';
-import AdminAddCatScreen from './screens/AdminAddCatScreen';
-import AddProductScreen from './screens/AddProductScreen'; 
-import ProductDetailsScreen from './screens/ProductDetailsScreen';
-import NotificationScreen from './screens/NotificationScreen';
-import FavoritesScreen from './screens/FavoritesScreen';
-import AdoptionFormScreen from './screens/AdoptionFormScreen';
-import ExplorePetsScreen from './screens/ExplorePetsScreen'; 
+import CartScreen, { CartItem } from './src/screens/shop/CartScreen';
+import ChatScreen from './src/screens/user/ChatScreen';
+import DetailsScreen from './src/screens/shop/DetailsScreen';
+import GetStartedScreen from './src/screens/auth/GetStartedScreen';
+import LoginScreen from './src/screens/auth/LoginScreen';
+import LoginSignupScreen from './src/screens/auth/LoginSignupScreen';
+import MainScreen from './src/screens/user/MainScreen';
+import ProfileScreen from './src/screens/user/ProfileScreen';
+import SignUpScreen from './src/screens/auth/SignUpScreen';
+import Splash1Screen from './src/screens/auth/Splash1Screen';
+import Splash2Screen from './src/screens/auth/Splash2Screen';
+import Splash3Screen from './src/screens/auth/Splash3Screen';
+import AdminAddCatScreen from './src/screens/admin/AdminAddCatScreen';
+import AddProductScreen from './src/screens/admin/AddProductScreen'; 
+import ProductDetailsScreen from './src/screens/shop/ProductDetailsScreen';
+import NotificationScreen from './src/screens/user/NotificationScreen';
+import FavoritesScreen from './src/screens/user/FavoritesScreen';
+import AdoptionFormScreen from './src/screens/shop/AdoptionFormScreen';
+import ExplorePetsScreen from './src/screens/shop/ExplorePetsScreen'; 
 
 // Profile Sub-Screens
-import SettingsScreen from './screens/SettingsScreen';
-import MyOrdersScreen from './screens/MyOrdersScreen';
-import AddressScreen from './screens/AddressScreen';
-import ChangePasswordScreen from './screens/ChangePasswordScreen';
-import HelpSupportScreen from './screens/HelpSupportScreen';
-import PrivacyPolicyScreen from './screens/PrivacyPolicyScreen'; 
-import TermsOfServiceScreen from './screens/TermsOfServiceScreen'; 
+import SettingsScreen from './src/screens/user/SettingsScreen';
+import MyOrdersScreen from './src/screens/user/MyOrdersScreen';
+import AddressScreen from './src/screens/user/AddressScreen';
+import ChangePasswordScreen from './src/screens/shop/ChangePasswordScreen';
+import HelpSupportScreen from './src/screens/user/HelpSupportScreen';
+import PrivacyPolicyScreen from './src/screens/user/PrivacyPolicyScreen'; 
+import TermsOfServiceScreen from './src/screens/user/TermsOfServiceScreen'; 
 
 // Checkout Flow Imports
-import PaymentScreen from './screens/PaymentScreen';
-import AddCardScreen from './screens/AddCardScreen';
-import OrderConfirmationScreen from './screens/OrderConfirmationScreen';
+import PaymentScreen from './src/screens/shop/PaymentScreen';
+import AddCardScreen from './src/screens/shop/AddCardScreen';
+import OrderConfirmationScreen from './src/screens/shop/OrderConfirmationScreen';
 
-import { colors } from './constants/theme';
-import { AuthProvider } from './services/AuthContext';
-import { CAT_DATA } from './data/cats';
+import { colors } from './src/constants/theme';
+import { AuthProvider } from './src/services/AuthContext';
+import { CAT_DATA } from './src/data/cats';
 
 export default function App() {
   const [screen, setScreen] = useState<string>('splash1');
