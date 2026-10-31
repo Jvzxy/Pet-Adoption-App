@@ -3,6 +3,9 @@ import React, { createContext, useContext, useState } from 'react';
 export interface User {
   username: string;
   name: string;
+  role: 'user' | 'admin';
+  address?: string;
+  phone?: string;
 }
 
 interface AuthContextType {
@@ -10,17 +13,33 @@ interface AuthContextType {
   login: (username: string, password: string) => boolean;
   signup: (username: string, password: string, name?: string) => boolean;
   logout: () => void;
+  updateProfile: (data: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  
+  // Initialize with a default admin account and an empty accounts array
   const [accounts, setAccounts] = useState<
-    Array<{ username: string; password: string; name: string }>
-  >([]);
+    Array<{ 
+      username: string; 
+      password: string; 
+      name: string; 
+      role: 'user' | 'admin';
+      address?: string;
+      phone?: string;
+    }>
+  >([
+    { 
+      username: 'admin@pets.com', 
+      password: 'adminpassword', 
+      name: 'Admin', 
+      role: 'admin' 
+    }
+  ]);
 
-  // Validates credentials against stored accounts
   const login = (username: string, password: string): boolean => {
     const matchedAccount = accounts.find(
       (acc) =>
@@ -29,31 +48,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     );
 
     if (matchedAccount) {
-      setUser({ username: matchedAccount.username, name: matchedAccount.name });
+      setUser({ 
+        username: matchedAccount.username, 
+        name: matchedAccount.name, 
+        role: matchedAccount.role,
+        address: matchedAccount.address,
+        phone: matchedAccount.phone
+      });
       return true;
     }
     return false;
   };
 
-  // Saves a new user account dynamically in state without automatically logging them in
   const signup = (username: string, password: string, name?: string): boolean => {
     const exists = accounts.some(
       (acc) => acc.username.toLowerCase() === username.trim().toLowerCase()
     );
 
-    if (exists) {
-      return false; // Account with this email/username already exists
-    }
+    if (exists) return false; 
 
     const newAccount = {
       username: username.trim(),
       password,
       name: name || username.trim(),
+      role: 'user' as const, 
     };
 
     setAccounts((prev) => [...prev, newAccount]);
-    // Removed setUser(...) here so the user remains logged out until they use the login screen
     return true;
+  };
+
+  const updateProfile = (data: Partial<User>) => {
+    if (!user) return;
+    
+    // Update active user session
+    const updatedUser = { ...user, ...data };
+    setUser(updatedUser);
+
+    // Update user in the accounts "database"
+    setAccounts((prev) => 
+      prev.map((acc) => 
+        acc.username === user.username 
+          ? { ...acc, ...data } 
+          : acc
+      )
+    );
   };
 
   const logout = () => {
@@ -61,7 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, login, signup, logout, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );

@@ -26,7 +26,7 @@ import ExplorePetsScreen from './src/screens/shop/ExplorePetsScreen';
 
 // Profile Sub-Screens
 import SettingsScreen from './src/screens/user/SettingsScreen';
-import MyOrdersScreen from './src/screens/user/MyOrdersScreen';
+import MyOrdersScreen, { Order } from './src/screens/user/MyOrdersScreen';
 import AddressScreen from './src/screens/user/AddressScreen';
 import ChangePasswordScreen from './src/screens/shop/ChangePasswordScreen';
 import HelpSupportScreen from './src/screens/user/HelpSupportScreen';
@@ -37,6 +37,7 @@ import TermsOfServiceScreen from './src/screens/user/TermsOfServiceScreen';
 import PaymentScreen from './src/screens/shop/PaymentScreen';
 import AddCardScreen from './src/screens/shop/AddCardScreen';
 import OrderConfirmationScreen from './src/screens/shop/OrderConfirmationScreen';
+import TrackOrderScreen from './src/screens/shop/TrackOrderScreen'; // <--- NEW IMPORT
 
 import { colors } from './src/constants/theme';
 import { AuthProvider } from './src/services/AuthContext';
@@ -49,6 +50,7 @@ export default function App() {
   // Lifted States
   const [favorites, setFavorites] = useState<string[]>([]);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
 
   // Load saved cats from device storage on app startup
   useEffect(() => {
@@ -92,33 +94,21 @@ export default function App() {
         {screen === 'signup' && <SignUpScreen go={go} />}
         
         {(screen === 'main' || screen === 'home') && (
-          <MainScreen 
-            go={go} 
-            favorites={favorites} 
-            toggleFavorite={toggleFavorite} 
-          />
+          <MainScreen go={go} favorites={favorites} toggleFavorite={toggleFavorite} />
         )}
         
         {screen === 'explorePets' && (
-          <ExplorePetsScreen 
-            go={go} 
-            favorites={favorites} 
-            toggleFavorite={toggleFavorite} 
-          />
+          <ExplorePetsScreen go={go} favorites={favorites} toggleFavorite={toggleFavorite} />
         )}
         
         {screen === 'chat' && <ChatScreen go={go} />}
         {screen === 'cart' && (
-          <CartScreen 
-            go={go} 
-            cartItems={cartItems} 
-            setCartItems={setCartItems} 
-          />
+          <CartScreen go={go} cartItems={cartItems} setCartItems={setCartItems} />
         )}
         {screen === 'profile' && <ProfileScreen go={go} />}
         
         {screen === 'settings' && <SettingsScreen go={go} />}
-        {screen === 'myOrders' && <MyOrdersScreen go={go} />}
+        {screen === 'myOrders' && <MyOrdersScreen go={go} orders={orders} />}
         {screen === 'address' && <AddressScreen go={go} />}
         {screen === 'changePassword' && <ChangePasswordScreen go={go} />}
         {screen === 'helpSupport' && <HelpSupportScreen go={go} />}
@@ -131,36 +121,38 @@ export default function App() {
         {screen === 'notifications' && <NotificationScreen go={go} />} 
         
         {screen === 'favorites' && (
-          <FavoritesScreen 
-            go={go} 
-            favorites={favorites} 
-            toggleFavorite={toggleFavorite} 
-          />
+          <FavoritesScreen go={go} favorites={favorites} toggleFavorite={toggleFavorite} />
         )} 
         
         {screen === 'adoptionForm' && <AdoptionFormScreen go={go} id={selectedPetId} />} 
         
         {screen === 'details' && <DetailsScreen go={go} id={selectedPetId} />}
         {screen === 'productDetails' && (
-          <ProductDetailsScreen 
-            go={go} 
-            productId={selectedPetId} 
-            cartItems={cartItems} 
-            setCartItems={setCartItems} 
-          />
+          <ProductDetailsScreen go={go} productId={selectedPetId} cartItems={cartItems} setCartItems={setCartItems} />
         )}
 
         {screen === 'payment' && <PaymentScreen go={go} />}
         {screen === 'addCard' && <AddCardScreen go={go} />}
-        {screen === 'orderConfirmation' && <OrderConfirmationScreen go={go} />}
+        
+        {/* Pass dependencies to Order Confirmation to finalize checkout */}
+        {screen === 'orderConfirmation' && (
+          <OrderConfirmationScreen 
+            go={go} 
+            orders={orders} 
+            cartItems={cartItems} 
+            setCartItems={setCartItems} 
+            setOrders={setOrders} 
+          />
+        )}
+
+        {/* New Screen for animation tracking */}
+        {screen === 'trackOrder' && <TrackOrderScreen go={go} />}
+        
       </AuthProvider>
     </GestureHandlerRootView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.mint,
-  },
+  container: { flex: 1, backgroundColor: colors.mint },
 });
