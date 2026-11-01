@@ -1,358 +1,435 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
-  FlatList,
-  Image,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
-import { colors, radii, spacing } from '../../constants/theme';
+import { radii, spacing } from '../../constants/theme';
+import { useAppPreferences, type AppColors } from '../../services/AppPreferencesContext';
+import BottomNavigation from '../../components/BottomNavigation';
+import { useAuth } from '../../services/AuthContext';
+import { supabase } from '../../services/supabaseClient';
 
-// SVG Icon Imports
-import CartIcon from '../../images/Icons/cart-shopping-solid-full.svg';
-import CommentIcon from '../../images/Icons/comment-solid-full.svg';
-import HouseIcon from '../../images/Icons/house-solid-full.svg';
-import UserIcon from '../../images/Icons/user-solid-full.svg';
+import AngleLeftIcon from '../../images/Icons/angle-left-solid-full.svg';
 
 interface ScreenProps {
   go: (next: string) => void;
 }
 
-interface ChatItem {
+interface Conversation {
   id: string;
-  name: string;
-  message: string;
-  time: string;
-  unreadCount?: number;
-  avatar: string;
+  owner_id: string;
+  displayName: string;
+  preview: string;
+  updated_at: string;
 }
 
-const CHATS_DATA: ChatItem[] = [
-  {
-    id: '1',
-    name: 'Jussy Jay Durain',
-    message: "Hello Good morning. I'm interested to adopt Whisper I rea...",
-    time: '2:20',
-    unreadCount: 2,
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-  },
-  {
-    id: '2',
-    name: 'Marilex Rabosa',
-    message: 'Sent 12 mins',
-    time: '3:10',
-    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150',
-  },
-  {
-    id: '3',
-    name: 'Andree Sanlayan',
-    message: 'Sent 12 mins',
-    time: '3:10',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-  },
-  {
-    id: '4',
-    name: 'Abigail Lapinid',
-    message: 'Sent 12 mins',
-    time: '1:10',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
-  },
-  {
-    id: '5',
-    name: 'Maui Tangarorang',
-    message: 'Sent 12 mins',
-    time: '10:40',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
-  },
-];
+interface Message {
+  id: string;
+  conversation_id: string;
+  sender_id: string;
+  body: string;
+  created_at: string;
+}
 
-const NAV_ITEMS = [
-  { key: 'main', Icon: HouseIcon, label: 'Home', active: false },
-  { key: 'chat', Icon: CommentIcon, label: 'Chat', active: true },
-  { key: 'cart', Icon: CartIcon, label: 'Cart', active: false },
-  { key: 'profile', Icon: UserIcon, label: 'Profile', active: false },
-];
+interface SupportContact {
+  id: string;
+  name: string;
+  username: string;
+}
 
 export default function ChatScreen({ go }: ScreenProps) {
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [chatFilter, setChatFilter] = useState<'recent' | 'old'>('recent');
+  const { colors } = useAppPreferences();
+  const styles = createStyles(colors);
+  const { user } = useAuth();
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [draft, setDraft] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
+  const [contacts, setContacts] = useState<SupportContact[]>([]);
+  const [showContacts, setShowContacts] = useState(false);
+  const [loadingContacts, setLoadingContacts] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const displayedChats = chatFilter === 'recent' ? CHATS_DATA : [...CHATS_DATA].reverse();
+  const refreshConversations = useCallback(async () => {
+    if (!user || user.role !== 'admin') return;
 
-  const renderChatItem = ({ item }: { item: ChatItem }) => (
-    <Pressable style={styles.chatRow}>
-      <Image source={{ uri: item.avatar }} style={styles.avatar} />
-      <View style={styles.chatDetails}>
-        <Text style={styles.chatName} numberOfLines={1}>
-          {item.name}
+    setError(null);
+    const { data: rawConversations, error: conversationError } = await supabase
+      .from('conversations')
+      .select('id, owner_id, updated_at')
+      .order('updated_at', { ascending: false });
+    if (conversationError) throw conversationError;
+
+    const ownerIds = [...new Set((rawConversations ?? []).map((item) => item.owner_id))];
+    const [profileResult, messageResult] = ownerIds.length
+      ? await Promise.all([
+          supabase.from('users').select('id, name, username').in('id', ownerIds),
+          supabase.from('messages').select('conversation_id, body, created_at')
+            .order('created_at', { ascending: false }).limit(200),
+        ])
+      : [{ data: [], error: null }, { data: [], error: null }];
+
+    if (profileResult.error) throw profileResult.error;
+    if (messageResult.error) throw messageResult.error;
+
+    const profiles = new Map((profileResult.data ?? []).map((profile) => [
+      profile.id,
+      profile.name || profile.username || profile.id,
+    ]));
+    const previews = new Map<string, string>();
+    for (const message of messageResult.data ?? []) {
+      if (!previews.has(message.conversation_id)) previews.set(message.conversation_id, message.body);
+    }
+
+    setConversations((rawConversations ?? []).map((item) => ({
+      ...item,
+      displayName: profiles.get(item.owner_id) ?? `Customer ${item.owner_id.slice(0, 8)}`,
+      preview: previews.get(item.id) ?? 'No messages yet',
+    })));
+  }, [user]);
+
+  const loadContacts = async () => {
+    setLoadingContacts(true);
+    setError(null);
+    const { data, error: contactsError } = await supabase
+      .from('users')
+      .select('id, name, username')
+      .eq('role', 'user')
+      .order('name', { ascending: true });
+
+    if (contactsError) {
+      console.error('Could not load support contacts:', contactsError.message);
+      setError(contactsError.message);
+    } else {
+      setContacts((data ?? []) as SupportContact[]);
+      setShowContacts(true);
+    }
+    setLoadingContacts(false);
+  };
+
+  const startConversation = async (contact: SupportContact) => {
+    setLoadingContacts(true);
+    setError(null);
+    const { data, error: startError } = await supabase.rpc(
+      'admin_get_or_create_support_conversation',
+      { p_owner_id: contact.id },
+    );
+
+    if (startError) {
+      console.error('Could not start support conversation:', startError.message);
+      setError(startError.message);
+      setLoadingContacts(false);
+      return;
+    }
+
+    setSelectedConversation({
+      id: data,
+      owner_id: contact.id,
+      displayName: contact.name || contact.username,
+      preview: '',
+      updated_at: new Date().toISOString(),
+    });
+    setShowContacts(false);
+    setLoadingContacts(false);
+  };
+
+  useEffect(() => {
+    let active = true;
+    const initialize = async () => {
+      if (!user) {
+        setError('Sign in to use support chat.');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        if (user.role === 'admin') {
+          await refreshConversations();
+        } else {
+          const { data, error: conversationError } = await supabase.rpc('get_or_create_support_conversation');
+          if (conversationError) throw conversationError;
+          if (active) {
+            setSelectedConversation({
+              id: data,
+              owner_id: user.id,
+              displayName: 'Pawfect Support',
+              preview: '',
+              updated_at: new Date().toISOString(),
+            });
+          }
+        }
+      } catch (loadError) {
+        console.error('Could not initialize support chat:', loadError);
+        if (active) setError(loadError instanceof Error ? loadError.message : 'Could not load support chat.');
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    setLoading(true);
+    void initialize();
+    return () => {
+      active = false;
+    };
+  }, [refreshConversations, user]);
+
+  useEffect(() => {
+    if (!user || user.role !== 'admin') return;
+    const channel = supabase
+      .channel(`admin-conversations-${user.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'conversations' }, () => {
+        void refreshConversations().catch((refreshError: unknown) => {
+          console.error('Could not refresh support conversations:', refreshError);
+        });
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, () => {
+        void refreshConversations().catch((refreshError: unknown) => {
+          console.error('Could not refresh support messages:', refreshError);
+        });
+      })
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [refreshConversations, user]);
+
+  useEffect(() => {
+    const conversationId = selectedConversation?.id;
+    if (!conversationId) {
+      setMessages([]);
+      return;
+    }
+
+    let active = true;
+    const loadMessages = async () => {
+      const { data, error: messageError } = await supabase
+        .from('messages')
+        .select('id, conversation_id, sender_id, body, created_at')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: true });
+
+      if (messageError) throw messageError;
+      if (active) setMessages((data ?? []) as Message[]);
+    };
+
+    void loadMessages().catch((loadError: unknown) => {
+      console.error('Could not load support messages:', loadError);
+      if (active) setError(loadError instanceof Error ? loadError.message : 'Could not load messages.');
+    });
+
+    const channel = supabase
+      .channel(`conversation-messages-${conversationId}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages',
+        filter: `conversation_id=eq.${conversationId}`,
+      }, () => {
+        void loadMessages().catch((loadError: unknown) => {
+          console.error('Could not refresh support messages:', loadError);
+        });
+      })
+      .subscribe();
+
+    return () => {
+      active = false;
+      void supabase.removeChannel(channel);
+    };
+  }, [selectedConversation?.id]);
+
+  const sendMessage = async () => {
+    const body = draft.trim();
+    if (!body || !selectedConversation || sending) return;
+
+    setSending(true);
+    const { error: sendError } = await supabase.rpc('send_support_message', {
+      p_conversation_id: selectedConversation.id,
+      p_body: body,
+    });
+    setSending(false);
+    if (sendError) {
+      console.error('Could not send support message:', sendError.message);
+      Alert.alert('Message not sent', sendError.message);
+      return;
+    }
+    setDraft('');
+  };
+
+  const isAdmin = user?.role === 'admin';
+  const showingThread = !isAdmin || selectedConversation !== null;
+
+  return (
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={12}
+    >
+      <View style={styles.topBar}>
+        {isAdmin && selectedConversation ? (
+          <Pressable onPress={() => setSelectedConversation(null)} hitSlop={10}>
+            <AngleLeftIcon width={20} height={20} fill={colors.ink} />
+          </Pressable>
+        ) : null}
+        <Text style={[styles.title, isAdmin && !selectedConversation && styles.inboxTitle]}>
+          {isAdmin ? selectedConversation?.displayName ?? 'Support conversations' : 'Pawfect Support'}
         </Text>
-        <Text style={styles.chatMessage} numberOfLines={1}>
-          {item.message}
-        </Text>
-      </View>
-      <View style={styles.chatMeta}>
-        <Text style={styles.chatTime}>{item.time}</Text>
-        {item.unreadCount ? (
-          <View style={styles.unreadBadge}>
-            <Text style={styles.unreadText}>{item.unreadCount}</Text>
+        {isAdmin && !selectedConversation ? (
+          <View style={styles.headerActions}>
+            <Pressable
+              style={styles.headerButton}
+              onPress={() => void refreshConversations().catch((refreshError: unknown) => {
+                console.error('Could not refresh support conversations:', refreshError);
+                setError(refreshError instanceof Error ? refreshError.message : 'Could not refresh conversations.');
+              })}
+            >
+              <Text style={styles.headerButtonText}>Refresh</Text>
+            </Pressable>
+            <Pressable
+              style={styles.headerButton}
+              onPress={() => void loadContacts()}
+              disabled={loadingContacts}
+            >
+              <Text style={styles.headerButtonText}>
+                {loadingContacts ? 'Loading...' : 'New'}
+              </Text>
+            </Pressable>
           </View>
         ) : null}
       </View>
-    </Pressable>
-  );
 
-  return (
-    <View style={styles.fillMint}>
-      {/* Top Header Bar */}
-      <View style={styles.topBar}>
-        <Text style={styles.title}>Messages</Text>
-      </View>
-
-      {/* Sub Header: "Chats" & Dropdown Options */}
-      <View style={styles.subHeader}>
-        <Text style={styles.sectionTitle}>
-          {chatFilter === 'recent' ? 'Recent Chats' : 'Old Chats'}
-        </Text>
-        
-        <View style={styles.dropdownContainer}>
-          <Pressable 
-            onPress={() => setShowDropdown(!showDropdown)} 
-            hitSlop={15}
-            style={styles.moreOptionsHitbox}
-          >
-            <Text style={styles.moreOptions}>⋮</Text>
-          </Pressable>
-
-          {showDropdown && (
-            <View style={styles.dropdownMenu}>
-              <Pressable 
-                style={[styles.dropdownItem, chatFilter === 'recent' && styles.activeDropdownItem]} 
-                onPress={() => {
-                  setChatFilter('recent');
-                  setShowDropdown(false);
-                }}
-              >
-                <Text style={[styles.dropdownItemText, chatFilter === 'recent' && styles.activeDropdownText]}>
-                  Recent Chat
-                </Text>
-              </Pressable>
-              
-              <View style={styles.dropdownDivider} />
-              
-              <Pressable 
-                style={[styles.dropdownItem, chatFilter === 'old' && styles.activeDropdownItem]} 
-                onPress={() => {
-                  setChatFilter('old');
-                  setShowDropdown(false);
-                }}
-              >
-                <Text style={[styles.dropdownItemText, chatFilter === 'old' && styles.activeDropdownText]}>
-                  Old Chat
-                </Text>
+      <View style={styles.contentArea}>
+        {error ? (
+          <View style={styles.stateContainer}>
+            <Text style={styles.errorText}>{error}</Text>
+            <Text style={styles.stateHint}>Check that the latest supabase/schema.sql has been run, then refresh.</Text>
+          </View>
+        ) : loading ? (
+          <Text style={styles.statusText}>Loading messages...</Text>
+        ) : showingThread ? (
+          <>
+            <ScrollView style={styles.messageScroll} contentContainerStyle={styles.messageList}>
+              {messages.length === 0 ? (
+                <Text style={styles.statusText}>Send a message to start a conversation with support.</Text>
+              ) : messages.map((message) => {
+                const ownMessage = message.sender_id === user?.id;
+                return (
+                  <View key={message.id} style={[styles.messageBubble, ownMessage ? styles.ownMessage : styles.otherMessage]}>
+                    <Text style={[styles.messageText, ownMessage && styles.ownMessageText]}>{message.body}</Text>
+                    <Text style={[styles.messageTime, ownMessage && styles.ownMessageText]}>
+                      {new Date(message.created_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+                    </Text>
+                  </View>
+                );
+              })}
+            </ScrollView>
+            <View style={styles.composer}>
+              <TextInput
+                style={styles.input}
+                value={draft}
+                onChangeText={setDraft}
+                placeholder="Write a message..."
+                multiline
+                maxLength={4000}
+              />
+              <Pressable style={[styles.sendButton, (!draft.trim() || sending) && styles.disabled]} onPress={() => void sendMessage()} disabled={!draft.trim() || sending}>
+                <Text style={styles.sendText}>{sending ? '...' : 'Send'}</Text>
               </Pressable>
             </View>
-          )}
-        </View>
+          </>
+        ) : showContacts ? (
+          <ScrollView style={styles.messageScroll} contentContainerStyle={styles.conversationList}>
+            <Text style={styles.stateHint}>Choose a customer to start a support conversation.</Text>
+            {contacts.length === 0 ? (
+              <Text style={styles.statusText}>No customer accounts were found.</Text>
+            ) : contacts.map((contact) => (
+              <Pressable
+                key={contact.id}
+                style={styles.conversationRow}
+                disabled={loadingContacts}
+                onPress={() => void startConversation(contact)}
+              >
+                <View style={styles.avatar}>
+                  <Text style={styles.avatarText}>{(contact.name || contact.username).slice(0, 1).toUpperCase()}</Text>
+                </View>
+                <View style={styles.conversationInfo}>
+                  <Text style={styles.conversationName}>{contact.name || contact.username}</Text>
+                  <Text style={styles.preview}>{contact.username}</Text>
+                </View>
+              </Pressable>
+            ))}
+          </ScrollView>
+        ) : conversations.length === 0 ? (
+          <View style={[styles.emptyState, styles.messageScroll]}>
+            <Text style={styles.statusText}>No support conversations yet.</Text>
+            <Text style={styles.stateHint}>
+              Start a conversation with a customer using New, or ask a customer to open Chat and send a message.
+            </Text>
+          </View>
+        ) : (
+          <ScrollView style={styles.messageScroll} contentContainerStyle={styles.conversationList}>
+            {conversations.map((conversation) => (
+              <Pressable key={conversation.id} style={styles.conversationRow} onPress={() => setSelectedConversation(conversation)}>
+                <View style={styles.avatar}>
+                  <Text style={styles.avatarText}>{conversation.displayName.slice(0, 1).toUpperCase()}</Text>
+                </View>
+                <View style={styles.conversationInfo}>
+                  <Text style={styles.conversationName}>{conversation.displayName}</Text>
+                  <Text style={styles.preview} numberOfLines={1}>{conversation.preview}</Text>
+                </View>
+                <Text style={styles.messageTime}>{new Date(conversation.updated_at).toLocaleDateString()}</Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+        )}
       </View>
 
-      {/* Chat List */}
-      <FlatList
-        data={displayedChats}
-        keyExtractor={(item) => item.id}
-        renderItem={renderChatItem}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-      />
-
-      {/* Floating Bottom Navigation */}
-      <View style={styles.bottomNavWrapper}>
-        <View style={styles.bottomNav}>
-          {NAV_ITEMS.map(({ key, Icon, label, active }) => (
-            <Pressable
-              key={key}
-              onPress={() => !active && go(key)}
-              style={[styles.navItem, active && styles.navItemActive]}
-            >
-              <Icon width={20} height={20} fill={colors.ink} />
-              {active && <Text style={styles.navLabel}>{label}</Text>}
-            </Pressable>
-          ))}
-        </View>
-      </View>
-    </View>
+      <BottomNavigation activeTab="chat" go={go} />
+    </KeyboardAvoidingView>
   );
 }
 
-const styles = StyleSheet.create({
-  fillMint: {
-    flex: 1,
-    backgroundColor: colors.mint,
-  },
-  topBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingTop: 55,
-    paddingBottom: 15,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: '900',
-    color: colors.ink,
-  },
-  subHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    marginTop: 10,
-    marginBottom: 16,
-    zIndex: 20,
-  },
-  sectionTitle: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: colors.ink,
-  },
-  dropdownContainer: {
-    position: 'relative',
-  },
-  moreOptionsHitbox: {
-    paddingHorizontal: 8,
-  },
-  moreOptions: {
-    fontSize: 20,
-    fontWeight: '900',
-    color: colors.ink,
-  },
-  dropdownMenu: {
-    position: 'absolute',
-    top: 25,
-    right: 0,
-    backgroundColor: colors.white,
-    borderRadius: radii.md || 12,
-    width: 140,
-    paddingVertical: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 10,
-    zIndex: 100,
-  },
-  dropdownItem: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-  },
-  activeDropdownItem: {
-    backgroundColor: 'rgba(168, 221, 214, 0.3)',
-  },
-  dropdownItemText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.ink,
-  },
-  activeDropdownText: {
-    fontWeight: '900',
-  },
-  dropdownDivider: {
-    height: 1,
-    backgroundColor: 'rgba(0,0,0,0.05)',
-  },
-  listContent: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: 120,
-  },
-  chatRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  avatar: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    marginRight: 14,
-    backgroundColor: '#D1E5E1',
-  },
-  chatDetails: {
-    flex: 1,
-    marginRight: 10,
-  },
-  chatName: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: colors.ink,
-    marginBottom: 3,
-  },
-  chatMessage: {
-    fontSize: 12,
-    color: colors.ink,
-    opacity: 0.8,
-    fontWeight: '500',
-  },
-  chatMeta: {
-    alignItems: 'flex-end',
-    justifyContent: 'center',
-  },
-  chatTime: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: colors.ink,
-    marginBottom: 4,
-  },
-  unreadBadge: {
-    backgroundColor: colors.ink,
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  unreadText: {
-    color: colors.white,
-    fontSize: 10,
-    fontWeight: '900',
-  },
-  bottomNavWrapper: {
-    position: 'absolute',
-    bottom: 35,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-  },
-  bottomNav: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    backgroundColor: colors.white,
-    width: '85%',
-    borderRadius: 100,
-    height: 65,
-    paddingHorizontal: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
-    elevation: 10,
-  },
-  navItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: radii.pill,
-  },
-  navItemActive: {
-    backgroundColor: colors.mint,
-  },
-  navLabel: {
-    fontSize: 14,
-    fontWeight: '900',
-    color: colors.ink,
-  },
+const createStyles = (colors: AppColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
+  topBar: { minHeight: 84, paddingTop: 48, paddingHorizontal: spacing.lg, paddingBottom: 14, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  contentArea: { flex: 1, paddingBottom: 105 },
+  title: { color: colors.ink, fontSize: 20, fontWeight: '900' },
+  inboxTitle: { flexShrink: 1, fontSize: 18 },
+  headerActions: { marginLeft: 'auto', flexDirection: 'row', gap: 8 },
+  headerButton: { backgroundColor: colors.white, borderRadius: radii.pill, paddingVertical: 8, paddingHorizontal: 12 },
+  headerButtonText: { color: colors.ink, fontSize: 11, fontWeight: '800' },
+  statusText: { color: colors.textMuted, textAlign: 'center', marginTop: 28, paddingHorizontal: 24 },
+  errorText: { color: '#A12626', textAlign: 'center', marginTop: 28, paddingHorizontal: 24 },
+  stateContainer: { alignItems: 'center', paddingHorizontal: spacing.lg },
+  stateHint: { color: colors.textMuted, textAlign: 'center', paddingHorizontal: 24, marginTop: 10, marginBottom: 12, fontSize: 12, lineHeight: 18 },
+  emptyState: { alignItems: 'center', paddingTop: 24 },
+  messageScroll: { flex: 1 },
+  messageList: { flexGrow: 1, paddingHorizontal: spacing.lg, paddingVertical: 16, gap: 10 },
+  messageBubble: { maxWidth: '84%', borderRadius: 16, paddingHorizontal: 14, paddingVertical: 10 },
+  ownMessage: { alignSelf: 'flex-end', backgroundColor: colors.isDark ? '#35635E' : colors.ink },
+  otherMessage: { alignSelf: 'flex-start', backgroundColor: colors.white },
+  messageText: { color: colors.ink, fontSize: 13, lineHeight: 19 },
+  ownMessageText: { color: '#FFFFFF' },
+  messageTime: { color: colors.textMuted, fontSize: 9, marginTop: 5 },
+  composer: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, padding: 12, backgroundColor: colors.white },
+  input: { flex: 1, maxHeight: 110, minHeight: 42, borderRadius: radii.md, backgroundColor: colors.cardBg, paddingHorizontal: 12, paddingVertical: 10, color: colors.ink },
+  sendButton: { backgroundColor: colors.ink, borderRadius: radii.pill, paddingHorizontal: 18, paddingVertical: 12 },
+  disabled: { opacity: 0.5 },
+  sendText: { color: colors.white, fontWeight: '800', fontSize: 12 },
+  conversationList: { paddingHorizontal: spacing.lg, paddingBottom: 16, gap: 8 },
+  conversationRow: { flexDirection: 'row', alignItems: 'center', padding: 13, backgroundColor: colors.white, borderRadius: radii.md, gap: 11 },
+  avatar: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center', backgroundColor: '#B2DFDB' },
+  avatarText: { color: colors.ink, fontSize: 17, fontWeight: '900' },
+  conversationInfo: { flex: 1 },
+  conversationName: { color: colors.ink, fontSize: 13, fontWeight: '800', marginBottom: 4 },
+  preview: { color: colors.textMuted, fontSize: 11 },
 });

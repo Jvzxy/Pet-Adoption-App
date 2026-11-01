@@ -1,6 +1,6 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View, ScrollView } from 'react-native';
-import { colors } from '../../constants/theme';
+import { useAppPreferences, type AppColors } from '../../services/AppPreferencesContext';
 import AngleLeftIcon from '../../images/Icons/angle-left-solid-full.svg';
 
 interface ScreenProps {
@@ -8,6 +8,9 @@ interface ScreenProps {
 }
 
 export default function PrivacyPolicyScreen({ go }: ScreenProps) {
+  const { colors } = useAppPreferences();
+  const styles = createStyles(colors);
+
   return (
     <View style={styles.container}>
       <View style={styles.topBar}>
@@ -41,8 +44,8 @@ export default function PrivacyPolicyScreen({ go }: ScreenProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.mint || '#A8DDD6' },
+const createStyles = (colors: AppColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 60, paddingBottom: 24, paddingHorizontal: 24 },
   backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.5)', alignItems: 'center', justifyContent: 'center' },
   headerTitle: { fontSize: 18, fontWeight: '900', color: colors.ink || '#000' },
@@ -50,7 +53,7 @@ const styles = StyleSheet.create({
   // Minimalist White Sheet Design for Readability
   sheetContainer: { 
     flex: 1, 
-    backgroundColor: '#FFFFFF', 
+    backgroundColor: colors.surface,
     borderTopLeftRadius: 32, 
     borderTopRightRadius: 32, 
     shadowColor: '#000', 
@@ -60,8 +63,8 @@ const styles = StyleSheet.create({
     elevation: 5 
   },
   content: { paddingHorizontal: 28, paddingTop: 32, paddingBottom: 60 },
-  lastUpdated: { fontSize: 12, fontWeight: '700', color: 'rgba(0,0,0,0.3)', marginBottom: 28, textTransform: 'uppercase', letterSpacing: 0.5 },
+  lastUpdated: { fontSize: 12, fontWeight: '700', color: colors.textMuted, marginBottom: 28, textTransform: 'uppercase', letterSpacing: 0.5 },
   section: { marginBottom: 28 },
   heading: { fontSize: 16, fontWeight: '900', color: colors.ink, marginBottom: 10 },
-  paragraph: { fontSize: 14, color: 'rgba(0,0,0,0.6)', lineHeight: 24, fontWeight: '500' },
+  paragraph: { fontSize: 14, color: colors.textMuted, lineHeight: 24, fontWeight: '500' },
 });

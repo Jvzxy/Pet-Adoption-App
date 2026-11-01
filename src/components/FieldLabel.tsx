@@ -1,8 +1,11 @@
 import React from 'react';
 import { StyleSheet, Text } from 'react-native';
-import { colors } from '../constants/theme';
+import { useAppPreferences, type AppColors } from '../services/AppPreferencesContext';
 
 export default function FieldLabel({ children }: { children: React.ReactNode }) {
+  const { colors } = useAppPreferences();
+  const styles = createStyles(colors);
+
   return (
     <Text style={styles.fieldLabel}>
       {children} <Text style={{ color: colors.red }}>*</Text>
@@ -10,7 +13,7 @@ export default function FieldLabel({ children }: { children: React.ReactNode }) 
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppColors) => StyleSheet.create({
   fieldLabel: {
     fontSize: 10,
     fontWeight: '700',

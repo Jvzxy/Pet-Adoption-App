@@ -10,9 +10,12 @@ import {
   View,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { colors, radii, spacing } from '../../constants/theme';
-import { CAT_DATA, CatItem } from '../../data/cats';
+import { radii, spacing } from '../../constants/theme';
+import { useAuth } from '../../services/AuthContext';
+import { supabase } from '../../services/supabaseClient';
+import { uploadCatalogImage } from '../../services/catalogService';
+import { useAppData } from '../../services/AppDataContext';
+import { useAppPreferences, type AppColors } from '../../services/AppPreferencesContext';
 
 // SVG Icon Imports
 import AngleLeftIcon from '../../images/Icons/angle-left-solid-full.svg';
@@ -23,6 +26,11 @@ interface ScreenProps {
 }
 
 export default function AdminAddCatScreen({ go }: ScreenProps) {
+  const { colors } = useAppPreferences();
+  const styles = createStyles(colors);
+  const { user } = useAuth();
+  const { refreshCatalog } = useAppData();
+  const [isSaving, setIsSaving] = useState(false);
   const [name, setName] = useState('');
   const [breed, setBreed] = useState('');
   const [age, setAge] = useState('');
@@ -35,6 +43,7 @@ export default function AdminAddCatScreen({ go }: ScreenProps) {
   const [traits, setTraits] = useState('');
   const [description, setDescription] = useState('');
   const [imageUri, setImageUri] = useState<string | null>(null);
+  const [imageBase64, setImageBase64] = useState<string | null>(null);
 
   // Pick Image from Phone Gallery
   const pickImage = async () => {
@@ -48,19 +57,21 @@ export default function AdminAddCatScreen({ go }: ScreenProps) {
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [4, 3],
       quality: 0.8,
+      base64: true,
     });
 
     if (!result.canceled && result.assets && result.assets.length > 0) {
       setImageUri(result.assets[0].uri);
+      setImageBase64(result.assets[0].base64 ?? null);
     }
   };
 
   const handleAddCat = async () => {
-    if (!name || !breed || !age) {
+    if (!name.trim() || !breed.trim() || !age.trim()) {
       Alert.alert('Missing Fields', 'Please provide at least a name, breed, and age.');
       return;
     }
@@ -70,38 +81,53 @@ export default function AdminAddCatScreen({ go }: ScreenProps) {
       ? traits.split(',').map((t) => t.trim()).filter((t) => t.length > 0)
       : ['Friendly', 'Playful'];
 
-    const newCat: CatItem = {
-      id: Date.now().toString(),
-      name,
-      category: 'Pet', // Changed to Pet
-      type: 'pet',       
-      breed,
-      age,
-      gender: gender || 'Unknown',
-      location: location || 'Cagayan de Oro City',
-      price: price || 'Free',
-      weight: weight ? `${weight} kg` : '3.0 kg',
-      height: height ? `${height} cm` : '25 cm',
-      health: health || 'Healthy / Vaccinated',
-      traits: parsedTraits,
-      description: description || 'A wonderful cat looking for a forever home.',
-      imageUri: imageUri || '',
-    };
+    const adoptionFee = price.trim().toLowerCase() === 'free' || !price.trim()
+      ? 0
+      : Number(price.replace(/[^\d.]/g, ''));
+    if (!Number.isFinite(adoptionFee) || adoptionFee < 0) {
+      Alert.alert('Invalid fee', 'Enter a valid non-negative adoption fee, or leave it blank for free adoption.');
+      return;
+    }
+
+    if (!user) {
+      Alert.alert('Sign in required', 'Sign in with an admin account before publishing a pet.');
+      return;
+    }
 
     try {
-      console.log('🐾 NEW CAT ADDED VIA APP:', JSON.stringify(newCat, null, 2));
+      setIsSaving(true);
+      if (imageUri && !imageBase64) {
+        throw new Error('The photo picker did not provide image data. Choose the photo again and retry.');
+      }
+      const imageUrl = imageBase64 ? await uploadCatalogImage(imageBase64, user.id) : '';
+      const { error } = await supabase.from('catalog_items').insert({
+        type: 'pet',
+        category: 'Pet',
+        name: name.trim(),
+        breed: breed.trim(),
+        age: age.trim(),
+        gender: gender.trim() || 'Unknown',
+        location: location.trim() || 'Cagayan de Oro City',
+        price: adoptionFee,
+        weight: weight.trim() ? `${weight.trim()} kg` : null,
+        height: height.trim() ? `${height.trim()} cm` : null,
+        health: health.trim() || 'Healthy / Vaccinated',
+        traits: parsedTraits,
+        description: description.trim() || 'A wonderful cat looking for a forever home.',
+        image_url: imageUrl,
+        created_by: user.id,
+      });
 
-      // 1. Add to top of in-memory array
-      CAT_DATA.unshift(newCat);
-
-      // 2. Persist to storage
-      await AsyncStorage.setItem('saved_cats', JSON.stringify(CAT_DATA));
-
-      Alert.alert('Success', `${name} has been listed for adoption!`, [
-        { text: 'OK', onPress: () => go('explorePets') }, // Redirects to new screen
+      if (error) throw error;
+      await refreshCatalog();
+      Alert.alert('Success', `${name.trim()} has been listed for adoption.`, [
+        { text: 'OK', onPress: () => go('explorePets') },
       ]);
     } catch (error) {
-      Alert.alert('Error', 'Failed to save the cat.');
+      console.error('Could not publish pet:', error);
+      Alert.alert('Could not publish pet', error instanceof Error ? error.message : 'Please try again.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -235,16 +261,16 @@ export default function AdminAddCatScreen({ go }: ScreenProps) {
           multiline
         />
 
-        <Pressable style={styles.submitButton} onPress={handleAddCat}>
-          <Text style={styles.submitButtonText}>Publish Listing</Text>
+        <Pressable style={styles.submitButton} onPress={handleAddCat} disabled={isSaving}>
+          <Text style={styles.submitButtonText}>{isSaving ? 'Publishing...' : 'Publish Listing'}</Text>
         </Pressable>
       </ScrollView>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.mint || '#A8DDD6' },
+const createStyles = (colors: AppColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -268,13 +294,13 @@ const styles = StyleSheet.create({
   imagePickerCard: {
     width: '100%',
     height: 160,
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderRadius: radii.md,
     overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.1)',
+    borderColor: colors.border,
     borderStyle: 'dashed',
   },
   imagePickerPlaceholder: {
@@ -286,7 +312,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     fontSize: 12,
     fontWeight: '700',
-    color: 'rgba(0,0,0,0.5)',
+    color: colors.textMuted,
   },
   previewImage: {
     width: '100%',
@@ -294,7 +320,7 @@ const styles = StyleSheet.create({
     resizeMode: 'cover',
   },
   input: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderRadius: radii.md,
     paddingHorizontal: 16,
     height: 50,

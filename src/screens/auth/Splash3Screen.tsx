@@ -1,7 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Image, Pressable, StyleSheet, Text } from 'react-native';
-import ScreenLabel from '../../components/ScreenLabel';
-import { colors } from '../../constants/theme';
+import { useAppPreferences, type AppColors } from '../../services/AppPreferencesContext';
 import appLogo from '../../images/Logo.png';
 
 interface ScreenProps {
@@ -9,6 +8,8 @@ interface ScreenProps {
 }
 
 export default function Splash3Screen({ go }: ScreenProps) {
+  const { colors } = useAppPreferences();
+  const styles = createStyles(colors);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.5)).current;
 
@@ -55,8 +56,8 @@ export default function Splash3Screen({ go }: ScreenProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  fillMint: { flex: 1, backgroundColor: colors.mint },
+const createStyles = (colors: AppColors) => StyleSheet.create({
+  fillMint: { flex: 1, backgroundColor: colors.background },
   centerAll: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   logo: { width: 75, height: 75, marginBottom: 12 },
   brandText: { fontSize: 22, fontWeight: '900', color: colors.ink, letterSpacing: 0.5 },

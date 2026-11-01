@@ -1,13 +1,15 @@
 import React, { useEffect } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
-import ScreenLabel from '../../components/ScreenLabel';
-import { colors } from '../../constants/theme';
+import { useAppPreferences, type AppColors } from '../../services/AppPreferencesContext';
 
 interface ScreenProps {
   go: (next: string) => void;
 }
 
 export default function Splash2Screen({ go }: ScreenProps) {
+  const { colors } = useAppPreferences();
+  const styles = createStyles(colors);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       go('splash3');
@@ -21,6 +23,6 @@ export default function Splash2Screen({ go }: ScreenProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  fillMint: { flex: 1, backgroundColor: colors.mint },
+const createStyles = (colors: AppColors) => StyleSheet.create({
+  fillMint: { flex: 1, backgroundColor: colors.background },
 });

@@ -2,8 +2,9 @@ import React from 'react';
 import { Dimensions, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-import { colors, radii, spacing } from '../../constants/theme';
-import { CAT_DATA } from '../../data/cats';
+import { spacing } from '../../constants/theme';
+import { useAppData } from '../../services/AppDataContext';
+import { useAppPreferences, type AppColors } from '../../services/AppPreferencesContext';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -13,12 +14,17 @@ interface DetailsProps {
 }
 
 export default function DetailsScreen({ go, id }: DetailsProps) {
-  const item = CAT_DATA.find((c) => c.id === id);
+  const { colors } = useAppPreferences();
+  const styles = createStyles(colors);
+  const { catalogItems, loading } = useAppData();
+  const item = catalogItems.find((c) => c.id === id && c.type === 'pet');
 
   if (!item) {
     return (
       <View style={[styles.fill, styles.center]}>
-        <Text style={styles.errorText}>Item not found (ID: {id})</Text>
+        <Text style={styles.errorText}>
+          {loading ? 'Loading pet details...' : 'This pet is unavailable or no longer listed.'}
+        </Text>
         <Pressable style={styles.adoptButton} onPress={() => go('main')}>
           <Text style={styles.adoptButtonText}>Back to Home</Text>
         </Pressable>
@@ -127,10 +133,10 @@ export default function DetailsScreen({ go, id }: DetailsProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppColors) => StyleSheet.create({
   fill: { 
     flex: 1, 
-    backgroundColor: '#F2F2F2' 
+    backgroundColor: colors.background
   },
   center: { 
     justifyContent: 'center', 
@@ -164,7 +170,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   card: { 
-    backgroundColor: '#FAFAFA', 
+    backgroundColor: colors.surface,
     borderTopLeftRadius: 36, 
     borderTopRightRadius: 36, 
     padding: spacing.lg,
@@ -173,7 +179,7 @@ const styles = StyleSheet.create({
   dragHandle: {
     width: 50,
     height: 4,
-    backgroundColor: '#E0E0E0',
+    backgroundColor: colors.border,
     borderRadius: 2,
     alignSelf: 'center',
     marginBottom: 24,
@@ -203,7 +209,7 @@ const styles = StyleSheet.create({
   },
   subtitle: { 
     fontSize: 14, 
-    color: '#757575', 
+    color: colors.textMuted,
     fontWeight: '600',
     marginBottom: 8,
   },
@@ -215,7 +221,7 @@ const styles = StyleSheet.create({
   },
   locationText: { 
     fontSize: 13, 
-    color: '#757575', 
+    color: colors.textMuted,
     fontWeight: '600' 
   },
   statsContainer: {
@@ -227,7 +233,7 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.cardBg,
     padding: 12,
     borderRadius: 16,
     marginHorizontal: 4,
@@ -248,7 +254,7 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 11,
-    color: '#9E9E9E',
+    color: colors.textMuted,
     fontWeight: '500',
   },
   sectionTitle: { 
@@ -259,7 +265,7 @@ const styles = StyleSheet.create({
   },
   description: { 
     fontSize: 14, 
-    color: '#616161', 
+    color: colors.textMuted,
     lineHeight: 22,
     marginBottom: 24,
   },
@@ -273,7 +279,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.cardBg,
     paddingVertical: 10,
     borderRadius: 12,
     marginHorizontal: 4,
@@ -291,7 +297,7 @@ const styles = StyleSheet.create({
   },
   adoptButton: { 
     flexDirection: 'row',
-    backgroundColor: '#A7E2D6', 
+    backgroundColor: colors.mint,
     paddingVertical: 16, 
     borderRadius: 30, 
     justifyContent: 'center', 

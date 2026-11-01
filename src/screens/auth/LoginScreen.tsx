@@ -13,15 +13,18 @@ import BrandHeader from '../../components/BrandHeader';
 import FieldInput from '../../components/FieldInput';
 import FieldLabel from '../../components/FieldLabel';
 import PillButton from '../../components/PillButton';
-import { colors, radii, spacing } from '../../constants/theme';
+import { radii, spacing } from '../../constants/theme';
 import googleIcon from '../../images/Google icon.png';
 import { useAuth } from '../../services/AuthContext';
+import { useAppPreferences, type AppColors } from '../../services/AppPreferencesContext';
 
 interface ScreenProps {
   go: (next: string) => void;
 }
 
 export default function LoginScreen({ go }: ScreenProps) {
+  const { colors } = useAppPreferences();
+  const styles = createStyles(colors);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -36,20 +39,19 @@ export default function LoginScreen({ go }: ScreenProps) {
 
     setIsLoading(true);
 
-    // Simulate an API call delay
-    await new Promise((resolve) => setTimeout(resolve, 600));
+    try {
+      const isSuccess = await login(email.trim(), password);
 
-    // Validate credentials using AuthContext
-    const isSuccess = login(email, password);
-    setIsLoading(false);
-
-    if (isSuccess) {
-      go('main'); // Redirect to MainScreen on success
-    } else {
-      Alert.alert(
-        'Authentication Failed',
-        'Invalid email or password. Please try again.'
-      );
+      if (isSuccess) {
+        go('main');
+      } else {
+        Alert.alert(
+          'Authentication Failed',
+          'Invalid email or password. Please try again.'
+        );
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -60,12 +62,10 @@ export default function LoginScreen({ go }: ScreenProps) {
         contentContainerStyle={styles.scrollPad}
         showsVerticalScrollIndicator={false}
       >
-        {/* Brand Header with top padding to prevent top overlap */}
         <View style={styles.headerContainer}>
           <BrandHeader />
         </View>
 
-        {/* Floating White Card */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>LOGIN</Text>
 
@@ -88,7 +88,7 @@ export default function LoginScreen({ go }: ScreenProps) {
             editable={!isLoading}
           />
 
-          <Pressable style={styles.forgotBtn}>
+          <Pressable style={styles.forgotBtn} onPress={() => go('forgotPassword')}>
             <Text style={styles.forgot}>Forgot Password?</Text>
           </Pressable>
 
@@ -132,22 +132,12 @@ export default function LoginScreen({ go }: ScreenProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  fillMint: { 
-    flex: 1, 
-    backgroundColor: colors.mint 
-  },
-  scrollPad: { 
-    paddingHorizontal: spacing.lg, 
-    paddingTop: 50,
-    paddingBottom: spacing.xl 
-  },
-  headerContainer: {
-    paddingLeft: spacing.xs,
-    marginBottom: 20,
-  },
+const createStyles = (colors: AppColors) => StyleSheet.create({
+  fillMint: { flex: 1, backgroundColor: colors.background },
+  scrollPad: { paddingHorizontal: spacing.lg, paddingTop: 50, paddingBottom: spacing.xl },
+  headerContainer: { paddingLeft: spacing.xs, marginBottom: 20 },
   card: { 
-    backgroundColor: colors.white, 
+    backgroundColor: colors.surface,
     borderRadius: 24, 
     paddingHorizontal: 20,
     paddingVertical: 24,
@@ -158,60 +148,15 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 3,
   },
-  cardTitle: { 
-    fontSize: 18, 
-    fontWeight: '900', 
-    letterSpacing: 0.8, 
-    color: colors.ink, 
-    marginBottom: 20, 
-    textAlign: 'center' 
-  },
-  fieldSpacing: {
-    height: 10,
-  },
-  forgotBtn: {
-    alignSelf: 'flex-end', 
-    marginTop: 6, 
-    marginBottom: 24 
-  },
-  forgot: { 
-    fontSize: 12, 
-    fontWeight: '800', 
-    color: colors.ink 
-  },
-  loader: {
-    marginBottom: 16,
-  },
-  loginBtn: {
-    marginBottom: 14,
-  },
-  googleBtn: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    justifyContent: 'center', 
-    height: 48, 
-    borderRadius: radii.pill, 
-    borderWidth: 1.5, 
-    borderColor: '#000000',
-    backgroundColor: colors.white,
-  },
-  googleIcon: {
-    width: 30,
-    height: 30,
-    marginRight: 10,
-  },
-  googleText: { 
-    fontSize: 14, 
-    fontWeight: '800', 
-    color: colors.ink 
-  },
-  navigationLinkContainer: { 
-    marginTop: 18, 
-    alignItems: 'center' 
-  },
-  backLink: { 
-    fontSize: 12, 
-    color: colors.textMuted, 
-    fontWeight: '600' 
-  },
+  cardTitle: { fontSize: 18, fontWeight: '900', letterSpacing: 0.8, color: colors.ink, marginBottom: 20, textAlign: 'center' },
+  fieldSpacing: { height: 10 },
+  forgotBtn: { alignSelf: 'flex-end', marginTop: 6, marginBottom: 24 },
+  forgot: { fontSize: 12, fontWeight: '800', color: colors.ink },
+  loader: { marginBottom: 16 },
+  loginBtn: { marginBottom: 14 },
+  googleBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', height: 48, borderRadius: radii.pill, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.surface },
+  googleIcon: { width: 30, height: 30, marginRight: 10 },
+  googleText: { fontSize: 14, fontWeight: '800', color: colors.ink },
+  navigationLinkContainer: { marginTop: 18, alignItems: 'center' },
+  backLink: { fontSize: 12, color: colors.textMuted, fontWeight: '600' },
 });

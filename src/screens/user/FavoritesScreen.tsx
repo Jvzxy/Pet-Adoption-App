@@ -6,18 +6,17 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
-import { colors, radii, spacing } from "../../constants/theme";
-import { CAT_DATA } from "../../data/cats";
+import { radii } from "../../constants/theme";
+import BottomNavigation from "../../components/BottomNavigation";
+import { useAppData } from "../../services/AppDataContext";
+import { useAppPreferences, type AppColors } from "../../services/AppPreferencesContext";
 
 // SVG Icon Imports
 import ArrowLeftIcon from "../../images/Icons/arrow-left-solid-full.svg";
 import SearchIcon from "../../images/Icons/magnifying-glass-solid-full.svg";
-import CartIcon from "../../images/Icons/cart-shopping-solid-full.svg";
-import CommentIcon from "../../images/Icons/comment-solid-full.svg";
-import HouseIcon from "../../images/Icons/house-solid-full.svg";
-import UserIcon from "../../images/Icons/user-solid-full.svg";
 import ClockIcon from "../../images/Icons/clock-regular-full.svg";
 import HeartIcon from "../../images/Icons/heart-solid-full.svg";
 import LocationIcon from "../../images/Icons/location-dot-solid-full.svg";
@@ -29,18 +28,20 @@ interface ScreenProps {
   toggleFavorite: (id: string) => void;
 }
 
-const NAV_ITEMS = [
-  { key: "home", Icon: HouseIcon, label: "Home", active: false },
-  { key: "chat", Icon: CommentIcon, label: "Chat", active: false },
-  { key: "cart", Icon: CartIcon, label: "Cart", active: false },
-  { key: "profile", Icon: UserIcon, label: "Profile", active: false },
-];
-
 export default function FavoritesScreen({ go, favorites, toggleFavorite }: ScreenProps) {
+  const { colors } = useAppPreferences();
+  const styles = createStyles(colors);
   const [selectedItemToRemove, setSelectedItemToRemove] = useState<any>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const { catalogItems } = useAppData();
 
-  // 2. GET ACTUAL CAT OBJECTS BASED ON IDs
-  const favoriteCats = CAT_DATA.filter(cat => favorites.includes(cat.id));
+  const favoriteCats = catalogItems.filter(cat => cat.type === 'pet' && favorites.includes(cat.id));
+  const filteredCats = favoriteCats.filter((cat) => {
+    const query = searchQuery.trim().toLowerCase();
+    return !query || [cat.name, cat.breed, cat.location, cat.age, cat.gender]
+      .some((value) => value?.toLowerCase().includes(query));
+  });
 
   const handleRemoveConfirm = () => {
     if (selectedItemToRemove) {
@@ -105,39 +106,50 @@ export default function FavoritesScreen({ go, favorites, toggleFavorite }: Scree
         <Pressable onPress={() => go("home")} style={styles.iconButton}>
           <ArrowLeftIcon width={20} height={20} fill={colors.ink} />
         </Pressable>
-        <Text style={styles.headerTitle}>Favorites</Text>
-        <Pressable style={styles.iconButton}>
+        {searchOpen ? (
+          <TextInput
+            style={styles.searchInput}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Search favorites"
+            placeholderTextColor="rgba(0,0,0,0.45)"
+            autoFocus
+            returnKeyType="search"
+          />
+        ) : (
+          <Text style={styles.headerTitle}>Favorites</Text>
+        )}
+        <Pressable
+          style={styles.iconButton}
+          accessibilityRole="button"
+          accessibilityLabel={searchOpen ? 'Close favorites search' : 'Search favorites'}
+          onPress={() => {
+            if (searchOpen) setSearchQuery('');
+            setSearchOpen(!searchOpen);
+          }}
+        >
           <SearchIcon width={18} height={18} fill={colors.ink} />
         </Pressable>
       </View>
 
       <FlatList
-        data={favoriteCats} // 4. USE FILTERED DATA
+        data={filteredCats}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No favorites yet</Text>
+            <Text style={styles.emptyText}>
+              {favoriteCats.length === 0
+                ? 'No favorites yet'
+                : 'No favorites match your search'}
+            </Text>
           </View>
         }
       />
 
-      <View style={styles.bottomNavWrapper}>
-        <View style={styles.bottomNav}>
-          {NAV_ITEMS.map(({ key, Icon, label, active }) => (
-            <Pressable
-              key={key}
-              onPress={() => go(key)}
-              style={[styles.navItem, active && styles.navItemActive]}
-            >
-              <Icon width={20} height={20} fill={colors.ink} />
-              {active && <Text style={styles.navLabel}>{label}</Text>}
-            </Pressable>
-          ))}
-        </View>
-      </View>
+      <BottomNavigation activeTab="home" go={go} />
 
       <Modal
         visible={!!selectedItemToRemove}
@@ -187,19 +199,20 @@ export default function FavoritesScreen({ go, favorites, toggleFavorite }: Scree
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.mint || "#A8DDD6" },
+const createStyles = (colors: AppColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingTop: 60, paddingBottom: 20, paddingHorizontal: 24 },
   iconButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: "rgba(255,255,255,0.5)", alignItems: "center", justifyContent: "center" },
   headerTitle: { fontSize: 18, fontWeight: "900", color: colors.ink || "#000" },
+  searchInput: { flex: 1, marginHorizontal: 12, height: 42, borderRadius: 21, paddingHorizontal: 14, backgroundColor: colors.surface, color: colors.ink, fontSize: 14 },
   listContent: { paddingHorizontal: 20, paddingBottom: 120, flexGrow: 1 },
   emptyContainer: { flex: 1, justifyContent: "center", alignItems: "center", marginTop: 80 },
   emptyText: { fontSize: 16, fontWeight: "800", color: colors.ink, opacity: 0.5 },
-  cardContainer: { backgroundColor: colors.white || "#FFF", borderRadius: 20, padding: 16, marginBottom: 16, shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 3 },
+  cardContainer: { backgroundColor: colors.surface, borderRadius: 20, padding: 16, marginBottom: 16, shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 3 },
   cardTopRow: { flexDirection: "row", marginBottom: 16 },
   imageWrapper: { width: 90, height: 90, borderRadius: 16, overflow: "hidden", marginRight: 16, backgroundColor: "#F0F0F0", position: "relative" },
   cardImage: { width: "100%", height: "100%" },
-  heartButton: { position: "absolute", top: 8, right: 8, backgroundColor: colors.white, width: 24, height: 24, borderRadius: 12, alignItems: "center", justifyContent: "center", shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 },
+  heartButton: { position: "absolute", top: 8, right: 8, backgroundColor: colors.surface, width: 24, height: 24, borderRadius: 12, alignItems: "center", justifyContent: "center", shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 },
   cardInfo: { flex: 1, justifyContent: "center" },
   titleRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 4 },
   categoryTag: { fontSize: 10, fontWeight: "800", color: colors.mint || "#A8DDD6" },
@@ -212,13 +225,8 @@ const styles = StyleSheet.create({
   cardBottomRow: { flexDirection: "row", borderTopWidth: 1, borderTopColor: "#F0F0F0", paddingTop: 12, gap: 16 },
   detailPill: { flexDirection: "row", alignItems: "center" },
   detailText: { fontSize: 12, fontWeight: "700", color: colors.ink || "#000" },
-  bottomNavWrapper: { position: "absolute", bottom: 35, left: 0, right: 0, alignItems: "center" },
-  bottomNav: { flexDirection: "row", justifyContent: "space-around", alignItems: "center", backgroundColor: colors.white || "#FFF", width: "85%", borderRadius: 100, height: 65, paddingHorizontal: 15, shadowColor: "#000", shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 20, elevation: 10 },
-  navItem: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 16, paddingVertical: 10, borderRadius: radii?.pill || 20 },
-  navItemActive: { backgroundColor: colors.mint || "#A8DDD6" },
-  navLabel: { fontSize: 14, fontWeight: "900", color: colors.ink || "#000" },
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "center", alignItems: "center" },
-  modalContent: { backgroundColor: colors.white, width: "85%", borderRadius: 24, padding: 24, alignItems: "center" },
+  modalContent: { backgroundColor: colors.surface, width: "85%", borderRadius: 24, padding: 24, alignItems: "center" },
   modalTitle: { fontSize: 16, fontWeight: "900", color: colors.ink, marginBottom: 20 },
   modalItemPreview: { flexDirection: "row", width: "100%", backgroundColor: "#F9F9F9", borderRadius: 16, padding: 12, marginBottom: 24 },
   modalImage: { width: 60, height: 60, borderRadius: 12, marginRight: 12 },

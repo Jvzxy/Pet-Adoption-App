@@ -1,6 +1,7 @@
 import React from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { colors, radii } from '../../constants/theme';
+import { radii } from '../../constants/theme';
+import { useAppPreferences, type AppColors } from '../../services/AppPreferencesContext';
 import AngleLeftIcon from '../../images/Icons/angle-left-solid-full.svg';
 import CommentIcon from '../../images/Icons/comment-solid-full.svg';
 
@@ -15,6 +16,9 @@ const FAQS = [
 ];
 
 export default function HelpSupportScreen({ go }: ScreenProps) {
+  const { colors } = useAppPreferences();
+  const styles = createStyles(colors);
+
   return (
     <View style={styles.container}>
       <View style={styles.topBar}>
@@ -28,7 +32,7 @@ export default function HelpSupportScreen({ go }: ScreenProps) {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Pressable style={styles.contactCard} onPress={() => go('chat')}>
           <View style={styles.iconCircle}>
-            <CommentIcon width={24} height={24} fill={colors.white} />
+            <CommentIcon width={24} height={24} fill={colors.isDark ? colors.ink : colors.white} />
           </View>
           <View style={styles.contactTextWrapper}>
             <Text style={styles.contactTitle}>Live Chat Support</Text>
@@ -49,19 +53,19 @@ export default function HelpSupportScreen({ go }: ScreenProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.mint || '#A8DDD6' },
+const createStyles = (colors: AppColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 60, paddingBottom: 20, paddingHorizontal: 24 },
   backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.5)', alignItems: 'center', justifyContent: 'center' },
   headerTitle: { fontSize: 18, fontWeight: '900', color: colors.ink || '#000' },
   content: { paddingHorizontal: 24, paddingBottom: 40 },
-  contactCard: { flexDirection: 'row', backgroundColor: colors.ink, borderRadius: 24, padding: 20, alignItems: 'center', marginBottom: 32 },
+  contactCard: { flexDirection: 'row', backgroundColor: colors.isDark ? colors.cardBg : colors.ink, borderRadius: 24, padding: 20, alignItems: 'center', marginBottom: 32 },
   iconCircle: { width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(255,255,255,0.15)', justifyContent: 'center', alignItems: 'center', marginRight: 16 },
   contactTextWrapper: { flex: 1 },
-  contactTitle: { fontSize: 16, fontWeight: '900', color: colors.white, marginBottom: 4 },
-  contactSub: { fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.7)' },
+  contactTitle: { fontSize: 16, fontWeight: '900', color: colors.isDark ? colors.ink : colors.white, marginBottom: 4 },
+  contactSub: { fontSize: 12, fontWeight: '600', color: colors.textMuted },
   sectionTitle: { fontSize: 16, fontWeight: '900', color: colors.ink, marginBottom: 16, marginLeft: 4 },
-  faqCard: { backgroundColor: colors.white, borderRadius: 16, padding: 16, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 },
+  faqCard: { backgroundColor: colors.surface, borderRadius: 16, padding: 16, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 },
   faqQ: { fontSize: 14, fontWeight: '800', color: colors.ink, marginBottom: 8 },
-  faqA: { fontSize: 13, fontWeight: '600', color: 'rgba(0,0,0,0.6)', lineHeight: 20 },
+  faqA: { fontSize: 13, fontWeight: '600', color: colors.textMuted, lineHeight: 20 },
 });

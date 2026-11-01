@@ -1,8 +1,12 @@
 import React from 'react';
 import { StyleSheet, TextInput, TextInputProps } from 'react-native';
-import { colors, radii } from '../constants/theme';
+import { radii } from '../constants/theme';
+import { useAppPreferences, type AppColors } from '../services/AppPreferencesContext';
 
 export default function FieldInput(props: TextInputProps) {
+  const { colors } = useAppPreferences();
+  const styles = createStyles(colors);
+
   return (
     <TextInput
       placeholderTextColor={colors.textMuted}
@@ -13,7 +17,7 @@ export default function FieldInput(props: TextInputProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppColors) => StyleSheet.create({
   input: {
     height: 44,
     backgroundColor: colors.cream,

@@ -1,11 +1,14 @@
 import React from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
-import { colors } from '../constants/theme';
+import { useAppPreferences, type AppColors } from '../services/AppPreferencesContext';
 
 // Import your official black logo from the images folder
 import appLogo from '../images/Logo.png';
 
 export default function BrandHeader() {
+  const { colors } = useAppPreferences();
+  const styles = createStyles(colors);
+
   return (
     <View style={styles.container}>
       <Text style={styles.subText}>CAT SHOP</Text>
@@ -26,7 +29,7 @@ export default function BrandHeader() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppColors) => StyleSheet.create({
   container: {
     alignItems: 'flex-start',
   },

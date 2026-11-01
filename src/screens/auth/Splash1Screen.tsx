@@ -1,13 +1,14 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Pressable, StyleSheet, View } from 'react-native';
-import ScreenLabel from '../../components/ScreenLabel';
-import { colors } from '../../constants/theme';
+import { useAppPreferences, type AppColors } from '../../services/AppPreferencesContext';
 
 interface ScreenProps {
   go: (next: string) => void;
 }
 
 export default function Splash1Screen({ go }: ScreenProps) {
+  const { colors } = useAppPreferences();
+  const styles = createStyles(colors);
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
@@ -37,8 +38,8 @@ export default function Splash1Screen({ go }: ScreenProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  fillWhite: { flex: 1, backgroundColor: colors.white },
+const createStyles = (colors: AppColors) => StyleSheet.create({
+  fillWhite: { flex: 1, backgroundColor: colors.surface },
   centerAll: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   dot: {
     width: 80,

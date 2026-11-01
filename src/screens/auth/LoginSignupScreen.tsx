@@ -2,7 +2,8 @@ import React from 'react';
 import { Image, StyleSheet, View } from 'react-native';
 import BrandHeader from '../../components/BrandHeader';
 import PillButton from '../../components/PillButton';
-import { colors, spacing } from '../../constants/theme';
+import { spacing } from '../../constants/theme';
+import { useAppPreferences, type AppColors } from '../../services/AppPreferencesContext';
 
 import catTabby from '../../images/Cats/Cat2.png';
 
@@ -11,6 +12,9 @@ interface ScreenProps {
 }
 
 export default function LoginSignupScreen({ go }: ScreenProps) {
+  const { colors } = useAppPreferences();
+  const styles = createStyles(colors);
+
   return (
     <View style={styles.fillMint}>
 
@@ -46,10 +50,10 @@ export default function LoginSignupScreen({ go }: ScreenProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppColors) => StyleSheet.create({
   fillMint: { 
     flex: 1, 
-    backgroundColor: colors.mint,
+    backgroundColor: colors.background,
     position: 'relative',
   },
   pagePadTop: { 

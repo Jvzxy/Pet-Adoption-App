@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
-import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { colors, radii, spacing } from '../../constants/theme';
-import { CAT_DATA } from '../../data/cats';
+import { Alert, Image, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { radii, spacing } from '../../constants/theme';
+import { useAppPreferences, type AppColors } from '../../services/AppPreferencesContext';
+import { useAppData } from '../../services/AppDataContext';
+import { useAuth } from '../../services/AuthContext';
+import type { CartItem } from './CartScreen';
 
 // SVG Icon Import
 import CheckIcon from '../../images/Icons/check-solid-full.svg';
@@ -9,17 +12,19 @@ import CheckIcon from '../../images/Icons/check-solid-full.svg';
 interface ScreenProps {
   go: (next: string) => void;
   productId?: string;
-  cartItems: any[];
-  setCartItems: React.Dispatch<React.SetStateAction<any[]>>;
 }
 
-export default function ProductDetailsScreen({ go, productId, cartItems, setCartItems }: ScreenProps) {
+export default function ProductDetailsScreen({ go, productId }: ScreenProps) {
+  const { colors } = useAppPreferences();
+  const styles = createStyles(colors);
+  const { catalogItems, setCartItems } = useAppData();
+  const { user } = useAuth();
   const [selectedVariation, setSelectedVariation] = useState<number>(0);
   const [quantity, setQuantity] = useState<number>(1);
   const [showSuccessModal, setShowSuccessModal] = useState<boolean>(false);
 
   // Dynamically fetch product from data store
-  const product = CAT_DATA.find((c) => c.id === productId);
+  const product = catalogItems.find((item) => item.id === productId && item.type === 'product');
 
   if (!product) {
     return (
@@ -43,8 +48,16 @@ export default function ProductDetailsScreen({ go, productId, cartItems, setCart
       }];
 
   const handleAddToCart = () => {
+    if (!user) {
+      Alert.alert('Sign in required', 'Sign in to save products to your account cart.', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Sign in', onPress: () => go('login') },
+      ]);
+      return;
+    }
+
     const selectedItem = variations[selectedVariation];
-    const newCartItem = {
+    const newCartItem: CartItem = {
       id: `${product.id}-${selectedVariation}`,
       title: product.name,
       subtitle: `Size: ${selectedItem.label}`,
@@ -175,18 +188,18 @@ export default function ProductDetailsScreen({ go, productId, cartItems, setCart
   );
 }
 
-const styles = StyleSheet.create({
-  fillWhite: { flex: 1, backgroundColor: '#FAFAFA' },
+const createStyles = (colors: AppColors) => StyleSheet.create({
+  fillWhite: { flex: 1, backgroundColor: colors.background },
   topHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing.lg, paddingTop: 50, paddingBottom: 10 },
   closeBtn: { padding: 4 },
   closeText: { fontSize: 24, fontWeight: 'bold', color: colors.ink },
   scrollPad: { paddingHorizontal: spacing.lg, paddingBottom: 120 },
-  imageCard: { backgroundColor: colors.white, borderRadius: 20, height: 260, justifyContent: 'center', alignItems: 'center', marginBottom: 20, padding: 16 },
+  imageCard: { backgroundColor: colors.surface, borderRadius: 20, height: 260, justifyContent: 'center', alignItems: 'center', marginBottom: 20, padding: 16 },
   productImg: { width: '100%', height: '100%' },
   productTitle: { fontSize: 26, fontWeight: '900', color: colors.ink, marginBottom: 16 },
   descTitle: { fontSize: 14, fontWeight: '900', color: colors.ink, marginBottom: 6 },
-  descBody: { fontSize: 12, lineHeight: 18, color: '#555555', fontWeight: '500', marginBottom: 20 },
-  variationCard: { backgroundColor: '#EFECE6', borderRadius: 16, padding: 16, marginBottom: 20 },
+  descBody: { fontSize: 12, lineHeight: 18, color: colors.textMuted, fontWeight: '500', marginBottom: 20 },
+  variationCard: { backgroundColor: colors.cardBg, borderRadius: 16, padding: 16, marginBottom: 20 },
   variationTitle: { fontSize: 16, fontWeight: '900', color: colors.ink, marginBottom: 14 },
   variationRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
   radioContainer: { flexDirection: 'row', alignItems: 'center', gap: 12 },
@@ -196,11 +209,11 @@ const styles = StyleSheet.create({
   priceText: { fontSize: 14, fontWeight: '800', color: colors.ink },
   
   footerRow: { position: 'absolute', bottom: 30, left: spacing.lg, right: spacing.lg, flexDirection: 'row', alignItems: 'center', gap: 12 },
-  quantityBox: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#E0E0E0', borderRadius: radii.pill, width: 120, height: 48, paddingHorizontal: 16 },
+  quantityBox: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: colors.cardBg, borderRadius: radii.pill, width: 120, height: 48, paddingHorizontal: 16 },
   qtyBtn: { fontSize: 16, fontWeight: 'bold', color: colors.ink },
   qtyText: { fontSize: 15, fontWeight: '800', color: colors.ink },
-  addToCartBtn: { flex: 1, backgroundColor: '#B2DFDB', height: 48, borderRadius: radii.pill, justifyContent: 'center', alignItems: 'center' },
-  addToCartText: { fontSize: 14, fontWeight: '900', color: colors.ink },
+  addToCartBtn: { flex: 1, backgroundColor: colors.isDark ? '#35635E' : '#B2DFDB', height: 48, borderRadius: radii.pill, justifyContent: 'center', alignItems: 'center' },
+  addToCartText: { fontSize: 14, fontWeight: '900', color: colors.isDark ? '#FFFFFF' : colors.ink },
 
   /* Modal Styles */
   modalOverlay: {
@@ -212,7 +225,7 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     width: '100%',
-    backgroundColor: '#FFF',
+    backgroundColor: colors.surface,
     borderRadius: 24,
     padding: 24,
     alignItems: 'center',
@@ -239,7 +252,7 @@ const styles = StyleSheet.create({
   },
   modalText: {
     fontSize: 14,
-    color: '#616161',
+    color: colors.textMuted,
     textAlign: 'center',
     marginBottom: 24,
     lineHeight: 20,
@@ -257,7 +270,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   modalBtnSecondary: {
-    backgroundColor: '#F5F5F5',
+    backgroundColor: colors.cardBg,
   },
   modalBtnPrimary: {
     backgroundColor: colors.ink,
@@ -270,6 +283,6 @@ const styles = StyleSheet.create({
   modalBtnTextPrimary: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#FFF',
+    color: colors.background,
   },
 });

@@ -16,5 +16,3 @@ export interface CatItem {
   traits?: string[];
   variations?: { size: string; price: number }[];
 }
-
-export let CAT_DATA: CatItem[] = [];

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Alert,
   Pressable,
@@ -8,9 +8,11 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { colors, radii, spacing } from '../../constants/theme';
-import { CAT_DATA } from '../../data/cats';
+import { radii, spacing } from '../../constants/theme';
+import { useAuth } from '../../services/AuthContext';
+import { useAppData } from '../../services/AppDataContext';
+import { useAppPreferences, type AppColors } from '../../services/AppPreferencesContext';
+import { supabase } from '../../services/supabaseClient';
 
 // SVG Icon Imports
 import AngleLeftIcon from '../../images/Icons/angle-left-solid-full.svg';
@@ -21,55 +23,72 @@ interface ScreenProps {
 }
 
 export default function AdoptionFormScreen({ go, id }: ScreenProps) {
-  const selectedCat = CAT_DATA.find((cat) => cat.id === id);
+  const { colors } = useAppPreferences();
+  const styles = createStyles(colors);
+  const { user } = useAuth();
+  const { catalogItems } = useAppData();
+  const selectedCat = catalogItems.find((cat) => cat.id === id && cat.type === 'pet');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Form Fields State
-  const [fullName, setFullName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
-  const [address, setAddress] = useState('');
+  const [fullName, setFullName] = useState(user?.name ?? '');
+  const [phone, setPhone] = useState(user?.phone ?? '');
+  const [email, setEmail] = useState(user?.username ?? '');
+  const [address, setAddress] = useState(user?.address ?? '');
   const [deliveryOption, setDeliveryOption] = useState<'delivery' | 'pickup'>('delivery');
   const [notes, setNotes] = useState('');
 
+  useEffect(() => {
+    setFullName((value) => value || user?.name || '');
+    setPhone((value) => value || user?.phone || '');
+    setEmail((value) => value || user?.username || '');
+    setAddress((value) => value || user?.address || '');
+  }, [user]);
+
   const handleSubmitAdoption = async () => {
-    if (!fullName || !phone || !address) {
+    if (!user) {
+      Alert.alert('Sign in required', 'Sign in before submitting an adoption application.');
+      return;
+    }
+    if (!selectedCat) {
+      Alert.alert('Pet unavailable', 'This pet is no longer available for adoption.');
+      return;
+    }
+    if (!fullName.trim() || !phone.trim() || !email.trim() || !address.trim()) {
       Alert.alert('Missing Fields', 'Please fill in your full name, phone number, and delivery address.');
       return;
     }
 
-    const adoptionData = {
-      id: Date.now().toString(),
-      catId: selectedCat?.id || id,
-      catName: selectedCat?.name || 'Selected Cat',
-      fullName,
-      phone,
-      email,
-      address,
-      deliveryOption,
-      notes,
-      status: 'Pending Confirmation',
-      createdAt: new Date().toISOString(),
-    };
-
     try {
-      console.log('🐾 NEW ADOPTION APPLICATION:', JSON.stringify(adoptionData, null, 2));
+      setIsSubmitting(true);
+      const { error } = await supabase.from('adoption_applications').insert({
+        applicant_id: user.id,
+        catalog_item_id: selectedCat.id,
+        full_name: fullName.trim(),
+        phone: phone.trim(),
+        email: email.trim(),
+        address: address.trim(),
+        fulfillment: deliveryOption,
+        notes: notes.trim(),
+      });
 
-      // Get existing adoptions from AsyncStorage
-      const existingAdoptionsRaw = await AsyncStorage.getItem('saved_adoptions');
-      const existingAdoptions = existingAdoptionsRaw ? JSON.parse(existingAdoptionsRaw) : [];
-      
-      existingAdoptions.unshift(adoptionData);
-      await AsyncStorage.setItem('saved_adoptions', JSON.stringify(existingAdoptions));
+      if (error) throw error;
 
       Alert.alert(
-        'Application Submitted! 🎉',
-        `Thank you ${fullName}! Your request to ${
+        'Application Submitted',
+        `Thank you ${fullName.trim()}! Your request to ${
           deliveryOption === 'delivery' ? 'deliver' : 'reserve'
-        } ${selectedCat?.name || 'your cat'} has been received.`,
+        } ${selectedCat.name} has been received.`,
         [{ text: 'Return to Home', onPress: () => go('main') }]
       );
     } catch (error) {
-      Alert.alert('Error', 'Failed to submit adoption application. Please try again.');
+      console.error('Could not submit adoption application:', error);
+      Alert.alert(
+        'Application not saved',
+        error instanceof Error ? error.message : 'Failed to submit the application. Please try again.',
+      );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -165,9 +184,9 @@ export default function AdoptionFormScreen({ go, id }: ScreenProps) {
         />
 
         {/* Submit Button */}
-        <Pressable style={styles.submitButton} onPress={handleSubmitAdoption}>
+        <Pressable style={styles.submitButton} onPress={handleSubmitAdoption} disabled={isSubmitting || !selectedCat}>
           <Text style={styles.submitButtonText}>
-            {deliveryOption === 'delivery' ? 'Confirm Delivery Request' : 'Reserve Cat for Pickup'}
+            {isSubmitting ? 'Submitting...' : deliveryOption === 'delivery' ? 'Confirm Delivery Request' : 'Reserve Cat for Pickup'}
           </Text>
         </Pressable>
       </ScrollView>
@@ -175,8 +194,8 @@ export default function AdoptionFormScreen({ go, id }: ScreenProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.mint || '#A8DDD6' },
+const createStyles = (colors: AppColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -196,7 +215,7 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 18, fontWeight: '800', color: colors.ink },
   scrollContent: { paddingHorizontal: spacing.md, paddingBottom: 60 },
   summaryCard: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     padding: 16,
     borderRadius: radii.md,
     marginBottom: 16,
@@ -204,25 +223,25 @@ const styles = StyleSheet.create({
     borderLeftColor: colors.ink,
   },
   summaryTitle: { fontSize: 16, fontWeight: '900', color: colors.ink },
-  summarySubtitle: { fontSize: 13, color: 'rgba(0,0,0,0.6)', marginTop: 4, fontWeight: '600' },
+  summarySubtitle: { fontSize: 13, color: colors.textMuted, marginTop: 4, fontWeight: '600' },
   label: { fontSize: 13, fontWeight: '700', color: colors.ink, marginBottom: 8, marginTop: 14 },
   toggleRow: { flexDirection: 'row', gap: 10, marginBottom: 8 },
   toggleBtn: {
     flex: 1,
     paddingVertical: 12,
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderRadius: radii.md,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: 'transparent',
   },
   toggleBtnActive: {
-    backgroundColor: colors.ink,
+    backgroundColor: colors.isDark ? colors.mint : colors.ink,
   },
   toggleText: { fontSize: 13, fontWeight: '700', color: colors.ink },
-  toggleTextActive: { color: colors.white },
+  toggleTextActive: { color: colors.isDark ? colors.ink : colors.white },
   input: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderRadius: radii.md,
     paddingHorizontal: 16,
     height: 50,
@@ -237,5 +256,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 28,
   },
-  submitButtonText: { color: colors.white, fontSize: 16, fontWeight: '800' },
+  submitButtonText: { color: colors.isDark ? colors.background : colors.white, fontSize: 16, fontWeight: '800' },
 });

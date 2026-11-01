@@ -9,8 +9,11 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { colors, radii, spacing } from "../../constants/theme";
-import { CAT_DATA } from "../../data/cats";
+import { radii, spacing } from "../../constants/theme";
+import BottomNavigation from "../../components/BottomNavigation";
+import { useAppData } from "../../services/AppDataContext";
+import { useAuth } from "../../services/AuthContext";
+import { useAppPreferences, type AppColors } from "../../services/AppPreferencesContext";
 
 // Image Imports
 import cat3Img from "../../images/Cats/Cat3.png";
@@ -43,13 +46,6 @@ interface DisplayItem {
   isPet: boolean;
 }
 
-const NAV_ITEMS = [
-  { key: "home", Icon: HouseIcon, label: "Home", active: true },
-  { key: "chat", Icon: CommentIcon, label: "Chat", active: false },
-  { key: "cart", Icon: CartIcon, label: "Cart", active: false },
-  { key: "profile", Icon: UserIcon, label: "Profile", active: false },
-];
-
 const SIDEBAR_MENU = [
   { key: "home", label: "Home", Icon: HouseIcon },
   { key: "chat", label: "Messages", Icon: CommentIcon },
@@ -67,8 +63,11 @@ const ListHeader = React.memo(
     searchQuery: string;
     setSearchQuery: (text: string) => void;
     go: (next: string, id?: string) => void;
-  }) => (
-    <View style={styles.headerWrapper}>
+  }) => {
+    const { colors } = useAppPreferences();
+    const styles = createStyles(colors);
+    return (
+      <View style={styles.headerWrapper}>
       <View style={styles.searchBar}>
         <SearchIcon
           width={16}
@@ -78,7 +77,7 @@ const ListHeader = React.memo(
         />
         <TextInput
           placeholder="Search pets, products..."
-          placeholderTextColor="rgba(0,0,0,0.4)"
+          placeholderTextColor={colors.textMuted}
           value={searchQuery}
           onChangeText={setSearchQuery}
           style={styles.searchInput}
@@ -111,8 +110,9 @@ const ListHeader = React.memo(
         <Text style={styles.gridTitle}>Featured Catalog</Text>
         <Text style={styles.gridSeeAll}>See all</Text>
       </View>
-    </View>
-  )
+      </View>
+    );
+  }
 );
 
 export default function MainScreen({
@@ -120,15 +120,19 @@ export default function MainScreen({
   favorites,
   toggleFavorite,
 }: ScreenProps) {
+  const { colors } = useAppPreferences();
+  const styles = createStyles(colors);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const { catalogItems, loading } = useAppData();
+  const { logout } = useAuth();
 
-  const STORE_ITEMS: DisplayItem[] = CAT_DATA.map((item) => {
+  const STORE_ITEMS: DisplayItem[] = catalogItems.map((item) => {
     const isProduct = item.type === "product";
     return {
       id: item.id,
       name: item.name,
-      category: item.category || (isProduct ? "Product" : "Pet"),
+      category: isProduct ? item.category || "Product" : "Pet",
       // Replaced hardcoded "Free Adoption" with dynamic check
       priceTag: isProduct 
         ? item.price 
@@ -184,7 +188,7 @@ export default function MainScreen({
             <View>
               <View style={styles.sidebarHeader}>
                 <View>
-                  <Text style={styles.sidebarTitle}>🐾 PAWFECT</Text>
+                  <Text style={styles.sidebarTitle}>PAWFECT</Text>
                   <Text style={styles.sidebarSub}>CAT ADOPTION & STORE</Text>
                 </View>
                 <Pressable onPress={() => setIsSidebarOpen(false)} hitSlop={10}>
@@ -213,7 +217,9 @@ export default function MainScreen({
               style={styles.logoutButton}
               onPress={() => {
                 setIsSidebarOpen(false);
-                go("login");
+                void logout().then(() => go("login")).catch((error: unknown) => {
+                  console.error("Could not sign out:", error);
+                });
               }}
             >
               <LogoutIcon width={20} height={20} fill="#D32F2F" />
@@ -239,8 +245,10 @@ export default function MainScreen({
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyEmoji}>🐾</Text>
-            <Text style={styles.emptyText}>No items found</Text>
+            <Text style={styles.emptyEmoji}>{loading ? "…" : ""}</Text>
+            <Text style={styles.emptyText}>
+              {loading ? "Loading catalog…" : "No items found"}
+            </Text>
           </View>
         }
         renderItem={({ item }) => {
@@ -269,7 +277,7 @@ export default function MainScreen({
                     resizeMode="cover"
                   />
                 ) : (
-                  <Text style={{ fontSize: 38 }}>{item.emoji || "🐾"}</Text>
+                  <Text style={{ fontSize: 38 }}>{item.emoji || ""}</Text>
                 )}
 
                 {item.isPet && (
@@ -312,26 +320,13 @@ export default function MainScreen({
         }}
       />
 
-      <View style={styles.bottomNavWrapper}>
-        <View style={styles.bottomNav}>
-          {NAV_ITEMS.map(({ key, Icon, label, active }) => (
-            <Pressable
-              key={key}
-              onPress={() => key !== "home" && go(key)}
-              style={[styles.navItem, active && styles.navItemActive]}
-            >
-              <Icon width={20} height={20} fill={colors.ink || "#000"} />
-              {active && <Text style={styles.navLabel}>{label}</Text>}
-            </Pressable>
-          ))}
-        </View>
-      </View>
+      <BottomNavigation activeTab="home" go={go} />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  fillMint: { flex: 1, backgroundColor: colors.mint || "#A8DDD6" },
+const createStyles = (colors: AppColors) => StyleSheet.create({
+  fillMint: { flex: 1, backgroundColor: colors.background },
   topBar: {
     flexDirection: "row",
     alignItems: "center",
@@ -367,7 +362,7 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.surface,
     height: 48,
     borderRadius: radii.pill || 24,
     paddingHorizontal: 20,
@@ -386,7 +381,7 @@ const styles = StyleSheet.create({
   },
   heroCard: {
     flexDirection: "row",
-    backgroundColor: colors.ink || "#000",
+    backgroundColor: colors.isDark ? '#050808' : '#000',
     borderRadius: 24,
     height: 165,
     overflow: "hidden",
@@ -404,7 +399,7 @@ const styles = StyleSheet.create({
   heroBadge: {
     fontSize: 9,
     fontWeight: "900",
-    color: colors.mint || "#A8DDD6",
+    color: colors.isDark ? '#B2DFDB' : colors.mint,
     letterSpacing: 1,
     marginBottom: 4,
   },
@@ -412,17 +407,17 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "900",
     lineHeight: 26,
-    color: colors.white || "#FFF",
+    color: '#FFFFFF',
     marginBottom: 12,
   },
   adoptBtn: {
-    backgroundColor: colors.white || "#FFF",
+    backgroundColor: '#FFFFFF',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: radii.pill || 20,
     alignSelf: "flex-start",
   },
-  adoptBtnText: { fontSize: 11, fontWeight: "900", color: colors.ink || "#000" },
+  adoptBtnText: { fontSize: 11, fontWeight: "900", color: '#000000' },
   heroImageWrapper: {
     width: 140,
     height: "100%",
@@ -456,7 +451,7 @@ const styles = StyleSheet.create({
   rowWrapper: { justifyContent: "space-between" },
   gridItem: {
     width: "48%",
-    backgroundColor: colors.white || "#FFF",
+    backgroundColor: colors.surface,
     borderRadius: 20,
     padding: 10,
     marginBottom: 16,
@@ -471,7 +466,7 @@ const styles = StyleSheet.create({
     height: 115,
     borderRadius: 14,
     marginBottom: 10,
-    backgroundColor: "#F4FAF8",
+    backgroundColor: colors.background,
     justifyContent: "center",
     alignItems: "center",
     overflow: "hidden",
@@ -488,7 +483,7 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   categoryBadgeText: {
-    color: "#FFFFFF",
+    color: '#FFFFFF',
     fontSize: 8,
     fontWeight: "900",
     letterSpacing: 0.5,
@@ -497,7 +492,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 8,
     right: 8,
-    backgroundColor: "rgba(255,255,255,0.9)",
+    backgroundColor: colors.surface,
     padding: 6,
     borderRadius: 12,
     shadowColor: "#000",
@@ -513,7 +508,7 @@ const styles = StyleSheet.create({
   gridSub: {
     fontSize: 10,
     fontWeight: "600",
-    color: "rgba(0,0,0,0.5)",
+    color: colors.textMuted,
     marginTop: 2,
     marginBottom: 8,
   },
@@ -565,7 +560,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     width: "75%",
-    backgroundColor: colors.white || "#FFF",
+    backgroundColor: colors.surface,
     paddingTop: 60,
     paddingHorizontal: 24,
     paddingBottom: 40,
@@ -607,40 +602,8 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 12,
     borderTopWidth: 1,
-    borderColor: "#EEEEEE",
+    borderColor: colors.border,
     marginTop: "auto",
   },
-  logoutText: { fontSize: 15, fontWeight: "800", color: "#D32F2F" },
-  bottomNavWrapper: {
-    position: "absolute",
-    bottom: 35,
-    left: 0,
-    right: 0,
-    alignItems: "center",
-  },
-  bottomNav: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "center",
-    backgroundColor: colors.white || "#FFF",
-    width: "85%",
-    borderRadius: 100,
-    height: 65,
-    paddingHorizontal: 15,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
-    elevation: 10,
-  },
-  navItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: radii.pill || 20,
-  },
-  navItemActive: { backgroundColor: colors.mint || "#A8DDD6" },
-  navLabel: { fontSize: 14, fontWeight: "900", color: colors.ink || "#000" },
+  logoutText: { fontSize: 15, fontWeight: "800", color: colors.red },
 });

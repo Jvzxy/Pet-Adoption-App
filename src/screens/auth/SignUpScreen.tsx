@@ -11,14 +11,17 @@ import BrandHeader from '../../components/BrandHeader';
 import FieldInput from '../../components/FieldInput';
 import FieldLabel from '../../components/FieldLabel';
 import PillButton from '../../components/PillButton';
-import { colors, radii, spacing } from '../../constants/theme';
+import { radii, spacing } from '../../constants/theme';
 import { useAuth } from '../../services/AuthContext';
+import { useAppPreferences, type AppColors } from '../../services/AppPreferencesContext';
 
 interface ScreenProps {
   go: (next: string) => void;
 }
 
 export default function SignUpScreen({ go }: ScreenProps) {
+  const { colors } = useAppPreferences();
+  const styles = createStyles(colors);
   const { signup } = useAuth();
 
   const [firstName, setFirstName] = useState('');
@@ -26,10 +29,19 @@ export default function SignUpScreen({ go }: ScreenProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSignUp = () => {
+  const handleSignUp = async () => {
+    if (isSubmitting) return;
+
     if (!firstName || !lastName || !email || !password || !confirmPassword) {
       Alert.alert('Missing Fields', 'Please fill in all fields.');
+      return;
+    }
+
+    // Enforce Gmail-only registration
+    if (!email.toLowerCase().endsWith('@gmail.com')) {
+      Alert.alert('Invalid Email', 'Please use a valid @gmail.com address to sign up.');
       return;
     }
 
@@ -39,15 +51,28 @@ export default function SignUpScreen({ go }: ScreenProps) {
     }
 
     const fullName = `${firstName.trim()} ${lastName.trim()}`;
-    const success = signup(email, password, fullName);
 
-    if (success) {
-      // Changed to redirect to 'login' instead of 'home'
-      Alert.alert('Success', 'Account created successfully! Please log in.', [
-        { text: 'OK', onPress: () => go('login') },
-      ]);
-    } else {
-      Alert.alert('Sign Up Failed', 'An account with this email already exists.');
+    setIsSubmitting(true);
+    try {
+      const result = await signup(email, password, fullName);
+
+      if (result.status === 'signedIn') {
+        Alert.alert('Success', 'Account created successfully!', [
+          { text: 'Continue', onPress: () => go('main') },
+        ]);
+      } else if (result.status === 'confirmationRequired') {
+        Alert.alert('Check your email', 'Confirm your email address, then log in with your new account.', [
+          { text: 'Go to Login', onPress: () => go('login') },
+        ]);
+      } else {
+        Alert.alert('Sign Up Failed', result.message, [
+          { text: result.reason === 'alreadyExists' ? 'Go to Login' : 'OK', onPress: () => {
+            if (result.reason === 'alreadyExists') go('login');
+          } },
+        ]);
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -114,7 +139,10 @@ export default function SignUpScreen({ go }: ScreenProps) {
           </View>
 
           <View style={styles.buttonContainer}>
-            <PillButton title="SIGNUP" onPress={handleSignUp} />
+            <PillButton
+              title={isSubmitting ? 'CREATING ACCOUNT...' : 'SIGNUP'}
+              onPress={handleSignUp}
+            />
           </View>
 
           <Pressable
@@ -136,10 +164,10 @@ export default function SignUpScreen({ go }: ScreenProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppColors) => StyleSheet.create({
   fillMint: {
     flex: 1,
-    backgroundColor: colors.mint,
+    backgroundColor: colors.background,
   },
   scrollPad: {
     paddingHorizontal: spacing.lg,
@@ -151,7 +179,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   card: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderRadius: 24,
     paddingHorizontal: 20,
     paddingVertical: 24,

@@ -10,9 +10,12 @@ import {
   View,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { colors, radii, spacing } from '../../constants/theme';
-import { CAT_DATA, CatItem } from '../../data/cats';
+import { radii, spacing } from '../../constants/theme';
+import { useAuth } from '../../services/AuthContext';
+import { supabase } from '../../services/supabaseClient';
+import { uploadCatalogImage } from '../../services/catalogService';
+import { useAppData } from '../../services/AppDataContext';
+import { useAppPreferences, type AppColors } from '../../services/AppPreferencesContext';
 
 // SVG Icon Imports
 import AngleLeftIcon from '../../images/Icons/angle-left-solid-full.svg';
@@ -23,6 +26,11 @@ interface ScreenProps {
 }
 
 export default function AddProductScreen({ go }: ScreenProps) {
+  const { colors } = useAppPreferences();
+  const styles = createStyles(colors);
+  const { user } = useAuth();
+  const { refreshCatalog } = useAppData();
+  const [isSaving, setIsSaving] = useState(false);
   const [productForm, setProductForm] = useState({
     name: '',
     description: '',
@@ -33,6 +41,7 @@ export default function AddProductScreen({ go }: ScreenProps) {
     priceMedium: '',
     priceLarge: '',
     imageUri: '',
+    imageBase64: '',
   });
 
   // Pick Image from Phone Gallery
@@ -47,37 +56,46 @@ export default function AddProductScreen({ go }: ScreenProps) {
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [4, 3],
       quality: 0.8,
+      base64: true,
     });
 
     if (!result.canceled && result.assets && result.assets.length > 0) {
-      setProductForm({ ...productForm, imageUri: result.assets[0].uri });
+      setProductForm({
+        ...productForm,
+        imageUri: result.assets[0].uri,
+        imageBase64: result.assets[0].base64 ?? '',
+      });
     }
   };
 
   const handleAddProduct = async () => {
-    if (!productForm.name) {
+    if (!productForm.name.trim()) {
       Alert.alert("Missing Fields", "Please enter a product name.");
       return;
     }
 
-    let finalPrice = '';
+    let price = 0;
     let variations: { size: string; price: number }[] = [];
 
     // Validation & Price Handling Based on Type
     if (productForm.pricingType === 'standard') {
-      if (!productForm.price) {
+      if (!productForm.price.trim()) {
         Alert.alert("Missing Fields", "Please enter a price.");
         return;
       }
-      finalPrice = `₱${parseFloat(productForm.price).toFixed(2)}`;
+      price = Number(productForm.price);
+      if (!Number.isFinite(price) || price <= 0) {
+        Alert.alert("Invalid Price", "Enter a valid product price greater than zero.");
+        return;
+      }
     } else {
-      const pS = parseFloat(productForm.priceSmall);
-      const pM = parseFloat(productForm.priceMedium);
-      const pL = parseFloat(productForm.priceLarge);
+      const pS = productForm.priceSmall.trim() ? Number(productForm.priceSmall) : Number.NaN;
+      const pM = productForm.priceMedium.trim() ? Number(productForm.priceMedium) : Number.NaN;
+      const pL = productForm.priceLarge.trim() ? Number(productForm.priceLarge) : Number.NaN;
 
       if (isNaN(pS) && isNaN(pM) && isNaN(pL)) {
         Alert.alert("Missing Fields", "Please enter at least one size price (S/M/L).");
@@ -88,34 +106,47 @@ export default function AddProductScreen({ go }: ScreenProps) {
       if (!isNaN(pM)) variations.push({ size: 'Medium', price: pM });
       if (!isNaN(pL)) variations.push({ size: 'Large', price: pL });
 
-      const minPrice = Math.min(...variations.map((v) => v.price));
-      finalPrice = `From ₱${minPrice.toFixed(2)}`;
+      if (variations.some((variation) => !Number.isFinite(variation.price) || variation.price <= 0)) {
+        Alert.alert("Invalid Price", "Every size price must be greater than zero.");
+        return;
+      }
+      price = Math.min(...variations.map((variation) => variation.price));
     }
     
-    // Construct the new product object
-    const newItem: CatItem = {
-      id: Date.now().toString(),
-      name: productForm.name,
-      category: productForm.category,
-      type: 'product',
-      price: finalPrice,
-      description: productForm.description,
-      imageUri: productForm.imageUri || '',
-      variations: variations.length > 0 ? variations : undefined,
-    };
+    if (!user) {
+      Alert.alert('Sign in required', 'Sign in with an admin account before adding products.');
+      return;
+    }
 
-    // Push to local session array
-    CAT_DATA.push(newItem);
-
-    // Persist to storage
     try {
-      await AsyncStorage.setItem('saved_cats', JSON.stringify(CAT_DATA));
-      Alert.alert("Success", `${productForm.name} has been added successfully!`, [
+      setIsSaving(true);
+      if (productForm.imageUri && !productForm.imageBase64) {
+        throw new Error('The photo picker did not provide image data. Choose the photo again and retry.');
+      }
+      const imageUrl = productForm.imageBase64
+        ? await uploadCatalogImage(productForm.imageBase64, user.id)
+        : '';
+      const { error } = await supabase.from('catalog_items').insert({
+        type: 'product',
+        category: productForm.category,
+        name: productForm.name.trim(),
+        price,
+        description: productForm.description.trim(),
+        image_url: imageUrl,
+        variations,
+        created_by: user.id,
+      });
+
+      if (error) throw error;
+      await refreshCatalog();
+      Alert.alert("Success", `${productForm.name.trim()} has been added successfully!`, [
         { text: "OK", onPress: () => go('profile') }
       ]);
-    } catch (e) {
-      console.log('Error saving product:', e);
-      Alert.alert("Error", "Could not save the product.");
+    } catch (error) {
+      console.error('Could not save product:', error);
+      Alert.alert("Could not save product", error instanceof Error ? error.message : 'Please try again.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -259,16 +290,16 @@ export default function AddProductScreen({ go }: ScreenProps) {
           />
         </View>
 
-        <Pressable style={styles.saveBtn} onPress={handleAddProduct}>
-          <Text style={styles.saveBtnText}>Add Product</Text>
+        <Pressable style={styles.saveBtn} onPress={handleAddProduct} disabled={isSaving}>
+          <Text style={styles.saveBtnText}>{isSaving ? 'Saving...' : 'Add Product'}</Text>
         </Pressable>
       </ScrollView>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.mint || '#A8DDD6' },
+const createStyles = (colors: AppColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 60, paddingBottom: 20, paddingHorizontal: 24 },
   backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.5)', alignItems: 'center', justifyContent: 'center' },
   headerTitle: { fontSize: 18, fontWeight: '900', color: colors.ink || '#000' },
@@ -277,35 +308,35 @@ const styles = StyleSheet.create({
   imagePickerCard: {
     width: '100%',
     height: 160,
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderRadius: radii.md || 16,
     overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.1)',
+    borderColor: colors.border,
     borderStyle: 'dashed',
     marginBottom: 16,
   },
   imagePickerPlaceholder: { alignItems: 'center', justifyContent: 'center', padding: 16 },
-  imagePickerText: { marginTop: 8, fontSize: 12, fontWeight: '700', color: 'rgba(0,0,0,0.5)' },
+  imagePickerText: { marginTop: 8, fontSize: 12, fontWeight: '700', color: colors.textMuted },
   previewImage: { width: '100%', height: '100%', resizeMode: 'cover' },
 
-  formGroup: { backgroundColor: colors.white, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 10, marginBottom: 12 },
-  inputLabel: { fontSize: 10, fontWeight: '700', color: 'rgba(0,0,0,0.4)', marginBottom: 2 },
+  formGroup: { backgroundColor: colors.surface, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 10, marginBottom: 12 },
+  inputLabel: { fontSize: 10, fontWeight: '700', color: colors.textMuted, marginBottom: 2 },
   input: { fontSize: 14, fontWeight: '800', color: colors.ink, padding: 0 },
   
   categoryRow: { flexDirection: 'row', gap: 10, marginTop: 6, marginBottom: 4 },
-  catPill: { paddingVertical: 6, paddingHorizontal: 14, borderRadius: 20, backgroundColor: '#F4FAF8', borderWidth: 1, borderColor: '#EEEEEE' },
-  catPillActive: { backgroundColor: colors.ink, borderColor: colors.ink },
-  catPillText: { fontSize: 12, fontWeight: '700', color: 'rgba(0,0,0,0.5)' },
-  catPillTextActive: { color: colors.white },
+  catPill: { paddingVertical: 6, paddingHorizontal: 14, borderRadius: 20, backgroundColor: colors.cardBg, borderWidth: 1, borderColor: colors.border },
+  catPillActive: { backgroundColor: colors.isDark ? colors.mint : colors.ink, borderColor: colors.ink },
+  catPillText: { fontSize: 12, fontWeight: '700', color: colors.textMuted },
+  catPillTextActive: { color: colors.isDark ? colors.ink : colors.white },
 
   variantContainer: { flexDirection: 'row', gap: 8, marginTop: 6 },
   variantCol: { flex: 1 },
   variantLabel: { fontSize: 10, color: 'rgba(0,0,0,0.5)', marginBottom: 4, fontWeight: '700' },
   variantInput: {
-    backgroundColor: '#F4FAF8',
+    backgroundColor: colors.cardBg,
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 8,
@@ -313,7 +344,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: colors.ink,
     borderWidth: 1,
-    borderColor: '#EEEEEE',
+    borderColor: colors.border,
   },
 
   saveBtn: { backgroundColor: colors.ink, borderRadius: radii?.pill || 20, paddingVertical: 16, alignItems: 'center', marginTop: 16 },

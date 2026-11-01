@@ -2,10 +2,11 @@
   "expo": {
     "name": "bla-bla-bla-cat-adoption-system-not-finished-pa-sirrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr",
     "slug": "snack-189ad69f-cc3f-4f0a-831e-a6ffa488cb1f",
+    "scheme": "pawfectcats",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./src/images/Logo.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
       "image": "./src/images/Logo.png",

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Pressable, StyleProp, StyleSheet, Text, ViewStyle } from 'react-native';
-import { colors, radii } from '../constants/theme';
+import { radii } from '../constants/theme';
+import { useAppPreferences, type AppColors } from '../services/AppPreferencesContext';
 
 interface PillButtonProps {
   title: string;
@@ -10,6 +11,9 @@ interface PillButtonProps {
 }
 
 export default function PillButton({ title, onPress, variant = 'dark', style }: PillButtonProps) {
+  const { colors } = useAppPreferences();
+  const styles = createStyles(colors);
+
   return (
     <Pressable
       onPress={onPress}
@@ -32,7 +36,7 @@ export default function PillButton({ title, onPress, variant = 'dark', style }: 
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppColors) => StyleSheet.create({
   pillButtonBase: {
     height: 48,
     borderRadius: radii.pill,
@@ -43,10 +47,10 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   pillButtonDark: {
-    backgroundColor: colors.ink,
+    backgroundColor: colors.isDark ? colors.mint : colors.ink,
   },
   pillButtonLight: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.ink,
   },
@@ -58,7 +62,7 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
   pillButtonTextDark: {
-    color: colors.white,
+    color: colors.isDark ? colors.ink : colors.white,
   },
   pillButtonTextLight: {
     color: colors.ink,
