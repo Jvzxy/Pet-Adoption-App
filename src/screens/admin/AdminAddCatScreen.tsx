@@ -21,6 +21,20 @@ import { useAppPreferences, type AppColors } from '../../services/AppPreferences
 import AngleLeftIcon from '../../images/Icons/angle-left-solid-full.svg';
 import CameraIcon from '../../images/Icons/camera-regular-full.svg';
 
+const PERSONALITY_OPTIONS = [
+  'Friendly',
+  'Playful',
+  'Gentle',
+  'Affectionate',
+  'Curious',
+  'Energetic',
+  'Calm',
+  'Independent',
+  'Social',
+  'Shy',
+  'Cuddly',
+];
+
 interface ScreenProps {
   go: (next: string) => void;
 }
@@ -39,8 +53,9 @@ export default function AdminAddCatScreen({ go }: ScreenProps) {
   const [price, setPrice] = useState('');
   const [weight, setWeight] = useState('');
   const [height, setHeight] = useState('');
-  const [health, setHealth] = useState('');
-  const [traits, setTraits] = useState('');
+  const [health, setHealth] = useState('Vaccinated');
+  const [selectedTraits, setSelectedTraits] = useState<string[]>(['Friendly', 'Playful']);
+  const [customTraits, setCustomTraits] = useState('');
   const [description, setDescription] = useState('');
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [imageBase64, setImageBase64] = useState<string | null>(null);
@@ -76,10 +91,11 @@ export default function AdminAddCatScreen({ go }: ScreenProps) {
       return;
     }
 
-    // Process comma-separated traits into array or default list
-    const parsedTraits = traits
-      ? traits.split(',').map((t) => t.trim()).filter((t) => t.length > 0)
-      : ['Friendly', 'Playful'];
+    const parsedTraits = [...selectedTraits, ...customTraits.split(',')]
+      .map((trait) => trait.trim())
+      .filter((trait, index, allTraits) =>
+        trait.length > 0 && allTraits.findIndex((item) => item.toLowerCase() === trait.toLowerCase()) === index,
+      );
 
     const adoptionFee = price.trim().toLowerCase() === 'free' || !price.trim()
       ? 0
@@ -185,12 +201,19 @@ export default function AdminAddCatScreen({ go }: ScreenProps) {
           </View>
           <View style={{ flex: 1, marginLeft: 8 }}>
             <Text style={styles.label}>Gender</Text>
-            <TextInput
-              style={styles.input}
-              value={gender}
-              onChangeText={setGender}
-              placeholder="e.g. Male"
-            />
+            <View style={styles.choiceGroup}>
+              {['Male', 'Female'].map((option) => (
+                <Pressable
+                  key={option}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: gender === option }}
+                  style={[styles.choiceChip, gender === option && styles.choiceChipSelected]}
+                  onPress={() => setGender(option)}
+                >
+                  <Text style={[styles.choiceText, gender === option && styles.choiceTextSelected]}>{option}</Text>
+                </Pressable>
+              ))}
+            </View>
           </View>
         </View>
 
@@ -219,20 +242,45 @@ export default function AdminAddCatScreen({ go }: ScreenProps) {
         </View>
 
         <Text style={styles.label}>Health Status</Text>
-        <TextInput
-          style={styles.input}
-          value={health}
-          onChangeText={setHealth}
-          placeholder="e.g. Healthy / Vaccinated"
-        />
+        <View style={styles.choiceGroup}>
+          {['Vaccinated', 'Not Vaccinated'].map((option) => (
+            <Pressable
+              key={option}
+              accessibilityRole="button"
+              accessibilityState={{ selected: health === option }}
+              style={[styles.choiceChip, health === option && styles.choiceChipSelected]}
+              onPress={() => setHealth(option)}
+            >
+              <Text style={[styles.choiceText, health === option && styles.choiceTextSelected]}>{option}</Text>
+            </Pressable>
+          ))}
+        </View>
 
-        {/* Dynamic Personality Tags Input */}
-        <Text style={styles.label}>Personality Traits (comma separated)</Text>
+        <Text style={styles.label}>Personality Traits</Text>
+        <View style={styles.traitOptions}>
+          {PERSONALITY_OPTIONS.map((trait) => {
+            const selected = selectedTraits.includes(trait);
+            return (
+              <Pressable
+                key={trait}
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
+                style={[styles.choiceChip, selected && styles.choiceChipSelected]}
+                onPress={() => setSelectedTraits((current) =>
+                  selected ? current.filter((item) => item !== trait) : [...current, trait],
+                )}
+              >
+                <Text style={[styles.choiceText, selected && styles.choiceTextSelected]}>{trait}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+        <Text style={styles.helperText}>Select all that apply, or add your own below.</Text>
         <TextInput
           style={styles.input}
-          value={traits}
-          onChangeText={setTraits}
-          placeholder="e.g. Friendly, Playful, Gentle"
+          value={customTraits}
+          onChangeText={setCustomTraits}
+          placeholder="Other traits, separated by commas"
         />
 
         {/* Location & Pricing */}
@@ -327,6 +375,20 @@ const createStyles = (colors: AppColors) => StyleSheet.create({
     fontSize: 14,
     color: colors.ink,
   },
+  choiceGroup: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  traitOptions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  choiceChip: {
+    backgroundColor: colors.surface,
+    borderRadius: radii.pill,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  choiceChipSelected: { backgroundColor: colors.ink, borderColor: colors.ink },
+  choiceText: { color: colors.ink, fontSize: 12, fontWeight: '700' },
+  choiceTextSelected: { color: colors.white },
+  helperText: { color: colors.textMuted, fontSize: 12, marginTop: 8 },
   textArea: { height: 100, paddingTop: 16, textAlignVertical: 'top' },
   submitButton: {
     backgroundColor: colors.ink,

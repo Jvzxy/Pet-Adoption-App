@@ -88,9 +88,14 @@ export default function ProfileScreen({ go }: ScreenProps) {
     }
   };
 
-  const handleLogout = () => {
-    logout(); // Trigger AuthContext logout[cite: 50]
-    go('login');
+  const handleLogout = async () => {
+    try {
+      await logout();
+      go('login');
+    } catch (error) {
+      console.error('Could not sign out:', error);
+      Alert.alert('Could not log out', 'Please try again.');
+    }
   };
 
   return (

@@ -1,9 +1,10 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Appearance } from 'react-native';
 import { colors } from '../constants/theme';
+import { useAuth } from './AuthContext';
 
-const STORAGE_KEY = '@pawfect/app-preferences';
+const STORAGE_KEY_PREFIX = '@pawfect/app-preferences:';
 
 export interface AppColors {
   mint: string;
@@ -52,22 +53,55 @@ const darkColors: AppColors = {
 const AppPreferencesContext = createContext<AppPreferences | null>(null);
 
 export function AppPreferencesProvider({ children }: { children: React.ReactNode }) {
+  const { user, loading: authLoading } = useAuth();
+  const accountId = user?.id ?? null;
+  const activeAccountIdRef = useRef(accountId);
+  activeAccountIdRef.current = accountId;
   const [darkMode, setDarkModeState] = useState(false);
   const [biometricEnabled, setBiometricEnabledState] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadedAccountId, setLoadedAccountId] = useState<string | null | undefined>();
 
   useEffect(() => {
     let active = true;
-    void AsyncStorage.getItem(STORAGE_KEY)
-      .then((stored) => {
-        if (!stored || !active) return;
-        const preferences = JSON.parse(stored) as Partial<Pick<AppPreferences, 'darkMode' | 'biometricEnabled'>>;
-        setDarkModeState(preferences.darkMode === true);
-        setBiometricEnabledState(preferences.biometricEnabled === true);
-        Appearance.setColorScheme(preferences.darkMode === true ? 'dark' : 'light');
-      })
+    if (loadedAccountId === accountId) {
+      setLoading(false);
+      return () => {
+        active = false;
+      };
+    }
+
+    if (authLoading) {
+      setLoading(true);
+      return () => {
+        active = false;
+      };
+    }
+
+    setLoading(true);
+    setDarkModeState(false);
+    setBiometricEnabledState(false);
+    Appearance.setColorScheme('light');
+
+    const loadPreferences = async () => {
+      if (accountId) {
+        const stored = await AsyncStorage.getItem(`${STORAGE_KEY_PREFIX}${accountId}`);
+        if (stored) {
+          const preferences = JSON.parse(stored) as Partial<Pick<AppPreferences, 'darkMode' | 'biometricEnabled'>>;
+          if (!active) return;
+          setDarkModeState(preferences.darkMode === true);
+          setBiometricEnabledState(preferences.biometricEnabled === true);
+          Appearance.setColorScheme(preferences.darkMode === true ? 'dark' : 'light');
+        }
+      }
+
+      if (active) setLoadedAccountId(accountId);
+    };
+
+    void loadPreferences()
       .catch((error: unknown) => {
-        console.error('Could not load app preferences:', error);
+        console.error('Could not load account preferences:', error);
+        if (active) setLoadedAccountId(accountId);
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -76,34 +110,41 @@ export function AppPreferencesProvider({ children }: { children: React.ReactNode
     return () => {
       active = false;
     };
-  }, []);
+  }, [accountId, authLoading, loadedAccountId]);
 
-  const persist = useCallback(async (nextDarkMode: boolean, nextBiometric: boolean) => {
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({
+  const persist = useCallback(async (ownerId: string | null, nextDarkMode: boolean, nextBiometric: boolean) => {
+    if (!ownerId) throw new Error('You must be signed in to save account preferences.');
+    await AsyncStorage.setItem(`${STORAGE_KEY_PREFIX}${ownerId}`, JSON.stringify({
       darkMode: nextDarkMode,
       biometricEnabled: nextBiometric,
     }));
   }, []);
 
   const setDarkMode = useCallback(async (enabled: boolean) => {
-    await persist(enabled, biometricEnabled);
+    await persist(accountId, enabled, biometricEnabled);
+    if (activeAccountIdRef.current !== accountId) return;
     setDarkModeState(enabled);
     Appearance.setColorScheme(enabled ? 'dark' : 'light');
-  }, [biometricEnabled, persist]);
+  }, [accountId, biometricEnabled, persist]);
 
   const setBiometricEnabled = useCallback(async (enabled: boolean) => {
-    await persist(darkMode, enabled);
+    await persist(accountId, darkMode, enabled);
+    if (activeAccountIdRef.current !== accountId) return;
     setBiometricEnabledState(enabled);
-  }, [darkMode, persist]);
+  }, [accountId, darkMode, persist]);
+
+  const preferencesReady = !loading && loadedAccountId === accountId;
+  const activeDarkMode = preferencesReady && darkMode;
+  const activeBiometricEnabled = preferencesReady && biometricEnabled;
 
   const value = useMemo<AppPreferences>(() => ({
-    darkMode,
-    biometricEnabled,
-    colors: darkMode ? darkColors : lightColors,
-    loading,
+    darkMode: activeDarkMode,
+    biometricEnabled: activeBiometricEnabled,
+    colors: activeDarkMode ? darkColors : lightColors,
+    loading: !preferencesReady,
     setDarkMode,
     setBiometricEnabled,
-  }), [darkMode, biometricEnabled, loading, setDarkMode, setBiometricEnabled]);
+  }), [activeDarkMode, activeBiometricEnabled, preferencesReady, setDarkMode, setBiometricEnabled]);
 
   return (
     <AppPreferencesContext.Provider value={value}>

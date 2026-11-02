@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
@@ -122,9 +122,11 @@ function DriverRoute({
 
 export default function App() {
   return (
-    <AppPreferencesProvider>
-      <ThemedApp />
-    </AppPreferencesProvider>
+    <AuthProvider>
+      <AppPreferencesProvider>
+        <ThemedApp />
+      </AppPreferencesProvider>
+    </AuthProvider>
   );
 }
 
@@ -134,15 +136,14 @@ function ThemedApp() {
 
   return (
     <GestureHandlerRootView style={styles.container}>
-      <AuthProvider>
-        <AppDataProvider>
-          {loading ? (
-            <View style={styles.preferenceLoading}>
-              <ActivityIndicator size="large" color={colors.ink} />
-            </View>
-          ) : <AppRouter />}
-        </AppDataProvider>
-      </AuthProvider>
+      <AppDataProvider>
+        <AppRouter />
+        {loading && (
+          <View style={[styles.preferenceLoading, StyleSheet.absoluteFill]}>
+            <ActivityIndicator size="large" color={colors.ink} />
+          </View>
+        )}
+      </AppDataProvider>
     </GestureHandlerRootView>
   );
 }
@@ -151,6 +152,7 @@ function AppRouter() {
   const [screen, setScreen] = useState<string>('splash1');
   const [selectedPetId, setSelectedPetId] = useState<string>('1');
   const [addressReturnTo, setAddressReturnTo] = useState('profile');
+  const hasAuthenticatedUser = useRef(false);
   const { user, loading: authLoading } = useAuth();
   const { favorites, cartItems, setCartItems, toggleFavorite } = useAppData();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -170,12 +172,13 @@ function AppRouter() {
       'forgotPassword',
     ]);
 
-    if (user && authScreens.has(screen)) {
-      setScreen('main');
+    if (user) {
+      hasAuthenticatedUser.current = true;
+      if (authScreens.has(screen)) setScreen('main');
       return;
     }
 
-    if (!user && !authScreens.has(screen)) {
+    if (hasAuthenticatedUser.current || !authScreens.has(screen)) {
       setScreen('login');
     }
   }, [authLoading, screen, user]);
