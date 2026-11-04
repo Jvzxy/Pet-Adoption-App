@@ -38,7 +38,7 @@ export default function ExplorePetsScreen({ go, favorites, toggleFavorite }: Scr
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyEmoji}>{loading ? "…" : "🐾"}</Text>
+            <Text style={styles.emptyEmoji}>{loading ? "…" : "No pets"}</Text>
             <Text style={styles.emptyText}>
               {loading ? "Loading available pets…" : "No pets available right now."}
             </Text>

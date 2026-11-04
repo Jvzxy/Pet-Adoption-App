@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import * as LocalAuthentication from 'expo-local-authentication';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { radii, spacing } from '../../constants/theme';
 import { useAuth } from '../../services/AuthContext';
 import { useAppData } from '../../services/AppDataContext';
@@ -36,6 +37,8 @@ export default function PaymentScreen({
   const { biometricEnabled, colors } = useAppPreferences();
   const styles = createStyles(colors);
   const { cartItems } = useAppData();
+  const insets = useSafeAreaInsets();
+  
   const selectedTotal = cartItems
     .filter((item) => item.selected)
     .reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -218,7 +221,7 @@ export default function PaymentScreen({
       </ScrollView>
 
       {/* Place Order Bar */}
-      <View style={styles.bottomBar}>
+      <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, 16) }]}>
         <View>
           <Text style={styles.totalCountText}>Total</Text>
           <Text style={styles.bottomTotalPrice}>₱ {totalPayment.toFixed(2)}</Text>
@@ -268,7 +271,7 @@ const createStyles = (colors: AppColors) => StyleSheet.create({
   unavailableMethod: { opacity: 0.72 },
   paymentNote: { marginTop: 10, color: colors.textMuted, fontSize: 11, lineHeight: 16 },
   disabledButton: { opacity: 0.5 },
-  bottomBar: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.border, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing.lg, paddingVertical: 16 },
+  bottomBar: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.border, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing.lg, paddingTop: 16 },
   totalCountText: { color: colors.textMuted, fontSize: 11 },
   bottomTotalPrice: { color: colors.ink, fontSize: 18, fontWeight: '900' },
   placeOrderBtn: { backgroundColor: colors.ink, paddingHorizontal: 20, paddingVertical: 12, borderRadius: radii.pill },

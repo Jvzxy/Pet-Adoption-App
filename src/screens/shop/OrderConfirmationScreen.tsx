@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, AppState, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import * as Location from 'expo-location';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { radii, spacing } from '../../constants/theme';
 import { useAuth } from '../../services/AuthContext';
 import { supabase } from '../../services/supabaseClient';
@@ -33,6 +34,7 @@ export default function OrderConfirmationScreen({
   const { user } = useAuth();
   const { colors } = useAppPreferences();
   const styles = createStyles(colors);
+  const insets = useSafeAreaInsets();
   const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
@@ -188,9 +190,9 @@ export default function OrderConfirmationScreen({
   const paymentConfirmed = !onlinePayment || latestOrder?.payment_status === 'paid';
 
   return (
-    <View style={styles.fillWhite}>
+    <View style={[styles.fillWhite, { paddingBottom: insets.bottom + 24 }]}>
       <View style={styles.topSection}>
-        <CircleCheckIcon width={130} height={130} fill={colors.mint} style={{ marginBottom: 24 }} />
+        <CircleCheckIcon width={130} height={130} fill={colors.ink} style={{ marginBottom: 24 }} />
         <Text style={styles.headingTitle}>
           {latestOrder && paymentConfirmed
             ? 'Your order is saved!'
@@ -283,7 +285,7 @@ export default function OrderConfirmationScreen({
 }
 
 const createStyles = (colors: AppColors) => StyleSheet.create({
-  fillWhite: { flex: 1, backgroundColor: colors.background, paddingHorizontal: spacing.lg, justifyContent: 'space-between', paddingTop: 60, paddingBottom: 40 },
+  fillWhite: { flex: 1, backgroundColor: colors.background, paddingHorizontal: spacing.lg, justifyContent: 'space-between', paddingTop: 60 },
   topSection: { alignItems: 'center', marginTop: 20 },
   headingTitle: { fontSize: 20, fontWeight: '900', color: colors.ink, marginBottom: 8 },
   headingSub: { fontSize: 12, color: colors.textMuted, textAlign: 'center', lineHeight: 18, paddingHorizontal: 10 },
@@ -298,9 +300,9 @@ const createStyles = (colors: AppColors) => StyleSheet.create({
   colValue: { fontSize: 11, fontWeight: '700', color: colors.ink, lineHeight: 15 },
   amountValue: { fontSize: 14, fontWeight: '900', color: colors.ink },
   actionSection: { width: '100%', gap: 12 },
-  trackBtn: { backgroundColor: colors.mint, height: 48, borderRadius: radii.pill, justifyContent: 'center', alignItems: 'center' },
+  trackBtn: { backgroundColor: colors.ink, height: 48, borderRadius: radii.pill, justifyContent: 'center', alignItems: 'center' },
   disabledBtn: { opacity: 0.5 },
-  trackBtnText: { fontSize: 13, fontWeight: '800', color: colors.isDark ? '#111A1A' : colors.ink },
-  homeBtn: { backgroundColor: 'transparent', borderWidth: 1, borderColor: colors.mint, height: 48, borderRadius: radii.pill, justifyContent: 'center', alignItems: 'center' },
+  trackBtnText: { fontSize: 13, fontWeight: '800', color: colors.background },
+  homeBtn: { backgroundColor: 'transparent', borderWidth: 1, borderColor: colors.ink, height: 48, borderRadius: radii.pill, justifyContent: 'center', alignItems: 'center' },
   homeBtnText: { fontSize: 13, fontWeight: '800', color: colors.ink },
 });

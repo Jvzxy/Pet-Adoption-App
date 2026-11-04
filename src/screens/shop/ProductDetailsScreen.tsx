@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Alert, Image, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { radii, spacing } from '../../constants/theme';
 import { useAppPreferences, type AppColors } from '../../services/AppPreferencesContext';
 import { useAppData } from '../../services/AppDataContext';
@@ -19,6 +21,7 @@ export default function ProductDetailsScreen({ go, productId }: ScreenProps) {
   const styles = createStyles(colors);
   const { catalogItems, setCartItems } = useAppData();
   const { user } = useAuth();
+  const insets = useSafeAreaInsets();
   const [selectedVariation, setSelectedVariation] = useState<number>(0);
   const [quantity, setQuantity] = useState<number>(1);
   const [showSuccessModal, setShowSuccessModal] = useState<boolean>(false);
@@ -89,7 +92,10 @@ export default function ProductDetailsScreen({ go, productId }: ScreenProps) {
         </Pressable>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollPad}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[styles.scrollPad, { paddingBottom: insets.bottom + 96 }]}
+      >
         <View style={styles.imageCard}>
           {product.imageUri ? (
             <Image
@@ -98,7 +104,7 @@ export default function ProductDetailsScreen({ go, productId }: ScreenProps) {
               resizeMode="contain"
             />
           ) : (
-            <Text style={{ fontSize: 40, color: '#CCC' }}>🐾</Text>
+            <Ionicons name="image-outline" size={40} color="#CCC" />
           )}
         </View>
 
@@ -132,7 +138,7 @@ export default function ProductDetailsScreen({ go, productId }: ScreenProps) {
         </View>
       </ScrollView>
 
-      <View style={styles.footerRow}>
+      <View style={[styles.footerRow, { bottom: insets.bottom + 12 }]}>
         <View style={styles.quantityBox}>
           <Pressable onPress={() => setQuantity(Math.max(1, quantity - 1))} hitSlop={10}>
             <Text style={styles.qtyBtn}>—</Text>
@@ -208,12 +214,12 @@ const createStyles = (colors: AppColors) => StyleSheet.create({
   variationLabel: { fontSize: 14, fontWeight: '700', color: colors.ink },
   priceText: { fontSize: 14, fontWeight: '800', color: colors.ink },
   
-  footerRow: { position: 'absolute', bottom: 30, left: spacing.lg, right: spacing.lg, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  footerRow: { position: 'absolute', left: spacing.lg, right: spacing.lg, flexDirection: 'row', alignItems: 'center', gap: 12 },
   quantityBox: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: colors.cardBg, borderRadius: radii.pill, width: 120, height: 48, paddingHorizontal: 16 },
   qtyBtn: { fontSize: 16, fontWeight: 'bold', color: colors.ink },
   qtyText: { fontSize: 15, fontWeight: '800', color: colors.ink },
-  addToCartBtn: { flex: 1, backgroundColor: colors.isDark ? '#35635E' : '#B2DFDB', height: 48, borderRadius: radii.pill, justifyContent: 'center', alignItems: 'center' },
-  addToCartText: { fontSize: 14, fontWeight: '900', color: colors.isDark ? '#FFFFFF' : colors.ink },
+  addToCartBtn: { flex: 1, backgroundColor: colors.ink, height: 48, borderRadius: radii.pill, justifyContent: 'center', alignItems: 'center' },
+  addToCartText: { fontSize: 14, fontWeight: '900', color: colors.background },
 
   /* Modal Styles */
   modalOverlay: {

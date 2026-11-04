@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppPreferences, type AppColors } from '../services/AppPreferencesContext';
 
 // Assuming you have a colors file, adjust the import path if needed
@@ -26,7 +27,8 @@ const TABS = [
 
 export default function BottomNavigation({ activeTab, go }: BottomNavigationProps) {
   const { colors } = useAppPreferences();
-  const styles = createStyles(colors);
+  const insets = useSafeAreaInsets();
+  const styles = createStyles(colors, insets.bottom);
   const animations = useRef(
     Object.fromEntries(
       TABS.map(({ key }) => [key, new Animated.Value(key === activeTab ? 1 : 0)])
@@ -110,13 +112,12 @@ export default function BottomNavigation({ activeTab, go }: BottomNavigationProp
   );
 }
 
-const createStyles = (colors: AppColors) => StyleSheet.create({
+const createStyles = (colors: AppColors, bottomInset: number) => StyleSheet.create({
   wrapper: {
     position: 'absolute',
-    bottom: 0,
+    bottom: bottomInset + 8,
     left: 0,
     right: 0,
-    paddingBottom: 20, 
   },
   bar: {
     flexDirection: 'row',

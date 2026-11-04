@@ -1,6 +1,7 @@
 import React from 'react';
 import { Dimensions, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { spacing } from '../../constants/theme';
 import { useAppData } from '../../services/AppDataContext';
@@ -16,6 +17,7 @@ interface DetailsProps {
 export default function DetailsScreen({ go, id }: DetailsProps) {
   const { colors } = useAppPreferences();
   const styles = createStyles(colors);
+  const insets = useSafeAreaInsets();
   const { catalogItems, loading } = useAppData();
   const item = catalogItems.find((c) => c.id === id && c.type === 'pet');
 
@@ -57,7 +59,7 @@ export default function DetailsScreen({ go, id }: DetailsProps) {
       {/* Scrollable Details Card */}
       <ScrollView 
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 24 }]}
       >
         <View style={styles.card}>
           {/* Drag Handle Indicator */}
@@ -112,7 +114,7 @@ export default function DetailsScreen({ go, id }: DetailsProps) {
           {/* Traits Row */}
           <View style={styles.traitsContainer}>
             {(item.traits || ['Friendly', 'Playful', 'Gentle']).map((trait, index) => (
-              <View key={index} style={styles.traitBox}>
+              <View key={`${trait}-${index}`} style={styles.traitBox}>
                 <Ionicons name="happy-outline" size={16} color={colors.ink} />
                 <Text style={styles.traitText}>{trait}</Text>
               </View>
@@ -124,7 +126,7 @@ export default function DetailsScreen({ go, id }: DetailsProps) {
             style={styles.adoptButton}
             onPress={() => go('adoptionForm')}
           >
-            <Ionicons name="paw" size={20} color={colors.ink} />
+            <Ionicons name="home-outline" size={20} color={colors.ink} />
             <Text style={styles.adoptButtonText}>Adopt {item.name}</Text>
           </Pressable>
         </View>
@@ -192,6 +194,7 @@ const createStyles = (colors: AppColors) => StyleSheet.create({
     gap: 12,
   },
   name: { 
+    flexShrink: 1,
     fontSize: 28, 
     fontWeight: '900', 
     color: colors.ink 
@@ -231,7 +234,7 @@ const createStyles = (colors: AppColors) => StyleSheet.create({
   },
   statBox: {
     flex: 1,
-    flexDirection: 'row',
+    flexDirection: 'column',
     alignItems: 'center',
     backgroundColor: colors.cardBg,
     padding: 12,
@@ -242,20 +245,24 @@ const createStyles = (colors: AppColors) => StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
-    gap: 8,
+    gap: 6,
   },
   statTextContainer: {
-    flex: 1,
+    width: '100%',
+    alignItems: 'center',
   },
   statValue: {
     fontSize: 13,
     fontWeight: '800',
     color: colors.ink,
+    textAlign: 'center',
+    flexShrink: 1,
   },
   statLabel: {
     fontSize: 11,
     color: colors.textMuted,
     fontWeight: '500',
+    textAlign: 'center',
   },
   sectionTitle: { 
     fontSize: 16, 
@@ -271,18 +278,19 @@ const createStyles = (colors: AppColors) => StyleSheet.create({
   },
   traitsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-start',
+    gap: 8,
     marginBottom: 32,
   },
   traitBox: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    alignSelf: 'flex-start',
     backgroundColor: colors.cardBg,
     paddingVertical: 10,
+    paddingHorizontal: 12,
     borderRadius: 12,
-    marginHorizontal: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
@@ -294,6 +302,7 @@ const createStyles = (colors: AppColors) => StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     color: colors.ink,
+    flexShrink: 1,
   },
   adoptButton: { 
     flexDirection: 'row',

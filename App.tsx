@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 // Screen Imports
 import CartScreen from './src/screens/shop/CartScreen';
@@ -135,16 +136,18 @@ function ThemedApp() {
   const styles = createStyles(colors);
 
   return (
-    <GestureHandlerRootView style={styles.container}>
-      <AppDataProvider>
-        <AppRouter />
-        {loading && (
-          <View style={[styles.preferenceLoading, StyleSheet.absoluteFill]}>
-            <ActivityIndicator size="large" color={colors.ink} />
-          </View>
-        )}
-      </AppDataProvider>
-    </GestureHandlerRootView>
+    <SafeAreaProvider>
+      <GestureHandlerRootView style={styles.container}>
+        <AppDataProvider>
+          <AppRouter />
+          {loading && (
+            <View style={[styles.preferenceLoading, StyleSheet.absoluteFill]}>
+              <ActivityIndicator size="large" color={colors.ink} />
+            </View>
+          )}
+        </AppDataProvider>
+      </GestureHandlerRootView>
+    </SafeAreaProvider>
   );
 }
 
