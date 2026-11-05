@@ -43,6 +43,7 @@ function mapCatalogRow(row: Record<string, unknown>): CatItem {
     name: String(row.name ?? ''),
     category,
     type: rowType,
+    available: row.available !== false,
     breed: asOptionalString(row.breed),
     age: asOptionalString(row.age),
     gender: asOptionalString(row.gender),

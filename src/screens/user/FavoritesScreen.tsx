@@ -36,7 +36,9 @@ export default function FavoritesScreen({ go, favorites, toggleFavorite }: Scree
   const [searchQuery, setSearchQuery] = useState('');
   const { catalogItems } = useAppData();
 
-  const favoriteCats = catalogItems.filter(cat => cat.type === 'pet' && favorites.includes(cat.id));
+  const favoriteCats = catalogItems.filter(
+    cat => cat.type === 'pet' && cat.available && favorites.includes(cat.id),
+  );
   const filteredCats = favoriteCats.filter((cat) => {
     const query = searchQuery.trim().toLowerCase();
     return !query || [cat.name, cat.breed, cat.location, cat.age, cat.gender]

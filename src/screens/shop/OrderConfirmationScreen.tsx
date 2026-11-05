@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, AppState, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Alert, AppState, Pressable, StyleSheet, Text, View } from 'react-native';
 import * as Location from 'expo-location';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { radii, spacing } from '../../constants/theme';
@@ -7,7 +7,7 @@ import { useAuth } from '../../services/AuthContext';
 import { supabase } from '../../services/supabaseClient';
 import { Order } from '../user/MyOrdersScreen';
 import { CartItem } from './CartScreen';
-import { getPaymentMethodLabel, isPayMongoEnabled, type PaymentMethod } from '../../services/paymentMethods';
+import { getPaymentMethodLabel, type PaymentMethod } from '../../services/paymentMethods';
 import { useAppPreferences, type AppColors } from '../../services/AppPreferencesContext';
 
 // SVG Imports
@@ -21,6 +21,7 @@ interface ScreenProps {
   setCartItems: React.Dispatch<React.SetStateAction<CartItem[]>>;
   setOrders: React.Dispatch<React.SetStateAction<Order[]>>;
   paymentMethod: PaymentMethod;
+  initialOrder?: Order | null;
 }
 
 export default function OrderConfirmationScreen({
@@ -30,42 +31,15 @@ export default function OrderConfirmationScreen({
   setCartItems,
   setOrders,
   paymentMethod,
+  initialOrder,
 }: ScreenProps) {
   const { user } = useAuth();
   const { colors } = useAppPreferences();
   const styles = createStyles(colors);
   const insets = useSafeAreaInsets();
-  const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
+  const [createdOrder, setCreatedOrder] = useState<Order | null>(initialOrder ?? null);
   const [isSaving, setIsSaving] = useState(false);
-  const [checkoutError, setCheckoutError] = useState<string | null>(null);
-  const [isOpeningCheckout, setIsOpeningCheckout] = useState(false);
-  const hasStartedRef = useRef(false);
-
-  const openHostedCheckout = useCallback(async (orderId: string) => {
-    if (!isPayMongoEnabled) {
-      throw new Error('PayMongo is not enabled. Complete the secure gateway setup before choosing online payment.');
-    }
-
-    setCheckoutError(null);
-    setIsOpeningCheckout(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('create-paymongo-checkout', {
-        body: { order_id: orderId, payment_method: paymentMethod },
-      });
-      if (error) throw error;
-      if (typeof data?.checkout_url !== 'string') {
-        throw new Error(data?.error || 'The payment provider did not return a checkout link.');
-      }
-      await Linking.openURL(data.checkout_url);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Could not open secure checkout.';
-      console.error('Could not open PayMongo checkout:', message);
-      setCheckoutError(message);
-      throw error;
-    } finally {
-      setIsOpeningCheckout(false);
-    }
-  }, [paymentMethod]);
+  const hasStartedRef = useRef(Boolean(initialOrder));
 
   const createOrder = async () => {
     const selectedItems = cartItems.filter((item) => item.selected);
@@ -75,10 +49,6 @@ export default function OrderConfirmationScreen({
 
     try {
       if (!user) throw new Error('Sign in before placing an order.');
-      if (paymentMethod !== 'cod' && !isPayMongoEnabled) {
-        throw new Error('PayMongo is not enabled. Complete the secure gateway setup before choosing online payment.');
-      }
-
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         throw new Error('Location permission is needed to save the delivery destination.');
@@ -121,13 +91,6 @@ export default function OrderConfirmationScreen({
       setCreatedOrder(order);
       setOrders((previous) => [order, ...previous]);
       setCartItems((previous) => previous.filter((item) => !item.selected));
-      if (paymentMethod !== 'cod') {
-        try {
-          await openHostedCheckout(order.id);
-        } catch {
-          // The order is already saved; the screen offers a secure checkout retry.
-        }
-      }
     } catch (error) {
       hasStartedRef.current = false;
       const message = error instanceof Error ? error.message : 'Order creation failed. Please try again.';
@@ -139,17 +102,18 @@ export default function OrderConfirmationScreen({
   };
 
   useEffect(() => {
-    void createOrder();
-  }, []);
+    if (!initialOrder) void createOrder();
+  }, [initialOrder]);
 
   useEffect(() => {
-    if (!createdOrder || paymentMethod === 'cod') return;
+    const orderToWatch = createdOrder ?? initialOrder;
+    if (!orderToWatch || paymentMethod === 'cod') return;
 
     const refreshPaymentStatus = async () => {
       const { data, error } = await supabase
         .from('orders')
         .select('payment_status')
-        .eq('id', createdOrder.id)
+        .eq('id', orderToWatch.id)
         .maybeSingle();
       if (error) {
         console.error('Could not refresh payment status:', error.message);
@@ -163,10 +127,10 @@ export default function OrderConfirmationScreen({
     };
 
     const channel = supabase
-      .channel(`order-payment-${createdOrder.id}`)
+      .channel(`order-payment-${orderToWatch.id}`)
       .on(
         'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'orders', filter: `id=eq.${createdOrder.id}` },
+        { event: 'UPDATE', schema: 'public', table: 'orders', filter: `id=eq.${orderToWatch.id}` },
         (payload) => {
           const paymentStatus = payload.new.payment_status;
           if (paymentStatus === 'paid' || paymentStatus === 'pending' || paymentStatus === 'refunded') {
@@ -183,9 +147,9 @@ export default function OrderConfirmationScreen({
       appStateSubscription.remove();
       void supabase.removeChannel(channel);
     };
-  }, [createdOrder?.id, paymentMethod]);
+  }, [createdOrder?.id, initialOrder?.id, paymentMethod]);
 
-  const latestOrder = createdOrder || (cartItems.length === 0 ? orders[0] : undefined);
+  const latestOrder = createdOrder || initialOrder || (cartItems.length === 0 ? orders[0] : undefined);
   const onlinePayment = paymentMethod !== 'cod';
   const paymentConfirmed = !onlinePayment || latestOrder?.payment_status === 'paid';
 
@@ -204,9 +168,9 @@ export default function OrderConfirmationScreen({
         </Text>
         <Text style={styles.headingSub}>
           {latestOrder && onlinePayment && !paymentConfirmed
-            ? checkoutError || 'Complete payment in the secure PayMongo checkout. The order will be confirmed after PayMongo verifies it.'
+            ? 'Payment is still being verified. The order will be confirmed after Xendit reports the payment.'
             : latestOrder && onlinePayment
-              ? 'PayMongo confirmed your payment. Tracking becomes available after a driver is assigned.'
+              ? 'Xendit confirmed your payment. Tracking becomes available after a driver is assigned.'
               : latestOrder
                 ? 'Your order is in the system. Cash is due on delivery; tracking becomes available after a driver is assigned.'
                 : 'We need your location and a connection to Supabase before this order can be created.'}
@@ -255,17 +219,6 @@ export default function OrderConfirmationScreen({
       </View>
 
       <View style={styles.actionSection}>
-        {onlinePayment && !paymentConfirmed && latestOrder && (
-          <Pressable
-            style={[styles.trackBtn, isOpeningCheckout && styles.disabledBtn]}
-            onPress={() => void openHostedCheckout(latestOrder.id).catch(() => undefined)}
-            disabled={isOpeningCheckout}
-          >
-            <Text style={styles.trackBtnText}>
-              {isOpeningCheckout ? 'Opening secure checkout...' : 'Continue to secure payment'}
-            </Text>
-          </Pressable>
-        )}
         <Pressable
         style={[styles.trackBtn, (!latestOrder || isSaving || !paymentConfirmed) && styles.disabledBtn]}
         onPress={() => latestOrder ? go('trackOrder', latestOrder.id) : void createOrder()}

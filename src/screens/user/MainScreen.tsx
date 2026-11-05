@@ -127,7 +127,7 @@ export default function MainScreen({
   const { catalogItems, loading } = useAppData();
   const { logout } = useAuth();
 
-  const STORE_ITEMS: DisplayItem[] = catalogItems.map((item) => {
+  const STORE_ITEMS: DisplayItem[] = catalogItems.filter((item) => item.available).map((item) => {
     const isProduct = item.type === "product";
     return {
       id: item.id,

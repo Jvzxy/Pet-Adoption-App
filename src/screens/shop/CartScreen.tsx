@@ -223,7 +223,6 @@ export default function CartScreen({ go, cartItems = [], setCartItems }: ScreenP
             </Text>
           </Pressable>
         </View>
-
       </View>
       <BottomNavigation activeTab="cart" go={go} />
     </View>
@@ -322,8 +321,10 @@ const createStyles = (colors: AppColors) => StyleSheet.create({
   pricingSection: { alignItems: "flex-end", marginRight: 10 },
   totalPrice: { color: colors.isDark ? colors.ink : '#FFF', fontSize: 14, fontWeight: "900" },
   shippingText: { color: colors.textMuted, fontSize: 9, fontWeight: "500", marginTop: 2 },
-  checkoutBtn: { backgroundColor: colors.mint, paddingHorizontal: 18, paddingVertical: 10, borderRadius: 20 },
-  checkoutBtnText: { color: colors.isDark ? '#111A1A' : colors.ink, fontSize: 12, fontWeight: "800" },
+  // Fixed checkoutBtn to use white in light mode instead of ink (which is dark grey)
+  checkoutBtn: { backgroundColor: colors.isDark ? colors.mint : '#FFFFFF', paddingHorizontal: 18, paddingVertical: 10, borderRadius: 20 },
+  // Fixed text to match the new background
+  checkoutBtnText: { color: colors.isDark ? colors.ink : '#000000', fontSize: 12, fontWeight: "800" },
   deleteBtn: { backgroundColor: "#FF4444" },
   deleteBtnText: { color: '#FFF' },
 });

@@ -27,7 +27,9 @@ export default function AdoptionFormScreen({ go, id }: ScreenProps) {
   const styles = createStyles(colors);
   const { user } = useAuth();
   const { catalogItems } = useAppData();
-  const selectedCat = catalogItems.find((cat) => cat.id === id && cat.type === 'pet');
+  const selectedCat = catalogItems.find(
+    (cat) => cat.id === id && cat.type === 'pet' && cat.available,
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Form Fields State

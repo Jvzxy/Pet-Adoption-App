@@ -126,6 +126,10 @@ export default function ProfileScreen({ go }: ScreenProps) {
               <Text style={styles.adminToolButtonText}>Add a cat</Text>
               <AngleRightIcon width={12} height={12} fill={colors.ink} />
             </Pressable>
+            <Pressable style={styles.adminToolButton} onPress={() => go('adminPets')}>
+              <Text style={styles.adminToolButtonText}>Manage pet availability</Text>
+              <AngleRightIcon width={12} height={12} fill={colors.ink} />
+            </Pressable>
             <Pressable style={styles.adminToolButton} onPress={() => go('adminAddProduct')}>
               <Text style={styles.adminToolButtonText}>Add a product</Text>
               <AngleRightIcon width={12} height={12} fill={colors.ink} />
@@ -180,8 +184,6 @@ export default function ProfileScreen({ go }: ScreenProps) {
             <Text style={styles.menuLabel}>Change Password</Text>
             <AngleRightIcon width={12} height={12} fill="rgba(0,0,0,0.3)" />
           </Pressable>
-
-          <View style={styles.divider} />
 
           <Pressable style={styles.menuItem} onPress={() => go('helpSupport')}>
             <CircleQuestionIcon width={16} height={16} fill={colors.ink} style={styles.svgIcon} />

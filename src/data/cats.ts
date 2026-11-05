@@ -3,6 +3,7 @@ export interface CatItem {
   name: string;
   category: 'Pet' | 'Toys' | 'Accessories';
   type: 'pet' | 'product';
+  available: boolean;
   breed?: string;
   age?: string;
   gender?: string;

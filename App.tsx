@@ -17,6 +17,7 @@ import Splash1Screen from './src/screens/auth/Splash1Screen';
 import Splash2Screen from './src/screens/auth/Splash2Screen';
 import Splash3Screen from './src/screens/auth/Splash3Screen';
 import AdminAddCatScreen from './src/screens/admin/AdminAddCatScreen';
+import AdminPetsScreen from './src/screens/admin/AdminPetsScreen';
 import AddProductScreen from './src/screens/admin/AddProductScreen'; 
 import AdminDeliveriesScreen from './src/screens/admin/AdminDeliveriesScreen';
 import AdminAdoptionsScreen from './src/screens/admin/AdminAdoptionsScreen';
@@ -159,6 +160,7 @@ function AppRouter() {
   const { user, loading: authLoading } = useAuth();
   const { favorites, cartItems, setCartItems, toggleFavorite } = useAppData();
   const [orders, setOrders] = useState<Order[]>([]);
+  const [completedCheckoutOrder, setCompletedCheckoutOrder] = useState<Order | null>(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>('cod');
 
   useEffect(() => {
@@ -188,6 +190,7 @@ function AppRouter() {
 
   const go = (next: string, id?: string) => {
     if (next === 'address') setAddressReturnTo(screen);
+    if (next === 'payment') setCompletedCheckoutOrder(null);
     setScreen(next);
     if (id) {
       setSelectedPetId(id);
@@ -236,6 +239,11 @@ function AppRouter() {
             <AdminAddCatScreen go={go} />
           </AdminRoute>
         )}
+        {screen === 'adminPets' && (
+          <AdminRoute go={go}>
+            <AdminPetsScreen go={go} />
+          </AdminRoute>
+        )}
         {screen === 'adminAddProduct' && (
           <AdminRoute go={go}>
             <AddProductScreen go={go} />
@@ -278,6 +286,10 @@ function AppRouter() {
         {screen === 'payment' && (
           <PaymentScreen
             go={go}
+            onPaymentComplete={(order) => {
+              setCompletedCheckoutOrder(order);
+              setOrders((previous) => [order, ...previous.filter((item) => item.id !== order.id)]);
+            }}
             selectedPaymentMethod={selectedPaymentMethod}
             setSelectedPaymentMethod={setSelectedPaymentMethod}
           />
@@ -293,6 +305,7 @@ function AppRouter() {
             setCartItems={setCartItems} 
             setOrders={setOrders} 
             paymentMethod={selectedPaymentMethod}
+            initialOrder={completedCheckoutOrder}
           />
         )}
 

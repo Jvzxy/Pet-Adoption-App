@@ -949,13 +949,20 @@ alter table public.orders
   add column if not exists payment_status text not null default 'pending'
     check (payment_status in ('pending', 'paid', 'refunded')),
   add column if not exists delivery_address text not null default '',
-  add column if not exists paymongo_checkout_session_id text,
-  add column if not exists paymongo_checkout_url text;
+  add column if not exists xendit_invoice_id text,
+  add column if not exists xendit_invoice_url text;
 
 alter table public.orders drop constraint if exists orders_payment_method_check;
+update public.orders
+set payment_method = 'online'
+where payment_method not in ('cod', 'xendit_card', 'xendit_gcash', 'xendit_maya');
 alter table public.orders
   add constraint orders_payment_method_check
-  check (payment_method in ('cod', 'paymongo_card', 'paymongo_gcash', 'paymongo_maya'));
+  check (payment_method in ('cod', 'online', 'xendit_card', 'xendit_gcash', 'xendit_maya'));
+
+alter table public.orders
+  drop column if exists paymongo_checkout_session_id,
+  drop column if exists paymongo_checkout_url;
 
 create or replace function public.notify_payment_status_change()
 returns trigger
@@ -1009,7 +1016,7 @@ begin
     raise exception 'Sign in before placing an order';
   end if;
   if p_payment_method is null
-    or p_payment_method not in ('cod', 'paymongo_card', 'paymongo_gcash', 'paymongo_maya') then
+    or p_payment_method not in ('cod', 'xendit_card', 'xendit_gcash', 'xendit_maya') then
     raise exception 'Select a supported payment method';
   end if;
   if p_delivery_latitude is null or p_delivery_latitude not between -90 and 90

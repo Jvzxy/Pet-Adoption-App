@@ -17,7 +17,7 @@ export default function ExplorePetsScreen({ go, favorites, toggleFavorite }: Scr
   const { colors } = useAppPreferences();
   const styles = createStyles(colors);
   const { catalogItems, loading } = useAppData();
-  const petItems = catalogItems.filter(item => item.type === 'pet');
+  const petItems = catalogItems.filter(item => item.type === 'pet' && item.available);
 
   return (
     <View style={styles.container}>

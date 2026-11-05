@@ -107,7 +107,7 @@ export default function SettingsScreen({ go }: ScreenProps) {
               disabled={isUpdating || preferences.loading}
             />
           </View>
-          <View style={styles.divider} />
+          
           <Pressable style={styles.menuItemAction} onPress={() => go('privacyPolicy')}>
             <Text style={styles.menuLabel}>Privacy Policy</Text>
             <AngleRightIcon width={12} height={12} fill={preferences.colors.textMuted} />

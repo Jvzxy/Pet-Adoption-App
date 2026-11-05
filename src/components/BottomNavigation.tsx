@@ -1,10 +1,7 @@
 import React, { useEffect, useRef } from 'react';
-import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppPreferences, type AppColors } from '../services/AppPreferencesContext';
-
-// Assuming you have a colors file, adjust the import path if needed
-// import { colors } from '../constants/theme'; 
 
 import CartIcon from '../images/Icons/cart-shopping-solid-full.svg';
 import CommentIcon from '../images/Icons/comment-solid-full.svg';
@@ -19,16 +16,17 @@ interface BottomNavigationProps {
 }
 
 const TABS = [
-  { key: 'home', label: 'Home', Icon: HouseIcon },
-  { key: 'chat', label: 'Chat', Icon: CommentIcon },
-  { key: 'cart', label: 'Cart', Icon: CartIcon },
-  { key: 'profile', label: 'Profile', Icon: UserIcon },
+  { key: 'home', Icon: HouseIcon },
+  { key: 'chat', Icon: CommentIcon },
+  { key: 'cart', Icon: CartIcon },
+  { key: 'profile', Icon: UserIcon },
 ] as const;
 
 export default function BottomNavigation({ activeTab, go }: BottomNavigationProps) {
   const { colors } = useAppPreferences();
   const insets = useSafeAreaInsets();
   const styles = createStyles(colors, insets.bottom);
+  
   const animations = useRef(
     Object.fromEntries(
       TABS.map(({ key }) => [key, new Animated.Value(key === activeTab ? 1 : 0)])
@@ -36,11 +34,12 @@ export default function BottomNavigation({ activeTab, go }: BottomNavigationProp
   ).current;
 
   useEffect(() => {
+    // Upgraded spring animation for a more playful, bouncy feel
     const activeAnim = Animated.spring(animations[activeTab], {
       toValue: 1,
       useNativeDriver: true,
-      friction: 6,
-      tension: 60,
+      friction: 5,
+      tension: 70,
     });
 
     const inactiveAnims = TABS.filter((t) => t.key !== activeTab).map((t) =>
@@ -48,7 +47,7 @@ export default function BottomNavigation({ activeTab, go }: BottomNavigationProp
         toValue: 0,
         useNativeDriver: true,
         friction: 6,
-        tension: 60,
+        tension: 50,
       })
     );
 
@@ -58,28 +57,32 @@ export default function BottomNavigation({ activeTab, go }: BottomNavigationProp
   return (
     <View pointerEvents="box-none" style={styles.wrapper}>
       <View style={styles.bar}>
-        {TABS.map(({ key, label, Icon }) => {
+        {TABS.map(({ key, Icon }) => {
           const isActive = activeTab === key;
           const anim = animations[key];
 
+          // Subtly lift the icon
           const iconTranslateY = anim.interpolate({
             inputRange: [0, 1],
-            outputRange: [0, -14],
+            outputRange: [0, -6], 
           });
 
-          const labelOpacity = anim.interpolate({
-            inputRange: [0.3, 1],
-            outputRange: [0, 1],
-          });
-
-          const labelTranslateY = anim.interpolate({
+          // Pop the icon size up slightly when active
+          const iconScale = anim.interpolate({
             inputRange: [0, 1],
-            outputRange: [10, 0],
+            outputRange: [1, 1.15],
           });
 
+          // Expand the background bubble
           const circleScale = anim.interpolate({
             inputRange: [0, 1],
             outputRange: [0, 1],
+          });
+          
+          // Fade in the bubble smoothly
+          const circleOpacity = anim.interpolate({
+            inputRange: [0, 0.5, 1],
+            outputRange: [0, 0.8, 1],
           });
 
           return (
@@ -88,22 +91,10 @@ export default function BottomNavigation({ activeTab, go }: BottomNavigationProp
               style={styles.tab}
               onPress={() => go(key)}
             >
-              <Animated.View style={[styles.iconContainer, { transform: [{ translateY: iconTranslateY }] }]}>
-                <Animated.View style={[styles.activeBubble, { transform: [{ scale: circleScale }] }]} />
-                <Icon width={24} height={24} fill={isActive ? colors.ink : colors.textMuted} />
+              <Animated.View style={[styles.iconContainer, { transform: [{ translateY: iconTranslateY }, { scale: iconScale }] }]}>
+                <Animated.View style={[styles.activeBubble, { opacity: circleOpacity, transform: [{ scale: circleScale }] }]} />
+                <Icon width={22} height={22} fill={isActive ? colors.ink : colors.textMuted} />
               </Animated.View>
-              
-              <Animated.Text 
-                style={[
-                  styles.label, 
-                  { 
-                    opacity: labelOpacity,
-                    transform: [{ translateY: labelTranslateY }]
-                  }
-                ]}
-              >
-                {label}
-              </Animated.Text>
             </Pressable>
           );
         })}
@@ -115,7 +106,7 @@ export default function BottomNavigation({ activeTab, go }: BottomNavigationProp
 const createStyles = (colors: AppColors, bottomInset: number) => StyleSheet.create({
   wrapper: {
     position: 'absolute',
-    bottom: bottomInset + 8,
+    bottom: bottomInset + 12, // Lifted slightly higher off the bottom edge
     left: 0,
     right: 0,
   },
@@ -123,15 +114,16 @@ const createStyles = (colors: AppColors, bottomInset: number) => StyleSheet.crea
     flexDirection: 'row',
     backgroundColor: colors.surface,
     height: 65,
-    marginHorizontal: 20,
+    marginHorizontal: 24, // Tighter width for a pill-like look
     borderRadius: 35,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 8,
     justifyContent: 'space-around',
     alignItems: 'center',
+    paddingHorizontal: 8,
   },
   tab: {
     flex: 1,
@@ -142,21 +134,14 @@ const createStyles = (colors: AppColors, bottomInset: number) => StyleSheet.crea
   iconContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    width: 45,
-    height: 45,
+    width: 48,
+    height: 48,
   },
   activeBubble: {
     position: 'absolute',
-    width: 45,
-    height: 45,
-    borderRadius: 25,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: colors.mint,
-  },
-  label: {
-    position: 'absolute',
-    bottom: -15,
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.ink,
   },
 });

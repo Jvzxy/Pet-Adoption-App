@@ -1,5 +1,5 @@
-[functions.create-paymongo-checkout]
+[functions.create-xendit-checkout]
 verify_jwt = true
 
-[functions.paymongo-webhook]
+[functions.xendit-webhook]
 verify_jwt = false

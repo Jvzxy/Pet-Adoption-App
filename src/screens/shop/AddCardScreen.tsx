@@ -18,11 +18,11 @@ export default function AddCardScreen({ go }: ScreenProps) {
         <Pressable onPress={() => go('payment')} hitSlop={10}>
           <AngleLeftIcon width={24} height={24} fill={colors.ink} />
         </Pressable>
-        <Text style={styles.title}>Set up secure PayMongo checkout</Text>
+        <Text style={styles.title}>Secure Xendit checkout</Text>
         <View style={{ width: 24 }} />
       </View>
       <Text style={styles.message}>
-        PayMongo is not enabled for this app yet. Create and verify a PayMongo account, then configure its secret key and webhook in Supabase. Once enabled, card, GCash, and Maya details are entered on PayMongo’s hosted checkout page—not stored by this app.
+        Card, GCash, and Maya payments are completed on Xendit's secure hosted checkout page. Your payment details are never stored in this app.
       </Text>
       <Pressable style={styles.button} onPress={() => go('payment')}>
         <Text style={styles.buttonText}>Return to checkout</Text>

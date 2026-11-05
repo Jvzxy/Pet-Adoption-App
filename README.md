@@ -15,7 +15,7 @@ The app uses Expo's WebView package to render Leaflet and OpenStreetMap tiles. I
 
 - Catalog pets and products, including uploaded photos, are shared across signed-in devices. The app reads available catalog items publicly; creating and managing items requires the `admin` role. Images are stored in the `catalog-images` bucket created by the schema.
 - Favorites and cart contents are saved to the signed-in account. Checkout creates an order through a server-side database function, checks current product availability and variation prices, and charges a fixed ₱100 delivery fee.
-- Cash on Delivery works without a payment processor. Card, Maya, and GCash use PayMongo-hosted checkout; payment credentials are entered on PayMongo, never stored in this app. Online payments stay pending until PayMongo's signed webhook confirms payment, and admins cannot assign unpaid online orders.
+- Cash on Delivery works without a payment processor. Card, Maya, and GCash use Xendit-hosted checkout; payment credentials are entered on Xendit, never stored in this app. Online payments stay pending until Xendit's authenticated webhook confirms payment, and admins cannot assign unpaid online orders.
 - Adoption submissions are stored in Supabase. Admins can review pending applications from **Profile → Admin Tools → Review adoption applications**; approval marks the pet unavailable. Applicants receive database notifications when an application is reviewed.
 - Support chat stores messages in Supabase and updates through Realtime. Customers start a support conversation from **Chat**; admins can reply from the same screen or select **New** in the admin inbox to start a conversation with a customer. If the admin inbox is empty, no customer has started a conversation yet; use **New** or ask the customer to open Chat. Run the latest schema so the admin conversation RPC is available.
 - Notifications are database-backed. Order, adoption, and support replies can generate notifications.
@@ -37,7 +37,7 @@ Changing a role does not affect a session already open in the app; sign out and 
 - **Dark Mode** can be toggled in **Profile → Settings**. The preference is saved on the current device and applies across the app, including account, customer, admin, and driver screens. It does not change Supabase data.
 - **Biometric payment confirmation** is optional in the same Settings screen. Enable it on a device with biometrics enrolled; the app asks for biometric confirmation before continuing with a non-Cash-on-Delivery payment. The app does not store biometric data or payment credentials.
 - `expo-local-authentication` is already included as an Expo SDK-compatible dependency. After native configuration changes, rebuild the development/production app (`npx expo run:android` or an EAS build); a JavaScript reload alone cannot add native permissions or modules.
-- Biometric confirmation does not make online payments available by itself. Card, Maya, and GCash still require the optional PayMongo setup below.
+- Biometric confirmation does not make online payments available by itself. Card, Maya, and GCash still require the Xendit setup below.
 
 ## Delivery tracking
 
@@ -57,15 +57,15 @@ Changing a role does not affect a session already open in the app; sign out and 
 
 Driver GPS is shared only while the driver is using the delivery screen; background tracking and turn-by-turn routing are not enabled. The map uses the public OpenStreetMap tile server, which is free to access but community-operated, rate-limited, and has no uptime guarantee. Follow the [OpenStreetMap tile usage policy](https://operations.osmfoundation.org/policies/tiles/); for high-traffic production use, select a tile provider or host tiles that meets your usage requirements.
 
-## PayMongo setup (optional)
+## Xendit setup (optional)
 
-PayMongo card, GCash, and Maya checkout is disabled until a verified PayMongo account and server-side secrets are configured. Create a PayMongo account and enable the desired payment methods in its dashboard. Then deploy the Edge Functions and store secrets in Supabase (never in `.env.local` or the mobile app):
+Xendit card, GCash, and Maya checkout is disabled until a verified Xendit account and server-side secrets are configured. Enable the desired payment channels in your Xendit account. Deploy the Supabase Edge Functions and set the Xendit API secret and callback token as Supabase secrets (never put either secret in `.env.local`, the app, or source code):
 
 ```powershell
-supabase functions deploy create-paymongo-checkout
-supabase functions deploy paymongo-webhook
-supabase secrets set PAYMONGO_SECRET_KEY=your-server-side-secret
-supabase secrets set PAYMONGO_WEBHOOK_SECRET=your-webhook-signing-secret
+supabase functions deploy create-xendit-checkout
+supabase functions deploy xendit-webhook
+supabase secrets set XENDIT_SECRET_KEY=your-xendit-secret-key
+supabase secrets set XENDIT_CALLBACK_TOKEN=your-xendit-callback-token
 ```
 
-In the PayMongo dashboard, register `https://<project-ref>.supabase.co/functions/v1/paymongo-webhook` as a webhook for `checkout_session.payment.paid`. Use the matching test-mode key and webhook secret while testing; replace them with live-mode secrets only after validating the integration. Finally, set `EXPO_PUBLIC_PAYMONGO_ENABLED=true` in `.env.local` and restart Expo with `npx expo start -c`. Leave it `false` until both functions and the webhook are configured. A custom app build registers the `pawfectcats` return scheme; Expo Go may require returning to the app manually after the hosted payment page, while the verified webhook remains the source of truth.
+In the Xendit dashboard, configure an invoice/payment notification webhook at `https://<project-ref>.supabase.co/functions/v1/xendit-webhook` and use the same callback verification token in Supabase. Run the latest `supabase/schema.sql` in the Supabase SQL Editor to update the payment methods and invoice columns. Set `EXPO_PUBLIC_XENDIT_ENABLED=true` in `.env.local` only after deploying both functions and configuring the webhook, then restart Expo with `npx expo start -c`. The signed-in app creates the order before opening Xendit's hosted invoice page; payment remains pending until the verified webhook confirms it.

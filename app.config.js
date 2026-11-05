@@ -6,6 +6,7 @@ module.exports = {
     ...appJson.expo,
     plugins: [
       ...appJson.expo.plugins,
+      'expo-web-browser',
       [
         'expo-location',
         {

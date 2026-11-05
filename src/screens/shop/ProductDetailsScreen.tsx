@@ -218,8 +218,8 @@ const createStyles = (colors: AppColors) => StyleSheet.create({
   quantityBox: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: colors.cardBg, borderRadius: radii.pill, width: 120, height: 48, paddingHorizontal: 16 },
   qtyBtn: { fontSize: 16, fontWeight: 'bold', color: colors.ink },
   qtyText: { fontSize: 15, fontWeight: '800', color: colors.ink },
-  addToCartBtn: { flex: 1, backgroundColor: colors.ink, height: 48, borderRadius: radii.pill, justifyContent: 'center', alignItems: 'center' },
-  addToCartText: { fontSize: 14, fontWeight: '900', color: colors.background },
+  addToCartBtn: { flex: 1, backgroundColor: colors.isDark ? (colors.mint || '#80CBC4') : colors.ink, height: 48, borderRadius: radii.pill, justifyContent: 'center', alignItems: 'center' },
+  addToCartText: { fontSize: 14, fontWeight: '900', color: colors.isDark ? colors.ink : colors.background },
 
   /* Modal Styles */
   modalOverlay: {
@@ -276,10 +276,10 @@ const createStyles = (colors: AppColors) => StyleSheet.create({
     justifyContent: 'center',
   },
   modalBtnSecondary: {
-    backgroundColor: colors.cardBg,
+    backgroundColor: colors.isDark ? 'rgba(255,255,255,0.1)' : '#F2F2F2',
   },
   modalBtnPrimary: {
-    backgroundColor: colors.ink,
+    backgroundColor: colors.isDark ? (colors.mint || '#80CBC4') : colors.ink,
   },
   modalBtnTextSecondary: {
     fontSize: 14,
@@ -289,6 +289,6 @@ const createStyles = (colors: AppColors) => StyleSheet.create({
   modalBtnTextPrimary: {
     fontSize: 14,
     fontWeight: '800',
-    color: colors.background,
+    color: colors.isDark ? colors.ink : '#FFFFFF',
   },
 });

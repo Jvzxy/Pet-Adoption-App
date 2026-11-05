@@ -19,7 +19,7 @@ export default function DetailsScreen({ go, id }: DetailsProps) {
   const styles = createStyles(colors);
   const insets = useSafeAreaInsets();
   const { catalogItems, loading } = useAppData();
-  const item = catalogItems.find((c) => c.id === id && c.type === 'pet');
+  const item = catalogItems.find((c) => c.id === id && c.type === 'pet' && c.available);
 
   if (!item) {
     return (
