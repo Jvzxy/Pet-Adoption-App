@@ -13,7 +13,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { radii, spacing } from '../../constants/theme';
 import { useAuth } from '../../services/AuthContext';
 import { supabase } from '../../services/supabaseClient';
-import { uploadCatalogImage } from '../../services/catalogService';
+import { uploadCatalogImages } from '../../services/catalogService';
 import { useAppData } from '../../services/AppDataContext';
 import { useAppPreferences, type AppColors } from '../../services/AppPreferencesContext';
 
@@ -40,35 +40,35 @@ export default function AddProductScreen({ go }: ScreenProps) {
     priceSmall: '',
     priceMedium: '',
     priceLarge: '',
-    imageUri: '',
-    imageBase64: '',
   });
+  const [images, setImages] = useState<ImagePicker.ImagePickerAsset[]>([]);
 
-  // Pick Image from Phone Gallery
-  const pickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert(
-        'Permission Denied',
-        'Sorry, we need camera roll permissions to upload an image.'
-      );
-      return;
-    }
+  const pickImages = async () => {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission required', 'Allow photo library access to add product photos.');
+        return;
+      }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.8,
-      base64: true,
-    });
-
-    if (!result.canceled && result.assets && result.assets.length > 0) {
-      setProductForm({
-        ...productForm,
-        imageUri: result.assets[0].uri,
-        imageBase64: result.assets[0].base64 ?? '',
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsMultipleSelection: true,
+        selectionLimit: 10,
+        quality: 0.8,
+        base64: true,
       });
+
+      if (result.canceled) return;
+      setImages((current) => {
+        const newImages = result.assets.filter((asset) =>
+          !current.some((selected) => selected.uri === asset.uri),
+        );
+        return [...current, ...newImages].slice(0, 10);
+      });
+    } catch (error) {
+      console.error('Could not select product photos:', error);
+      Alert.alert('Photos unavailable', 'Could not open the photo library. Please try again.');
     }
   };
 
@@ -120,12 +120,14 @@ export default function AddProductScreen({ go }: ScreenProps) {
 
     try {
       setIsSaving(true);
-      if (productForm.imageUri && !productForm.imageBase64) {
-        throw new Error('The photo picker did not provide image data. Choose the photo again and retry.');
+      if (images.some((image) => !image.base64)) {
+        throw new Error('The photo picker did not provide image data. Remove the affected photo and choose it again.');
       }
-      const imageUrl = productForm.imageBase64
-        ? await uploadCatalogImage(productForm.imageBase64, user.id)
-        : '';
+      const imageUrls = await uploadCatalogImages(images.map((image) => ({
+        base64: image.base64 ?? '',
+        mimeType: image.mimeType,
+      })), user.id);
+      const imageUrl = imageUrls[0] ?? '';
       const { error } = await supabase.from('catalog_items').insert({
         type: 'product',
         category: productForm.category,
@@ -133,6 +135,7 @@ export default function AddProductScreen({ go }: ScreenProps) {
         price,
         description: productForm.description.trim(),
         image_url: imageUrl,
+        image_urls: imageUrls,
         variations,
         created_by: user.id,
       });
@@ -163,17 +166,28 @@ export default function AddProductScreen({ go }: ScreenProps) {
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         
         {/* Image Picker Area */}
-        <Text style={styles.inputLabel}>Product Photo</Text>
-        <Pressable style={styles.imagePickerCard} onPress={pickImage}>
-          {productForm.imageUri ? (
-            <Image source={{ uri: productForm.imageUri }} style={styles.previewImage} />
-          ) : (
-            <View style={styles.imagePickerPlaceholder}>
-              <CameraIcon width={32} height={32} fill={colors.ink} />
-              <Text style={styles.imagePickerText}>Tap to select photo from gallery</Text>
+        <Text style={styles.inputLabel}>Product Photos (up to 10)</Text>
+        <ScrollView horizontal contentContainerStyle={styles.imageList} showsHorizontalScrollIndicator={false}>
+          {images.map((image, index) => (
+            <View key={image.uri} style={styles.imagePreviewItem}>
+              <Image source={{ uri: image.uri }} style={styles.thumbnail} />
+              <Pressable
+                style={styles.removeImageButton}
+                onPress={() => setImages((current) => current.filter((_, itemIndex) => itemIndex !== index))}
+                accessibilityRole="button"
+                accessibilityLabel={`Remove product photo ${index + 1}`}
+              >
+                <Text style={styles.removeImageText}>×</Text>
+              </Pressable>
             </View>
+          ))}
+          {images.length < 10 && (
+            <Pressable style={styles.addImageTile} onPress={() => void pickImages()}>
+              <CameraIcon width={28} height={28} fill={colors.ink} />
+              <Text style={styles.imagePickerText}>Add photos</Text>
+            </Pressable>
           )}
-        </Pressable>
+        </ScrollView>
 
         <View style={styles.formGroup}>
           <Text style={styles.inputLabel}>Product Name</Text>
@@ -305,22 +319,13 @@ const createStyles = (colors: AppColors) => StyleSheet.create({
   headerTitle: { fontSize: 18, fontWeight: '900', color: colors.ink || '#000' },
   scrollContent: { paddingHorizontal: 24, paddingBottom: 40 },
   
-  imagePickerCard: {
-    width: '100%',
-    height: 160,
-    backgroundColor: colors.surface,
-    borderRadius: radii.md || 16,
-    overflow: 'hidden',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderStyle: 'dashed',
-    marginBottom: 16,
-  },
-  imagePickerPlaceholder: { alignItems: 'center', justifyContent: 'center', padding: 16 },
+  imageList: { gap: 10, paddingVertical: 4, marginBottom: 16 },
+  imagePreviewItem: { width: 104, height: 104, borderRadius: radii.md || 16, overflow: 'hidden', position: 'relative' },
+  thumbnail: { width: '100%', height: '100%', resizeMode: 'cover' },
+  removeImageButton: { position: 'absolute', top: 5, right: 5, width: 26, height: 26, borderRadius: 13, backgroundColor: 'rgba(0,0,0,0.7)', alignItems: 'center', justifyContent: 'center' },
+  removeImageText: { color: '#FFFFFF', fontSize: 20, lineHeight: 22, fontWeight: '700' },
+  addImageTile: { width: 104, height: 104, borderRadius: radii.md || 16, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center' },
   imagePickerText: { marginTop: 8, fontSize: 12, fontWeight: '700', color: colors.textMuted },
-  previewImage: { width: '100%', height: '100%', resizeMode: 'cover' },
 
   formGroup: { backgroundColor: colors.surface, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 10, marginBottom: 12 },
   inputLabel: { fontSize: 10, fontWeight: '700', color: colors.textMuted, marginBottom: 2 },

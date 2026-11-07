@@ -4,6 +4,7 @@ import {
   Image,
   Modal,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -54,62 +55,102 @@ const SIDEBAR_MENU = [
   { key: "profile", label: "My Profile", Icon: UserIcon },
 ];
 
+const CATEGORIES = ["All", "Pets", "Toys", "Accessories"];
+
 const ListHeader = React.memo(
   ({
     searchQuery,
     setSearchQuery,
+    selectedCategory,
+    setSelectedCategory,
     go,
   }: {
     searchQuery: string;
     setSearchQuery: (text: string) => void;
+    selectedCategory: string;
+    setSelectedCategory: (cat: string) => void;
     go: (next: string, id?: string) => void;
   }) => {
     const { colors } = useAppPreferences();
     const styles = createStyles(colors);
     return (
       <View style={styles.headerWrapper}>
-      <View style={styles.searchBar}>
-        <SearchIcon
-          width={16}
-          height={16}
-          fill={colors.textMuted || "rgba(0,0,0,0.4)"}
-          style={{ marginRight: 10 }}
-        />
-        <TextInput
-          placeholder="Search pets, products..."
-          placeholderTextColor={colors.textMuted}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          style={styles.searchInput}
-          returnKeyType="search"
-        />
-      </View>
+        <View style={styles.searchBar}>
+          <SearchIcon
+            width={16}
+            height={16}
+            fill={colors.textMuted || "rgba(0,0,0,0.4)"}
+            style={{ marginRight: 10 }}
+          />
+          <TextInput
+            placeholder="Search pets, products..."
+            placeholderTextColor={colors.textMuted}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            style={styles.searchInput}
+            returnKeyType="search"
+          />
+        </View>
 
-      <View style={styles.heroCard}>
-        <View style={styles.heroTextContainer}>
-          <Text style={styles.heroBadge}>PAWFECT STORE</Text>
-          <Text style={styles.heroText}>
-            LIVE.{"\n"}LOVE.{"\n"}SHOP.
-          </Text>
-          <Pressable style={styles.adoptBtn} onPress={() => go("explorePets")}>
-            <Text style={styles.adoptBtnText}>Explore Now ➔</Text>
+        <View style={styles.heroCard}>
+          <View style={styles.heroTextContainer}>
+            <Text style={styles.heroBadge}>PAWFECT STORE</Text>
+            <Text style={styles.heroText}>
+              LIVE.{"\n"}LOVE.{"\n"}SHOP.
+            </Text>
+            <Pressable style={styles.adoptBtn} onPress={() => go("explorePets")}>
+              <Text style={styles.adoptBtnText}>Explore Now ➔</Text>
+            </Pressable>
+          </View>
+
+          <View style={styles.heroImageWrapper}>
+            <View style={styles.heroCircle} />
+            <Image
+              source={cat3Img}
+              style={styles.heroCatImage}
+              resizeMode="contain"
+            />
+          </View>
+        </View>
+
+        {/* Categories Header */}
+        <View style={styles.gridHeader}>
+          <Text style={styles.gridTitle}>Categories</Text>
+          <Pressable onPress={() => go("explorePets")} hitSlop={15}>
+            <Text style={styles.gridSeeAll}>See all</Text>
           </Pressable>
         </View>
 
-        <View style={styles.heroImageWrapper}>
-          <View style={styles.heroCircle} />
-          <Image
-            source={cat3Img}
-            style={styles.heroCatImage}
-            resizeMode="contain"
-          />
-        </View>
-      </View>
-
-      <View style={styles.gridHeader}>
-        <Text style={styles.gridTitle}>Featured Catalog</Text>
-        <Text style={styles.gridSeeAll}>See all</Text>
-      </View>
+        {/* Categories Chips */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.categoriesScroll}
+          contentContainerStyle={styles.categoriesContent}
+        >
+          {CATEGORIES.map((cat) => {
+            const isSelected = selectedCategory === cat;
+            return (
+              <Pressable
+                key={cat}
+                style={[
+                  styles.categoryChip,
+                  isSelected ? styles.categoryChipSelected : styles.categoryChipUnselected,
+                ]}
+                onPress={() => setSelectedCategory(cat)}
+              >
+                <Text
+                  style={[
+                    styles.categoryChipText,
+                    isSelected ? styles.categoryChipTextSelected : styles.categoryChipTextUnselected,
+                  ]}
+                >
+                  {cat}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
       </View>
     );
   }
@@ -124,6 +165,7 @@ export default function MainScreen({
   const styles = createStyles(colors);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
   const { catalogItems, loading } = useAppData();
   const { logout } = useAuth();
 
@@ -132,8 +174,7 @@ export default function MainScreen({
     return {
       id: item.id,
       name: item.name,
-      category: isProduct ? item.category || "Product" : "Pet",
-      // Replaced hardcoded "Free Adoption" with dynamic check
+      category: isProduct ? item.category || "Product" : "Pets",
       priceTag: isProduct 
         ? item.price 
         : (!item.price || item.price.toLowerCase() === "free" ? "Free Adoption" : item.price),
@@ -143,9 +184,14 @@ export default function MainScreen({
     };
   });
 
-  const filteredItems = STORE_ITEMS.filter((item) =>
-    item.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredItems = STORE_ITEMS.filter((item) => {
+    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = 
+      selectedCategory === "All" || 
+      item.category.toLowerCase() === selectedCategory.toLowerCase();
+      
+    return matchesSearch && matchesCategory;
+  });
 
   return (
     <View style={styles.fillMint}>
@@ -240,6 +286,8 @@ export default function MainScreen({
           <ListHeader
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
+            selectedCategory={selectedCategory}
+            setSelectedCategory={setSelectedCategory}
             go={go}
           />
         }
@@ -247,7 +295,7 @@ export default function MainScreen({
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyEmoji}>{loading ? "…" : ""}</Text>
             <Text style={styles.emptyText}>
-              {loading ? "Loading catalog…" : "No items found"}
+              {loading ? "Loading catalog…" : "No items found in this category"}
             </Text>
           </View>
         }
@@ -304,7 +352,6 @@ export default function MainScreen({
                 </Text>
 
                 <View style={styles.priceRow}>
-                  {/* Added flex layout to accommodate longer prices */}
                   <Text style={[styles.priceText, { flex: 1, paddingRight: 4 }]} numberOfLines={1}>
                     {item.priceTag}
                   </Text>
@@ -381,7 +428,7 @@ const createStyles = (colors: AppColors) => StyleSheet.create({
   },
   heroCard: {
     flexDirection: "row",
-    backgroundColor: colors.isDark ? '#050808' : '#000',
+    backgroundColor: colors.isDark ? '#27272A' : '#1C1C1E', // Modern e-commerce slate dark
     borderRadius: 24,
     height: 165,
     overflow: "hidden",
@@ -444,10 +491,46 @@ const createStyles = (colors: AppColors) => StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 16,
+    marginBottom: 12,
   },
   gridTitle: { fontSize: 17, fontWeight: "900", color: colors.ink || "#000" },
-  gridSeeAll: { fontSize: 12, fontWeight: "800", color: colors.ink || "#000", opacity: 0.6 },
+  gridSeeAll: { 
+    fontSize: 13, 
+    fontWeight: "700", 
+    color: colors.ink || "#000",
+    opacity: 0.6,
+  },
+  categoriesScroll: {
+    marginBottom: 20,
+  },
+  categoriesContent: {
+    paddingRight: 20, 
+  },
+  categoryChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20, // Rounded pill shape for modern e-commerce feel
+    marginRight: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  categoryChipSelected: {
+    backgroundColor: colors.ink || "#1C1C1E", // Solid dark background for selected
+  },
+  categoryChipUnselected: {
+    backgroundColor: "transparent", // Blends into the main background
+  },
+  categoryChipText: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  categoryChipTextSelected: {
+    color: colors.surface || "#FFFFFF", // White text on dark background
+  },
+  categoryChipTextUnselected: {
+    color: colors.ink || "#000",
+    opacity: 0.6, // Muted look for unselected items
+  },
   rowWrapper: { justifyContent: "space-between" },
   gridItem: {
     width: "48%",

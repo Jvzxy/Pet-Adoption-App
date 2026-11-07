@@ -6,12 +6,14 @@ create table if not exists public.users (
   role text not null default 'user' check (role in ('user', 'admin', 'driver')),
   address text,
   phone text,
+  avatar_url text,
   is_available boolean not null default false,
   created_at timestamptz not null default now()
 );
 
 alter table public.users
   add column if not exists display_username text,
+  add column if not exists avatar_url text,
   add column if not exists is_available boolean not null default false;
 
 alter table public.users drop constraint if exists users_role_check;
@@ -23,7 +25,7 @@ alter table public.users enable row level security;
 revoke all on table public.users from anon, authenticated;
 grant select on table public.users to authenticated;
 revoke update (username) on table public.users from authenticated;
-grant update (display_username, name, address, phone) on table public.users to authenticated;
+grant update (display_username, name, address, phone, avatar_url) on table public.users to authenticated;
 
 drop policy if exists "Users can read their own profile" on public.users;
 create policy "Users can read their own profile"
@@ -446,6 +448,7 @@ create table if not exists public.catalog_items (
   price numeric(12, 2) not null default 0 check (price >= 0),
   description text not null default '',
   image_url text not null default '',
+  image_urls text[] not null default '{}',
   weight text,
   height text,
   health text,
@@ -460,9 +463,12 @@ create table if not exists public.catalog_items (
 alter table public.catalog_items enable row level security;
 revoke all on table public.catalog_items from anon, authenticated;
 grant select on table public.catalog_items to anon, authenticated;
-grant insert (type, category, name, breed, age, gender, location, price, description, image_url, weight, height, health, traits, variations, created_by)
+alter table public.catalog_items
+  add column if not exists image_urls text[] not null default '{}';
+
+grant insert (type, category, name, breed, age, gender, location, price, description, image_url, image_urls, weight, height, health, traits, variations, created_by)
   on table public.catalog_items to authenticated;
-grant update (type, category, name, breed, age, gender, location, price, description, image_url, weight, height, health, traits, variations, available)
+grant update (type, category, name, breed, age, gender, location, price, description, image_url, image_urls, weight, height, health, traits, variations, available)
   on table public.catalog_items to authenticated;
 grant delete on table public.catalog_items to authenticated;
 
@@ -527,6 +533,27 @@ create policy "Admins can delete catalog images"
   on storage.objects for delete
   to authenticated
   using (bucket_id = 'catalog-images' and (select public.is_admin()));
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('profile-images', 'profile-images', true, 10485760, array['image/jpeg', 'image/png', 'image/webp'])
+on conflict (id) do update
+set public = true, file_size_limit = 10485760,
+    allowed_mime_types = array['image/jpeg', 'image/png', 'image/webp'];
+
+drop policy if exists "Profile images are publicly readable" on storage.objects;
+create policy "Profile images are publicly readable"
+  on storage.objects for select
+  to public
+  using (bucket_id = 'profile-images');
+
+drop policy if exists "Users can upload their own profile images" on storage.objects;
+create policy "Users can upload their own profile images"
+  on storage.objects for insert
+  to authenticated
+  with check (
+    bucket_id = 'profile-images'
+    and (storage.foldername(name))[1] = (select auth.uid())::text
+  );
 
 create table if not exists public.favorites (
   user_id uuid not null references auth.users (id) on delete cascade,

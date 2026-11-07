@@ -11,6 +11,7 @@ export interface CatItem {
   price: string;
   description: string;
   imageUri: string;
+  imageUris?: string[];
   weight?: string;
   height?: string;
   health?: string;

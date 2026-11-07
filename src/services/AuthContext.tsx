@@ -11,6 +11,7 @@ export interface User {
   role: 'user' | 'admin' | 'driver';
   address?: string;
   phone?: string;
+  avatarUrl?: string;
   isAvailable?: boolean;
 }
 
@@ -55,6 +56,9 @@ function buildUser(authUser: SupabaseAuthUser, profile?: Record<string, unknown>
       : 'user',
     ...(typeof profile?.address === 'string' ? { address: profile.address } : {}),
     ...(typeof profile?.phone === 'string' ? { phone: profile.phone } : {}),
+    ...(typeof profile?.avatar_url === 'string' && profile.avatar_url
+      ? { avatarUrl: profile.avatar_url }
+      : {}),
     ...(typeof profile?.is_available === 'boolean' ? { isAvailable: profile.is_available } : {}),
   };
 }
@@ -253,12 +257,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (typeof data.name === 'string') changes.name = data.name.trim();
     if (typeof data.address === 'string') changes.address = data.address.trim();
     if (typeof data.phone === 'string') changes.phone = data.phone.trim();
+    if (typeof data.avatarUrl === 'string') changes.avatar_url = data.avatarUrl;
 
     const { data: updatedProfile, error } = await supabase
       .from('users')
       .update(changes)
       .eq('id', user.id)
-      .select('id, username, display_username, name, role, address, phone, is_available')
+      .select('id, username, display_username, name, role, address, phone, avatar_url, is_available')
       .single();
 
     if (error) {
@@ -279,6 +284,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         : 'user',
       ...(updatedProfile.address ? { address: updatedProfile.address } : {}),
       ...(updatedProfile.phone ? { phone: updatedProfile.phone } : {}),
+      ...(updatedProfile.avatar_url ? { avatarUrl: updatedProfile.avatar_url } : {}),
       ...(typeof updatedProfile.is_available === 'boolean'
         ? { isAvailable: updatedProfile.is_available }
         : {}),

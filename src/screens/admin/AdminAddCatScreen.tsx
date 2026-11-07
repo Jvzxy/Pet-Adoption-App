@@ -13,7 +13,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { radii, spacing } from '../../constants/theme';
 import { useAuth } from '../../services/AuthContext';
 import { supabase } from '../../services/supabaseClient';
-import { uploadCatalogImage } from '../../services/catalogService';
+import { uploadCatalogImages } from '../../services/catalogService';
 import { useAppData } from '../../services/AppDataContext';
 import { useAppPreferences, type AppColors } from '../../services/AppPreferencesContext';
 
@@ -57,31 +57,37 @@ export default function AdminAddCatScreen({ go }: ScreenProps) {
   const [selectedTraits, setSelectedTraits] = useState<string[]>(['Friendly', 'Playful']);
   const [customTraits, setCustomTraits] = useState('');
   const [description, setDescription] = useState('');
-  const [imageUri, setImageUri] = useState<string | null>(null);
-  const [imageBase64, setImageBase64] = useState<string | null>(null);
+  const [images, setImages] = useState<ImagePicker.ImagePickerAsset[]>([]);
 
-  // Pick Image from Phone Gallery
-  const pickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert(
-        'Permission Denied',
-        'Sorry, we need camera roll permissions to upload an image.'
-      );
-      return;
-    }
+  const pickImages = async () => {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission required', 'Allow photo library access to add pet photos.');
+        return;
+      }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.8,
-      base64: true,
-    });
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsMultipleSelection: true,
+        selectionLimit: 10,
+        quality: 0.8,
+        base64: true,
+      });
 
-    if (!result.canceled && result.assets && result.assets.length > 0) {
-      setImageUri(result.assets[0].uri);
-      setImageBase64(result.assets[0].base64 ?? null);
+      if (result.canceled) return;
+      setImages((current) => {
+        const newImages = result.assets.filter((asset) =>
+          !current.some((selected) => selected.uri === asset.uri),
+        );
+        if (current.length + newImages.length > 10) {
+          Alert.alert('Photo limit reached', 'A pet listing can have up to 10 photos.');
+        }
+        return [...current, ...newImages].slice(0, 10);
+      });
+    } catch (error) {
+      console.error('Could not select pet photos:', error);
+      Alert.alert('Photos unavailable', 'Could not open the photo library. Please try again.');
     }
   };
 
@@ -112,10 +118,14 @@ export default function AdminAddCatScreen({ go }: ScreenProps) {
 
     try {
       setIsSaving(true);
-      if (imageUri && !imageBase64) {
-        throw new Error('The photo picker did not provide image data. Choose the photo again and retry.');
+      if (images.some((image) => !image.base64)) {
+        throw new Error('The photo picker did not provide image data. Remove the affected photo and choose it again.');
       }
-      const imageUrl = imageBase64 ? await uploadCatalogImage(imageBase64, user.id) : '';
+      const imageUrls = await uploadCatalogImages(images.map((image) => ({
+        base64: image.base64 ?? '',
+        mimeType: image.mimeType,
+      })), user.id);
+      const imageUrl = imageUrls[0] ?? '';
       const { error } = await supabase.from('catalog_items').insert({
         type: 'pet',
         category: 'Pet',
@@ -131,6 +141,7 @@ export default function AdminAddCatScreen({ go }: ScreenProps) {
         traits: parsedTraits,
         description: description.trim() || 'A wonderful cat looking for a forever home.',
         image_url: imageUrl,
+        image_urls: imageUrls,
         created_by: user.id,
       });
 
@@ -160,17 +171,28 @@ export default function AdminAddCatScreen({ go }: ScreenProps) {
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Image Picker Area */}
-        <Text style={styles.label}>Cat Photo</Text>
-        <Pressable style={styles.imagePickerCard} onPress={pickImage}>
-          {imageUri ? (
-            <Image source={{ uri: imageUri }} style={styles.previewImage} />
-          ) : (
-            <View style={styles.imagePickerPlaceholder}>
-              <CameraIcon width={32} height={32} fill={colors.ink} />
-              <Text style={styles.imagePickerText}>Tap to select photo from gallery</Text>
+        <Text style={styles.label}>Cat Photos (up to 10)</Text>
+        <ScrollView horizontal contentContainerStyle={styles.imageList} showsHorizontalScrollIndicator={false}>
+          {images.map((image, index) => (
+            <View key={image.uri} style={styles.imagePreviewItem}>
+              <Image source={{ uri: image.uri }} style={styles.thumbnail} />
+              <Pressable
+                style={styles.removeImageButton}
+                onPress={() => setImages((current) => current.filter((_, itemIndex) => itemIndex !== index))}
+                accessibilityRole="button"
+                accessibilityLabel={`Remove pet photo ${index + 1}`}
+              >
+                <Text style={styles.removeImageText}>×</Text>
+              </Pressable>
             </View>
+          ))}
+          {images.length < 10 && (
+            <Pressable style={styles.addImageTile} onPress={() => void pickImages()}>
+              <CameraIcon width={28} height={28} fill={colors.ink} />
+              <Text style={styles.imagePickerText}>Add photos</Text>
+            </Pressable>
           )}
-        </Pressable>
+        </ScrollView>
 
         {/* Basic Info Inputs */}
         <Text style={styles.label}>Cat Name *</Text>
@@ -339,33 +361,17 @@ const createStyles = (colors: AppColors) => StyleSheet.create({
   scrollContent: { paddingHorizontal: spacing.md, paddingBottom: 60 },
   label: { fontSize: 13, fontWeight: '700', color: colors.ink, marginBottom: 8, marginTop: 14 },
   row: { flexDirection: 'row' },
-  imagePickerCard: {
-    width: '100%',
-    height: 160,
-    backgroundColor: colors.surface,
-    borderRadius: radii.md,
-    overflow: 'hidden',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderStyle: 'dashed',
-  },
-  imagePickerPlaceholder: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 16,
-  },
+  imageList: { gap: 10, paddingVertical: 4 },
+  imagePreviewItem: { width: 104, height: 104, borderRadius: radii.md, overflow: 'hidden', position: 'relative' },
+  thumbnail: { width: '100%', height: '100%', resizeMode: 'cover' },
+  removeImageButton: { position: 'absolute', top: 5, right: 5, width: 26, height: 26, borderRadius: 13, backgroundColor: 'rgba(0,0,0,0.7)', alignItems: 'center', justifyContent: 'center' },
+  removeImageText: { color: '#FFFFFF', fontSize: 20, lineHeight: 22, fontWeight: '700' },
+  addImageTile: { width: 104, height: 104, borderRadius: radii.md, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center' },
   imagePickerText: {
     marginTop: 8,
     fontSize: 12,
     fontWeight: '700',
     color: colors.textMuted,
-  },
-  previewImage: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
   },
   input: {
     backgroundColor: colors.surface,

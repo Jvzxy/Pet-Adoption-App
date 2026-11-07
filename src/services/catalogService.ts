@@ -35,15 +35,48 @@ function decodeBase64Image(base64: string): Uint8Array {
 }
 
 export async function uploadCatalogImage(base64: string, userId: string): Promise<string> {
-  const image = decodeBase64Image(base64);
-  if (image.length === 0) throw new Error('The selected photo is empty. Choose another image.');
+  const [imageUrl] = await uploadImagesToBucket([{ base64 }], userId, 'catalog-images');
+  return imageUrl;
+}
 
-  const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
-  const { error } = await supabase.storage
-    .from('catalog-images')
-    .upload(path, image, { contentType: 'image/jpeg', upsert: false });
+export interface ImageUpload {
+  base64: string;
+  mimeType?: string | null;
+}
 
-  if (error) throw error;
+async function uploadImagesToBucket(
+  images: ImageUpload[],
+  userId: string,
+  bucket: 'catalog-images' | 'profile-images',
+): Promise<string[]> {
+  if (images.length === 0) return [];
 
-  return supabase.storage.from('catalog-images').getPublicUrl(path).data.publicUrl;
+  return Promise.all(images.map(async ({ base64, mimeType }) => {
+    const image = decodeBase64Image(base64);
+    if (image.length === 0) throw new Error('The selected photo is empty. Choose another image.');
+
+    const supportedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (mimeType && !supportedTypes.includes(mimeType)) {
+      throw new Error('Choose a JPEG, PNG, or WebP image.');
+    }
+    const contentType = mimeType ?? 'image/jpeg';
+    const extension = contentType === 'image/png' ? 'png' : contentType === 'image/webp' ? 'webp' : 'jpg';
+    const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${extension}`;
+    const { error } = await supabase.storage
+      .from(bucket)
+      .upload(path, image, { contentType, upsert: false });
+
+    if (error) throw error;
+
+    return supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
+  }));
+}
+
+export async function uploadCatalogImages(images: ImageUpload[], userId: string): Promise<string[]> {
+  return uploadImagesToBucket(images, userId, 'catalog-images');
+}
+
+export async function uploadProfileImage(base64: string, userId: string, mimeType?: string | null): Promise<string> {
+  const [imageUrl] = await uploadImagesToBucket([{ base64, mimeType }], userId, 'profile-images');
+  return imageUrl;
 }

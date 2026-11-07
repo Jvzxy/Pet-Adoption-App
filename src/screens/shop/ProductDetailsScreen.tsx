@@ -7,6 +7,8 @@ import { useAppPreferences, type AppColors } from '../../services/AppPreferences
 import { useAppData } from '../../services/AppDataContext';
 import { useAuth } from '../../services/AuthContext';
 import type { CartItem } from './CartScreen';
+// Corrected import path for ImageCarousel
+import ImageCarousel from '../../components/ImageCarousel'; 
 
 // SVG Icon Import
 import CheckIcon from '../../images/Icons/check-solid-full.svg';
@@ -41,6 +43,11 @@ export default function ProductDetailsScreen({ go, productId }: ScreenProps) {
       </View>
     );
   }
+
+  // Properly reference the mapped imageUris array from AppDataContext
+  const images = product.imageUris && product.imageUris.length > 0 
+    ? product.imageUris 
+    : (product.imageUri ? [product.imageUri] : []);
 
   // Map variations if they exist, otherwise fallback to standard parsed price
   const variations = product.variations && product.variations.length > 0
@@ -80,7 +87,6 @@ export default function ProductDetailsScreen({ go, productId }: ScreenProps) {
       return [...prev, newCartItem];
     });
 
-    // Show success modal instead of direct routing
     setShowSuccessModal(true);
   };
 
@@ -96,17 +102,16 @@ export default function ProductDetailsScreen({ go, productId }: ScreenProps) {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[styles.scrollPad, { paddingBottom: insets.bottom + 96 }]}
       >
-        <View style={styles.imageCard}>
-          {product.imageUri ? (
-            <Image
-              source={{ uri: product.imageUri }}
-              style={styles.productImg}
-              resizeMode="contain"
-            />
-          ) : (
+        {/* Render Carousel if images exist, otherwise show fallback icon */}
+        {images.length > 0 ? (
+          <View style={{ marginBottom: 20 }}>
+            <ImageCarousel images={images} height={260} />
+          </View>
+        ) : (
+          <View style={styles.imageCard}>
             <Ionicons name="image-outline" size={40} color="#CCC" />
-          )}
-        </View>
+          </View>
+        )}
 
         <Text style={styles.productTitle}>{product.name}</Text>
 

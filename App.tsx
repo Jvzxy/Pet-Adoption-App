@@ -168,6 +168,7 @@ function AppRouter() {
   useEffect(() => {
     if (authLoading) return;
 
+    // Removed 'legal' from this list so authenticated users can view the policies
     const authScreens = new Set([
       'splash1',
       'splash2',
@@ -176,8 +177,7 @@ function AppRouter() {
       'loginSignup',
       'login',
       'signup',
-      'forgotPassword',
-      'legal',
+      'forgotPassword'
     ]);
 
     if (user) {
@@ -304,7 +304,6 @@ function AppRouter() {
         )}
         {screen === 'addCard' && <AddCardScreen go={go} />}
         
-        {/* Pass dependencies to Order Confirmation to finalize checkout */}
         {screen === 'orderConfirmation' && (
           <OrderConfirmationScreen 
             go={go} 
@@ -317,7 +316,6 @@ function AppRouter() {
           />
         )}
 
-        {/* New Screen for animation tracking */}
         {screen === 'trackOrder' && <TrackOrderScreen go={go} orderId={selectedPetId} />}
 
         <ConsentBanner

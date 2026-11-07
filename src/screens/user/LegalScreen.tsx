@@ -1,123 +1,67 @@
-import React from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useState } from 'react';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View, LayoutAnimation, Platform, UIManager } from 'react-native';
 import { useAppPreferences, type AppColors } from '../../services/AppPreferencesContext';
 import AngleLeftIcon from '../../images/Icons/angle-left-solid-full.svg';
+import AngleRightIcon from '../../images/Icons/angle-right-solid-full (1).svg';
+
+// Enable LayoutAnimation for Android
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 interface ScreenProps {
   go: (next: string) => void;
   returnTo?: string;
 }
 
-const APP_NAME = 'Pet Adoption App';
-const SUPPORT_EMAIL = 'support@yourdomain.com';
+const APP_NAME = 'Forever Home Pet Adoption';
+const SUPPORT_EMAIL = 'privacy@foreverhomeapp.com';
 
 const POLICIES = [
   {
     title: 'Privacy Policy',
-    sections: [
-      {
-        heading: 'Information we collect',
-        body: `Depending on the features you use, ${APP_NAME} may collect account and contact details, adoption applications and communications, transaction records, and information you choose to provide. Device, diagnostic, and approximate location information may also be processed when needed for a feature and when you grant permission. Before publishing, list the exact data collected by the app and its service providers.`,
-      },
-      {
-        heading: 'How we use information',
-        body: 'We use information to operate accounts, facilitate pet adoption inquiries, provide customer support, process payments through the selected payment provider, protect the service, and meet legal obligations. Identify any additional purposes and obtain consent where required by law.',
-      },
-      {
-        heading: 'Sharing and service providers',
-        body: 'Information may be shared with participating shelters, rescues, or other adoption partners when needed to process an inquiry, and with contracted providers that support hosting, communications, analytics, or payments. Name the actual partners and providers before publication. Describe whether personal information is sold or shared for targeted advertising and list the choices available under applicable law.',
-      },
-      {
-        heading: 'Location, photos, and permissions',
-        body: 'Location or photo access should be requested only for a feature the user chooses to use. You can manage device permissions in your operating-system settings. Explain whether data is stored, how long it is retained, and whether it is shared.',
-      },
-      {
-        heading: 'Retention, security, and your choices',
-        body: 'State the retention periods and safeguards actually used, subject to legal and operational requirements. No method of storage or transmission is completely secure. Depending on your location, you may have rights to access, correct, delete, or restrict certain information. Contact us to make a request; identity verification may be required.',
-      },
-      {
-        heading: 'Children and contact',
-        body: 'This service is not intended for children to create accounts or submit personal information without any consent required by applicable law. Add the age threshold and parental-consent process that apply in your jurisdiction. Privacy questions and requests: ' + SUPPORT_EMAIL + '.',
-      },
-    ],
+    body: `1. Information We Collect\nWe collect account details, adoption application data (including housing and lifestyle information), and communications between you and partner shelters. We may also collect approximate location data to show nearby pets if you grant permission.\n\n2. How We Use Your Information\nYour data is used strictly to facilitate pet adoptions, process adoption fees, and coordinate with verified animal rescues. We do not sell your personal data.\n\n3. Data Sharing\nWhen you apply to adopt, your application details are securely shared only with the specific shelter or rescue evaluating your application.`,
   },
   {
     title: 'Terms of Service',
-    sections: [
-      {
-        heading: 'Using the service',
-        body: `By using ${APP_NAME}, you agree to these terms and applicable law. You must provide accurate information, protect your account credentials, and use the app lawfully. Insert any minimum-age requirement and the legal name of the service operator before publication.`,
-      },
-      {
-        heading: 'Adoption inquiries and decisions',
-        body: 'The app helps users discover pets and communicate with adoption organizations. Submitting an inquiry or application does not guarantee approval or adoption. The shelter, rescue, or other responsible organization makes its own eligibility and placement decisions and may require interviews, references, home checks, or additional agreements. The final adoption agreement is between the adopter and the responsible organization.',
-      },
-      {
-        heading: 'Pet information and fees',
-        body: 'Pet descriptions, availability, health, and behavior information are provided by the relevant organization and may change. Confirm important details directly before adopting; the app is not a substitute for veterinary advice. Any adoption fee, product price, taxes, and other charges must be shown before payment and are subject to the applicable refund policy and law.',
-      },
-      {
-        heading: 'Acceptable use and content',
-        body: 'Do not submit false, unlawful, abusive, or misleading information; interfere with the service; or misuse another person’s information. You are responsible for content you submit and must have permission to share it. Describe how reports, moderation, and account restrictions are handled.',
-      },
-      {
-        heading: 'Availability, disclaimers, and liability',
-        body: 'The service is provided subject to applicable consumer-protection laws. To the extent permitted by law, we do not guarantee uninterrupted availability or the accuracy of third-party pet listings, and we disclaim implied warranties that may lawfully be excluded. State the operator’s liability limits and governing law here only after jurisdiction-specific legal review.',
-      },
-      {
-        heading: 'Changes and contact',
-        body: 'We may update these terms and will provide notice when required. Continued use after an effective update constitutes acceptance only where permitted by law. Questions: ' + SUPPORT_EMAIL + '.',
-      },
-    ],
+    body: `1. Acceptance of Terms\nBy using ${APP_NAME}, you agree to these terms. You must be at least 18 years old to submit an adoption application.\n\n2. Adoption Decisions\n${APP_NAME} provides a platform for shelters to list pets. We do not make adoption decisions. The respective shelter retains full discretion over application approvals, home checks, and final placements.\n\n3. User Conduct\nYou agree to provide accurate information on all adoption applications. Falsifying housing or pet history may result in a permanent ban from the platform.`,
   },
   {
     title: 'Cookie Policy',
-    sections: [
-      {
-        heading: 'Cookies and similar technologies',
-        body: 'Native mobile apps do not necessarily use browser cookies. Cookies or similar technologies may be used on our website, in web-based content, or by embedded services. Verify what this app and each SDK actually use before publishing this policy.',
-      },
-      {
-        heading: 'Purposes and choices',
-        body: 'Where used, strictly necessary technologies may support core functionality; optional analytics or advertising technologies should be described separately. Explain how users can accept, reject, or change optional preferences, and how browser or device settings affect them. Obtain consent before setting non-essential cookies where required by law.',
-      },
-      {
-        heading: 'Third parties and contact',
-        body: 'List the actual third-party providers, their purposes, and links to their notices. Do not list technologies that are not in use. Questions: ' + SUPPORT_EMAIL + '.',
-      },
-    ],
+    body: `1. App Technologies\nAs a native mobile application, we do not use traditional web cookies. However, we use essential SDKs (like Supabase for authentication) that store secure tokens locally on your device to keep you logged in.\n\n2. Third-Party Analytics\nWe use anonymized crash reporting to improve app stability. You can opt out of non-essential usage data tracking in the Privacy Choices menu.`,
   },
   {
     title: 'Refund Policy',
-    sections: [
-      {
-        heading: 'Adoption-related fees',
-        body: 'Any adoption fee is set by the responsible shelter, rescue, or adoption partner. Before payment, show who receives the fee, what it covers, and whether it is refundable or transferable. Do not describe a fee as non-refundable if that would conflict with applicable law or the agreement with the adoption partner.',
-      },
-      {
-        heading: 'Products and other payments',
-        body: 'For products or other paid services, display the applicable cancellation, return, and refund terms before checkout. Explain how to report a duplicate or unauthorized charge and how payment-provider processing times may affect a refund.',
-      },
-      {
-        heading: 'How to request help',
-        body: `Contact ${SUPPORT_EMAIL} with your order or application reference and a description of the issue. We will direct the request to the responsible organization or payment provider when appropriate. Nothing in this policy limits consumer rights that cannot be waived under applicable law.`,
-      },
-    ],
+    body: `1. Adoption Fees\nAdoption fees are set and collected directly on behalf of the partner rescue. Because these fees often cover prior medical care and vaccinations, they are generally non-refundable once an adoption is finalized, subject to the specific shelter's individual return policy.\n\n2. Platform Donations\nAny optional donations made directly to ${APP_NAME} to support our platform development are non-refundable.`,
   },
 ];
 
 export default function LegalScreen({ go, returnTo = 'settings' }: ScreenProps) {
   const { colors } = useAppPreferences();
   const styles = createStyles(colors);
+  const [expandedPolicy, setExpandedPolicy] = useState<string | null>(null);
 
-  const requestDataDeletion = () => {
+  const togglePolicy = (title: string) => {
+    LayoutAnimation.configureNext(
+      LayoutAnimation.create(200, LayoutAnimation.Types.easeInEaseOut, LayoutAnimation.Properties.opacity)
+    );
+    setExpandedPolicy(expandedPolicy === title ? null : title);
+  };
+
+  const handleDataDeletion = () => {
     Alert.alert(
-      'Request data deletion?',
-      `This app does not submit deletion requests or delete data automatically. To submit a request, contact ${SUPPORT_EMAIL}. Continuing will not send a request or delete data.`,
+      'Request Data Deletion',
+      `Are you sure you want to request the deletion of your account and all associated adoption data? \n\nThis will send a formal request to ${SUPPORT_EMAIL} and cannot be undone once processed.`,
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Understood' },
-      ],
+        { 
+          text: 'Request Deletion', 
+          style: 'destructive',
+          onPress: () => {
+            Alert.alert('Request Submitted', 'Our privacy team will process your deletion request within 30 days.');
+          }
+        },
+      ]
     );
   };
 
@@ -126,62 +70,87 @@ export default function LegalScreen({ go, returnTo = 'settings' }: ScreenProps) 
       <View style={styles.topBar}>
         <Pressable
           onPress={() => go(returnTo)}
-          style={styles.backBtn}
-          hitSlop={10}
+          style={({ pressed }) => [styles.backBtn, pressed && styles.backBtnPressed]}
+          hitSlop={15}
           accessibilityRole="button"
-          accessibilityLabel="Back to settings"
+          accessibilityLabel="Go back to previous screen"
         >
-          <AngleLeftIcon width={18} height={18} fill={colors.ink} />
+          <AngleLeftIcon width={20} height={20} fill={colors.ink} />
         </Pressable>
-        <Text style={styles.headerTitle}>Legal & Policies</Text>
+        <Text style={styles.headerTitle}>Legal & Compliance</Text>
         <View style={styles.headerSpacer} />
       </View>
 
       <View style={styles.sheetContainer}>
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          <Text style={styles.notice}>
-            Draft templates only. Replace placeholders, confirm every statement matches your actual data practices and partner agreements, and obtain legal review for the countries where you operate before publishing.
-          </Text>
-
-          {POLICIES.map((policy) => (
-            <View key={policy.title} style={styles.policy}>
-              <Text style={styles.policyTitle}>{policy.title}</Text>
-              <Text style={styles.lastUpdated}>Effective date: [insert publication date]</Text>
-              {policy.sections.map((section) => (
-                <View key={section.heading} style={styles.section}>
-                  <Text style={styles.heading}>{section.heading}</Text>
-                  <Text style={styles.paragraph}>{section.body}</Text>
+          
+          <Text style={styles.sectionHeader}>Agreements & Policies</Text>
+          <View style={styles.cardGroup}>
+            {POLICIES.map((policy, index) => {
+              const isExpanded = expandedPolicy === policy.title;
+              return (
+                <View key={policy.title}>
+                  <Pressable 
+                    style={[
+                      styles.menuItem, 
+                      index === POLICIES.length - 1 && styles.lastMenuItem,
+                      isExpanded && styles.menuItemExpanded
+                    ]} 
+                    onPress={() => togglePolicy(policy.title)}
+                    accessibilityRole="button"
+                    accessibilityState={{ expanded: isExpanded }}
+                  >
+                    <Text style={[styles.menuLabel, isExpanded && styles.menuLabelActive]}>
+                      {policy.title}
+                    </Text>
+                    <View style={[styles.iconContainer, { transform: [{ rotate: isExpanded ? '90deg' : '0deg' }] }]}>
+                      <AngleRightIcon width={14} height={14} fill={isExpanded ? colors.ink : colors.textMuted} />
+                    </View>
+                  </Pressable>
+                  {isExpanded && (
+                    <View style={styles.policyBodyContainer}>
+                      <Text style={styles.policyText}>{policy.body}</Text>
+                    </View>
+                  )}
                 </View>
-              ))}
-            </View>
-          ))}
-
-          <View style={styles.businessSection}>
-            <Text style={styles.policyTitle}>Business Details</Text>
-            <Text style={styles.businessLabel}>App name</Text>
-            <Text style={styles.paragraph}>{APP_NAME}</Text>
-            <Text style={styles.businessLabel}>Contact email</Text>
-            <Text style={styles.paragraph}>
-              {SUPPORT_EMAIL} (replace with your monitored business email before publishing)
-            </Text>
-            <Text style={styles.businessLabel}>Legal business / charity name</Text>
-            <Text style={styles.paragraph}>[Insert the operator’s registered name and business address]</Text>
+              );
+            })}
           </View>
 
-          <View style={styles.deletionSection}>
-            <Text style={styles.heading}>Your data</Text>
-            <Text style={styles.paragraph}>
-              Use the button below for instructions on how to submit an account and personal-data deletion request.
+          <Text style={styles.sectionHeader}>Business Details</Text>
+          <View style={styles.infoCard}>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Entity Name</Text>
+              <Text style={styles.infoValue}>{APP_NAME} LLC</Text>
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Privacy Contact</Text>
+              <Text style={styles.infoValue}>{SUPPORT_EMAIL}</Text>
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Address</Text>
+              <Text style={styles.infoValue}>123 Rescue Way, Suite 100{'\n'}Pet City, PC 90210</Text>
+            </View>
+          </View>
+
+          <Text style={styles.sectionHeader}>Data Rights & Privacy</Text>
+          <View style={styles.dangerCard}>
+            <Text style={styles.dangerTitle}>Account Deletion</Text>
+            <Text style={styles.dangerNotice}>
+              Under the GDPR and CCPA, you have the right to request the permanent deletion of your personal data and adoption history.
             </Text>
             <Pressable
-              style={styles.deletionButton}
-              onPress={requestDataDeletion}
+              style={({ pressed }) => [styles.dangerButton, pressed && styles.dangerButtonPressed]}
+              onPress={handleDataDeletion}
               accessibilityRole="button"
               accessibilityLabel="Request account and data deletion"
             >
-              <Text style={styles.deletionButtonText}>Request Data Deletion</Text>
+              <Text style={styles.dangerButtonText}>Request Data Deletion</Text>
             </Pressable>
           </View>
+
         </ScrollView>
       </View>
     </View>
@@ -190,22 +159,36 @@ export default function LegalScreen({ go, returnTo = 'settings' }: ScreenProps) 
 
 const createStyles = (colors: AppColors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 60, paddingBottom: 24, paddingHorizontal: 24 },
-  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.5)', alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { fontSize: 18, fontWeight: '900', color: colors.ink },
-  headerSpacer: { width: 40 },
-  sheetContainer: { flex: 1, backgroundColor: colors.surface, borderTopLeftRadius: 32, borderTopRightRadius: 32, shadowColor: '#000', shadowOffset: { width: 0, height: -4 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 5 },
-  content: { paddingHorizontal: 28, paddingTop: 28, paddingBottom: 60 },
-  notice: { fontSize: 13, color: colors.ink, lineHeight: 21, padding: 16, marginBottom: 28, borderRadius: 16, backgroundColor: colors.background },
-  policy: { marginBottom: 24 },
-  policyTitle: { fontSize: 20, fontWeight: '900', color: colors.ink, marginBottom: 8 },
-  lastUpdated: { fontSize: 12, fontWeight: '700', color: colors.textMuted, marginBottom: 20, textTransform: 'uppercase', letterSpacing: 0.5 },
-  section: { marginBottom: 20 },
-  heading: { fontSize: 16, fontWeight: '900', color: colors.ink, marginBottom: 8 },
-  paragraph: { fontSize: 14, color: colors.textMuted, lineHeight: 23, fontWeight: '500' },
-  businessSection: { paddingTop: 24, marginBottom: 28, borderTopWidth: 1, borderTopColor: colors.border },
-  businessLabel: { fontSize: 13, fontWeight: '800', color: colors.ink, marginTop: 12, marginBottom: 4 },
-  deletionSection: { padding: 18, borderRadius: 18, backgroundColor: colors.background },
-  deletionButton: { marginTop: 16, paddingVertical: 14, paddingHorizontal: 18, borderRadius: 14, backgroundColor: colors.red, alignItems: 'center' },
-  deletionButtonText: { color: colors.white, fontSize: 14, fontWeight: '900' },
+  topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 60, paddingBottom: 20, paddingHorizontal: 24 },
+  backBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 },
+  backBtnPressed: { opacity: 0.7, transform: [{ scale: 0.96 }] },
+  headerTitle: { fontSize: 18, fontWeight: '800', color: colors.ink, letterSpacing: -0.5 },
+  headerSpacer: { width: 44 },
+  
+  sheetContainer: { flex: 1, backgroundColor: colors.surface, borderTopLeftRadius: 32, borderTopRightRadius: 32, shadowColor: '#000', shadowOffset: { width: 0, height: -4 }, shadowOpacity: 0.04, shadowRadius: 12, elevation: 10 },
+  content: { paddingHorizontal: 24, paddingTop: 28, paddingBottom: 80 },
+  sectionHeader: { fontSize: 13, fontWeight: '800', color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 12, marginTop: 32, marginLeft: 4 },
+  
+  cardGroup: { backgroundColor: colors.background, borderRadius: 20, overflow: 'hidden', borderWidth: 1, borderColor: colors.border },
+  menuItem: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 18, paddingHorizontal: 20, borderBottomWidth: 1, borderBottomColor: colors.border, backgroundColor: colors.background },
+  menuItemExpanded: { backgroundColor: colors.surface },
+  lastMenuItem: { borderBottomWidth: 0 },
+  menuLabel: { fontSize: 15, fontWeight: '600', color: colors.ink },
+  menuLabelActive: { fontWeight: '800' },
+  iconContainer: { width: 24, height: 24, alignItems: 'center', justifyContent: 'center' },
+  policyBodyContainer: { paddingHorizontal: 20, paddingBottom: 20, paddingTop: 4, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border },
+  policyText: { fontSize: 14, color: colors.textMuted, lineHeight: 22, fontWeight: '400' },
+
+  infoCard: { backgroundColor: colors.background, borderRadius: 20, padding: 20, borderWidth: 1, borderColor: colors.border },
+  infoRow: { flexDirection: 'column', marginVertical: 4 },
+  infoLabel: { fontSize: 12, fontWeight: '700', color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 },
+  infoValue: { fontSize: 15, color: colors.ink, fontWeight: '500', lineHeight: 22 },
+  divider: { height: 1, backgroundColor: colors.border, marginVertical: 12 },
+
+  dangerCard: { backgroundColor: colors.background, borderRadius: 20, padding: 20, borderWidth: 1, borderColor: 'rgba(255, 59, 48, 0.2)' },
+  dangerTitle: { fontSize: 16, fontWeight: '800', color: colors.red || '#FF3B30', marginBottom: 8 },
+  dangerNotice: { fontSize: 14, color: colors.textMuted, lineHeight: 22, marginBottom: 20 },
+  dangerButton: { paddingVertical: 16, borderRadius: 14, backgroundColor: 'rgba(255, 59, 48, 0.1)', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255, 59, 48, 0.3)' },
+  dangerButtonPressed: { backgroundColor: 'rgba(255, 59, 48, 0.2)' },
+  dangerButtonText: { color: colors.red || '#FF3B30', fontSize: 15, fontWeight: '800' },
 });

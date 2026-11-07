@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Alert,
+  Image,
   Modal,
   Pressable,
   ScrollView,
@@ -9,10 +10,12 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { radii } from '../../constants/theme';
 import BottomNavigation from '../../components/BottomNavigation';
 import { useAuth } from '../../services/AuthContext';
 import { useAppPreferences, type AppColors } from '../../services/AppPreferencesContext';
+import { uploadProfileImage } from '../../services/catalogService';
 
 // SVG & Image Icon Imports
 import AngleLeftIcon from '../../images/Icons/angle-left-solid-full.svg';
@@ -24,6 +27,7 @@ import CircleQuestionIcon from '../../images/Icons/circle-question-regular-full.
 import GearIcon from '../../images/Icons/gear-solid-full.svg';
 import ClipboardListIcon from '../../images/Icons/clipboard-list-solid-full.svg';
 import LockIcon from '../../images/Icons/lock-solid-full.svg';
+import CameraIcon from '../../images/Icons/camera-regular-full.svg';
 
 interface ScreenProps {
   go: (next: string) => void;
@@ -36,12 +40,16 @@ export default function ProfileScreen({ go }: ScreenProps) {
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [editAvatarUri, setEditAvatarUri] = useState(user?.avatarUrl ?? '');
+  const [editAvatarBase64, setEditAvatarBase64] = useState<string | null>(null);
+  const [editAvatarMimeType, setEditAvatarMimeType] = useState<string | null>(null);
 
   const [profile, setProfile] = useState({
     fullName: user?.name || user?.username || 'Guest User',
     username: user?.displayUsername || user?.username || '@guest',
     phone: user?.phone || '',
     email: user?.email || 'Not specified',
+    avatarUrl: user?.avatarUrl || '',
   });
 
   const [editForm, setEditForm] = useState(profile);
@@ -54,9 +62,44 @@ export default function ProfileScreen({ go }: ScreenProps) {
         username: user.displayUsername || user.username || '@guest',
         email: user.email || 'Not specified',
         phone: user.phone || '',
+        avatarUrl: user.avatarUrl || '',
       }));
     }
   }, [user]);
+
+  const openEditProfile = () => {
+    setEditForm(profile);
+    setEditAvatarUri(profile.avatarUrl);
+    setEditAvatarBase64(null);
+    setEditAvatarMimeType(null);
+    setIsEditModalOpen(true);
+  };
+
+  const pickProfileImage = async () => {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission required', 'Allow photo library access to choose a profile picture.');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+        base64: true,
+      });
+
+      if (result.canceled || !result.assets[0]) return;
+      setEditAvatarUri(result.assets[0].uri);
+      setEditAvatarBase64(result.assets[0].base64 ?? null);
+      setEditAvatarMimeType(result.assets[0].mimeType ?? null);
+    } catch (error) {
+      console.error('Could not select profile photo:', error);
+      Alert.alert('Photo unavailable', 'Could not open the photo library. Please try again.');
+    }
+  };
 
   const handleSaveProfile = async () => {
     const fullName = editForm.fullName.trim();
@@ -69,12 +112,16 @@ export default function ProfileScreen({ go }: ScreenProps) {
 
     setIsSavingProfile(true);
     try {
+      const avatarUrl = editAvatarBase64
+        ? await uploadProfileImage(editAvatarBase64, user?.id ?? '', editAvatarMimeType)
+        : profile.avatarUrl;
       await updateProfile({
         name: fullName,
         displayUsername: username,
         phone,
+        ...(avatarUrl ? { avatarUrl } : {}),
       });
-      setProfile({ ...editForm, fullName, username, phone });
+      setProfile({ ...editForm, fullName, username, phone, avatarUrl });
       setIsEditModalOpen(false);
       Alert.alert('Profile Updated', 'Your profile was saved to your Supabase account.');
     } catch (error) {
@@ -108,13 +155,17 @@ export default function ProfileScreen({ go }: ScreenProps) {
         <View style={styles.profileHeader}>
           <View style={styles.avatarWrapper}>
             <View style={styles.avatarPlaceholder}>
-              <UserIcon width={36} height={36} fill={colors.ink} />
+              {profile.avatarUrl ? (
+                <Image source={{ uri: profile.avatarUrl }} style={styles.avatarImage} />
+              ) : (
+                <UserIcon width={36} height={36} fill={colors.ink} />
+              )}
             </View>
           </View>
           <Text style={styles.userName}>{profile.fullName}</Text>
           <Text style={styles.userHandle}>{profile.username}</Text>
 
-          <Pressable style={styles.editProfileBtn} onPress={() => { setEditForm(profile); setIsEditModalOpen(true); }}>
+          <Pressable style={styles.editProfileBtn} onPress={openEditProfile}>
             <Text style={styles.editProfileBtnText}>Edit Profile</Text>
           </Pressable>
         </View>
@@ -213,11 +264,21 @@ export default function ProfileScreen({ go }: ScreenProps) {
             <View style={styles.profileHeader}>
               <View style={styles.avatarWrapper}>
                 <View style={styles.avatarPlaceholder}>
-                  <UserIcon width={36} height={36} fill={colors.ink} />
+                  {editAvatarUri ? (
+                    <Image source={{ uri: editAvatarUri }} style={styles.avatarImage} />
+                  ) : (
+                    <UserIcon width={36} height={36} fill={colors.ink} />
+                  )}
                 </View>
-                <View style={styles.cameraBadge}>
-                  <Text style={{ fontSize: 10 }}>📷</Text>
-                </View>
+                <Pressable
+                  style={styles.cameraBadge}
+                  onPress={() => void pickProfileImage()}
+                  disabled={isSavingProfile}
+                  accessibilityRole="button"
+                  accessibilityLabel="Choose profile picture"
+                >
+                  <CameraIcon width={12} height={12} fill={colors.ink} />
+                </Pressable>
               </View>
               <Text style={styles.userName}>{editForm.fullName}</Text>
               <Text style={styles.userHandle}>{editForm.username}</Text>
@@ -285,6 +346,7 @@ const createStyles = (colors: AppColors) => StyleSheet.create({
   profileHeader: { alignItems: 'center', marginVertical: 16 },
   avatarWrapper: { position: 'relative', marginBottom: 12 },
   avatarPlaceholder: { width: 80, height: 80, borderRadius: 40, backgroundColor: colors.surface, justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: colors.ink },
+  avatarImage: { width: '100%', height: '100%', borderRadius: 40 },
   cameraBadge: { position: 'absolute', bottom: 0, right: 0, backgroundColor: colors.surface, borderRadius: 12, width: 24, height: 24, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: colors.ink },
   userName: { fontSize: 18, fontWeight: '900', color: colors.ink },
   userHandle: { fontSize: 12, fontWeight: '600', color: 'rgba(0,0,0,0.5)', marginTop: 2 },

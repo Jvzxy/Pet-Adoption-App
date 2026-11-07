@@ -55,6 +55,9 @@ function mapCatalogRow(row: Record<string, unknown>): CatItem {
         : `₱${price.toFixed(2)}`,
     description: String(row.description ?? ''),
     imageUri: String(row.image_url ?? ''),
+    imageUris: Array.isArray(row.image_urls)
+      ? row.image_urls.filter((url): url is string => typeof url === 'string' && url.length > 0)
+      : String(row.image_url ?? '').length > 0 ? [String(row.image_url)] : [],
     weight: asOptionalString(row.weight),
     height: asOptionalString(row.height),
     health: asOptionalString(row.health),
