@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { colors } from '../constants/theme';
 
 interface ScreenLabelProps {
@@ -7,17 +8,30 @@ interface ScreenLabelProps {
 }
 
 export default function ScreenLabel({ children }: ScreenLabelProps) {
-  return <Text style={styles.label}>{children}</Text>;
+  return (
+    <View style={styles.container} pointerEvents="none">
+      <Text style={styles.label}>{children}</Text>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
-  label: {
+  container: {
     position: 'absolute',
     top: 40,
     left: 16,
-    fontSize: 12,
-    color: colors.textMuted,
-    opacity: 0.5,
     zIndex: 10,
+  },
+  label: {
+    fontSize: 11,
+    fontWeight: '600',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    color: colors.textMuted,
+    backgroundColor: 'rgba(255, 255, 255, 0.75)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    overflow: 'hidden',
   },
 });
