@@ -7,9 +7,10 @@ import AngleRightIcon from '../../images/Icons/angle-right-solid-full (1).svg';
 
 interface ScreenProps {
   go: (next: string) => void;
+  onManagePrivacyChoices: () => void;
 }
 
-export default function SettingsScreen({ go }: ScreenProps) {
+export default function SettingsScreen({ go, onManagePrivacyChoices }: ScreenProps) {
   const preferences = useAppPreferences();
   const styles = createStyles(preferences.colors);
   const [notifications, setNotifications] = useState(true);
@@ -108,16 +109,17 @@ export default function SettingsScreen({ go }: ScreenProps) {
             />
           </View>
           
-          <Pressable style={styles.menuItemAction} onPress={() => go('privacyPolicy')}>
-            <Text style={styles.menuLabel}>Privacy Policy</Text>
+          <Pressable style={styles.menuItemAction} onPress={onManagePrivacyChoices}>
+            <Text style={styles.menuLabel}>Privacy Choices</Text>
             <AngleRightIcon width={12} height={12} fill={preferences.colors.textMuted} />
           </Pressable>
-          <Pressable style={styles.menuItemAction} onPress={() => go('termsOfService')}>
-            <Text style={styles.menuLabel}>Terms of Service</Text>
+          <Pressable style={styles.menuItemAction} onPress={() => go('legal')}>
+            <Text style={styles.menuLabel}>Legal & Policies</Text>
             <AngleRightIcon width={12} height={12} fill={preferences.colors.textMuted} />
           </Pressable>
-          <Pressable style={[styles.menuItemAction, { borderBottomWidth: 0 }]}>
-            <Text style={[styles.menuLabel, { color: preferences.colors.red }]}>Delete Account</Text>
+          <Pressable style={[styles.menuItemAction, { borderBottomWidth: 0 }]} onPress={() => go('legal')}>
+            <Text style={[styles.menuLabel, { color: preferences.colors.red }]}>Request Data Deletion</Text>
+            <AngleRightIcon width={12} height={12} fill={preferences.colors.textMuted} />
           </Pressable>
         </View>
       </View>

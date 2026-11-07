@@ -1,35 +1,40 @@
 {
   "expo": {
-    "name": "bla-bla-bla-cat-adoption-system-not-finished-pa-sirrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr",
+    "name": "Pet Adoption App",
     "slug": "snack-189ad69f-cc3f-4f0a-831e-a6ffa488cb1f",
-    "scheme": "pawfectcats",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./src/images/Logo.png",
-    "userInterfaceStyle": "automatic",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./src/images/Logo.png",
+      "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "ios": {
       "supportsTablet": true
     },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./src/images/Logo.png",
-        "backgroundColor": "#ffffff"
-      },
-      "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
-    },
+"android": {
+  "package": "com.jussydurain.petadoption",
+  "adaptiveIcon": {
+    "foregroundImage": "./assets/adaptive-icon.png",
+    "backgroundColor": "#ffffff"
+  },
+  "edgeToEdgeEnabled": true,
+  "predictiveBackGestureEnabled": false
+},
     "web": {
-      "favicon": "./src/images/Logo.png"
+      "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-router",
       "expo-status-bar"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "5bcc83e0-70a8-473c-8493-0d07a5e6d6b5"
+      }
+    }
   }
 }

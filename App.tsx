@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import ConsentBanner from './src/components/ConsentBanner';
 
 // Screen Imports
 import CartScreen from './src/screens/shop/CartScreen';
@@ -36,8 +37,7 @@ import AddressScreen from './src/screens/user/AddressScreen';
 import ChangePasswordScreen from './src/screens/auth/ChangePasswordScreen';
 import ForgotPasswordScreen from './src/screens/auth/ForgotPasswordScreen';
 import HelpSupportScreen from './src/screens/user/HelpSupportScreen';
-import PrivacyPolicyScreen from './src/screens/user/PrivacyPolicyScreen'; 
-import TermsOfServiceScreen from './src/screens/user/TermsOfServiceScreen'; 
+import LegalScreen from './src/screens/user/LegalScreen';
 
 // Checkout Flow Imports
 import PaymentScreen from './src/screens/shop/PaymentScreen';
@@ -156,6 +156,8 @@ function AppRouter() {
   const [screen, setScreen] = useState<string>('splash1');
   const [selectedPetId, setSelectedPetId] = useState<string>('1');
   const [addressReturnTo, setAddressReturnTo] = useState('profile');
+  const [legalReturnTo, setLegalReturnTo] = useState('settings');
+  const [showConsentPreferences, setShowConsentPreferences] = useState(false);
   const hasAuthenticatedUser = useRef(false);
   const { user, loading: authLoading } = useAuth();
   const { favorites, cartItems, setCartItems, toggleFavorite } = useAppData();
@@ -175,6 +177,7 @@ function AppRouter() {
       'login',
       'signup',
       'forgotPassword',
+      'legal',
     ]);
 
     if (user) {
@@ -190,6 +193,7 @@ function AppRouter() {
 
   const go = (next: string, id?: string) => {
     if (next === 'address') setAddressReturnTo(screen);
+    if (next === 'legal') setLegalReturnTo(screen);
     if (next === 'payment') setCompletedCheckoutOrder(null);
     setScreen(next);
     if (id) {
@@ -222,7 +226,12 @@ function AppRouter() {
         )}
         {screen === 'profile' && <ProfileScreen go={go} />}
         
-        {screen === 'settings' && <SettingsScreen go={go} />}
+        {screen === 'settings' && (
+          <SettingsScreen
+            go={go}
+            onManagePrivacyChoices={() => setShowConsentPreferences(true)}
+          />
+        )}
         {screen === 'myOrders' && (
           user?.role === 'user'
             ? <MyOrdersScreen go={go} />
@@ -231,8 +240,7 @@ function AppRouter() {
         {screen === 'address' && <AddressScreen go={go} returnTo={addressReturnTo} />}
         {screen === 'changePassword' && <ChangePasswordScreen go={go} />}
         {screen === 'helpSupport' && <HelpSupportScreen go={go} />}
-        {screen === 'privacyPolicy' && <PrivacyPolicyScreen go={go} />}
-        {screen === 'termsOfService' && <TermsOfServiceScreen go={go} />}
+        {screen === 'legal' && <LegalScreen go={go} returnTo={legalReturnTo} />}
         
         {screen === 'adminAddCat' && (
           <AdminRoute go={go}>
@@ -311,7 +319,12 @@ function AppRouter() {
 
         {/* New Screen for animation tracking */}
         {screen === 'trackOrder' && <TrackOrderScreen go={go} orderId={selectedPetId} />}
-        
+
+        <ConsentBanner
+          onOpenPolicies={() => go('legal')}
+          forceVisible={showConsentPreferences}
+          onChoiceSaved={() => setShowConsentPreferences(false)}
+        />
     </>
   );
 }

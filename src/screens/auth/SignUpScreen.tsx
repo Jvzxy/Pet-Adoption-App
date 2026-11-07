@@ -29,10 +29,16 @@ export default function SignUpScreen({ go }: ScreenProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSignUp = async () => {
     if (isSubmitting) return;
+
+    if (!acceptedTerms) {
+      Alert.alert('Agreement required', 'Please agree to the Terms of Service and acknowledge the Privacy Policy to create an account.');
+      return;
+    }
 
     if (!firstName || !lastName || !email || !password || !confirmPassword) {
       Alert.alert('Missing Fields', 'Please fill in all fields.');
@@ -138,6 +144,37 @@ export default function SignUpScreen({ go }: ScreenProps) {
             />
           </View>
 
+          <View style={styles.consentRow}>
+            <Pressable
+              style={[styles.checkbox, acceptedTerms && styles.checkboxChecked]}
+              onPress={() => setAcceptedTerms((checked) => !checked)}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: acceptedTerms }}
+              accessibilityLabel="I agree to the Terms of Service and acknowledge the Privacy Policy"
+            >
+              {acceptedTerms && <Text style={styles.checkmark}>✓</Text>}
+            </Pressable>
+            <Text style={styles.consentText}>
+              I agree to the{' '}
+              <Text
+                style={styles.consentLink}
+                onPress={() => go('legal')}
+                accessibilityRole="link"
+              >
+                Terms of Service
+              </Text>
+              {' '}and acknowledge the{' '}
+              <Text
+                style={styles.consentLink}
+                onPress={() => go('legal')}
+                accessibilityRole="link"
+              >
+                Privacy Policy
+              </Text>
+              .
+            </Text>
+          </View>
+
           <View style={styles.buttonContainer}>
             <PillButton
               title={isSubmitting ? 'CREATING ACCOUNT...' : 'SIGNUP'}
@@ -205,6 +242,12 @@ const createStyles = (colors: AppColors) => StyleSheet.create({
     marginTop: 16,
     marginBottom: 14,
   },
+  consentRow: { flexDirection: 'row', alignItems: 'flex-start', marginTop: 8, gap: 10 },
+  checkbox: { width: 22, height: 22, borderWidth: 1.5, borderColor: colors.textMuted, borderRadius: 5, alignItems: 'center', justifyContent: 'center', marginTop: 1 },
+  checkboxChecked: { backgroundColor: colors.ink, borderColor: colors.ink },
+  checkmark: { color: colors.isDark ? colors.background : colors.white, fontSize: 15, fontWeight: '900', lineHeight: 18 },
+  consentText: { flex: 1, color: colors.textMuted, fontSize: 13, lineHeight: 20 },
+  consentLink: { color: colors.ink, fontWeight: '800', textDecorationLine: 'underline' },
   navigationLinkContainer: {
     marginTop: 10,
     alignItems: 'center',

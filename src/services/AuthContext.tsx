@@ -168,10 +168,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   ): Promise<SignupResult> => {
     try {
       const fullName = name?.trim() || email.trim();
+      const termsAcceptedAt = new Date().toISOString();
       const { data, error } = await supabase.auth.signUp({
         email: email.trim(),
         password,
-        options: { data: { full_name: fullName } },
+        options: {
+          data: {
+            full_name: fullName,
+            terms_accepted_at: termsAcceptedAt,
+            privacy_notice_acknowledged_at: termsAcceptedAt,
+          },
+        },
       });
 
       if (error || !data.user) {

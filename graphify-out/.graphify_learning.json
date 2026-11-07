@@ -1,0 +1,134 @@
+{
+  "generated_at": "2026-11-05T16:27:55.732562+00:00",
+  "nodes": {
+    "app_tsx_app": {
+      "code_fingerprint": "b32b5e61d81cb717555ab69d917d44baab1d574b0ea35f2765549b409f3a000e",
+      "label": "App.tsx",
+      "last": "2026-11-05T10:31:11.744957+00:00",
+      "provenance": [
+        {
+          "date": "2026-11-05T10:31:11.744957+00:00",
+          "outcome": "useful",
+          "q": "Why does react connect Image Asset Handling to App Navigation and Routing, Shared Form Components, App Dependencies, Product Catalog and UI, Shopping and Bottom Navigation, Orders and Location Services, Driver Map Tracking, Order Tracking Screens, Settings Screen, Admin Delivery Management, Screen Label Components, Privacy Policy Screen, Splash Onboarding One, Splash Onboarding Two, and Terms of Service Screen?"
+        }
+      ],
+      "score": 0.994292541,
+      "source_file": "App.tsx",
+      "status": "tentative",
+      "uses": 1
+    },
+    "package": {
+      "code_fingerprint": "2b1cd3f7de563a3caad58517c01f7925b4fad5c25aef5f4ed6534641f804f27d",
+      "label": "package.json",
+      "last": "2026-11-05T10:31:11.744957+00:00",
+      "provenance": [
+        {
+          "date": "2026-11-05T10:31:11.744957+00:00",
+          "outcome": "useful",
+          "q": "Why does react connect Image Asset Handling to App Navigation and Routing, Shared Form Components, App Dependencies, Product Catalog and UI, Shopping and Bottom Navigation, Orders and Location Services, Driver Map Tracking, Order Tracking Screens, Settings Screen, Admin Delivery Management, Screen Label Components, Privacy Policy Screen, Splash Onboarding One, Splash Onboarding Two, and Terms of Service Screen?"
+        }
+      ],
+      "score": 0.994292541,
+      "source_file": "package.json",
+      "status": "tentative",
+      "uses": 1
+    },
+    "ref_react": {
+      "code_fingerprint": "2b1cd3f7de563a3caad58517c01f7925b4fad5c25aef5f4ed6534641f804f27d",
+      "label": "react",
+      "last": "2026-11-05T10:31:11.744957+00:00",
+      "provenance": [
+        {
+          "date": "2026-11-05T10:31:11.744957+00:00",
+          "outcome": "useful",
+          "q": "Why does react connect Image Asset Handling to App Navigation and Routing, Shared Form Components, App Dependencies, Product Catalog and UI, Shopping and Bottom Navigation, Orders and Location Services, Driver Map Tracking, Order Tracking Screens, Settings Screen, Admin Delivery Management, Screen Label Components, Privacy Policy Screen, Splash Onboarding One, Splash Onboarding Two, and Terms of Service Screen?"
+        }
+      ],
+      "score": 0.994292541,
+      "source_file": "package.json",
+      "status": "tentative",
+      "uses": 1
+    },
+    "src_components_fieldinput": {
+      "code_fingerprint": "ad8291437c0a6b61f2c4c8f3ef48d660f9527baa36dd5d64aabece930a57bae1",
+      "label": "FieldInput.tsx",
+      "last": "2026-11-05T10:31:11.744957+00:00",
+      "provenance": [
+        {
+          "date": "2026-11-05T10:31:11.744957+00:00",
+          "outcome": "useful",
+          "q": "Why does react connect Image Asset Handling to App Navigation and Routing, Shared Form Components, App Dependencies, Product Catalog and UI, Shopping and Bottom Navigation, Orders and Location Services, Driver Map Tracking, Order Tracking Screens, Settings Screen, Admin Delivery Management, Screen Label Components, Privacy Policy Screen, Splash Onboarding One, Splash Onboarding Two, and Terms of Service Screen?"
+        }
+      ],
+      "score": 0.994292541,
+      "source_file": "src/components/FieldInput.tsx",
+      "status": "tentative",
+      "uses": 1
+    },
+    "src_components_imageholder": {
+      "code_fingerprint": "78d8bee9ceb64131ee90b9ba6103a6bf415efc65d75cb1a323f3ef96f6247575",
+      "label": "ImageHolder.tsx",
+      "last": "2026-11-05T10:31:11.744957+00:00",
+      "provenance": [
+        {
+          "date": "2026-11-05T10:31:11.744957+00:00",
+          "outcome": "useful",
+          "q": "Why does react connect Image Asset Handling to App Navigation and Routing, Shared Form Components, App Dependencies, Product Catalog and UI, Shopping and Bottom Navigation, Orders and Location Services, Driver Map Tracking, Order Tracking Screens, Settings Screen, Admin Delivery Management, Screen Label Components, Privacy Policy Screen, Splash Onboarding One, Splash Onboarding Two, and Terms of Service Screen?"
+        }
+      ],
+      "score": 0.994292541,
+      "source_file": "src/components/ImageHolder.tsx",
+      "status": "tentative",
+      "uses": 1
+    },
+    "src_components_osmmap": {
+      "code_fingerprint": "020ab67dcd7511338eca73d52b58ac7790f9fb9753b7dddef54064dc252644ad",
+      "label": "OSMMap.tsx",
+      "last": "2026-11-05T10:31:11.744957+00:00",
+      "provenance": [
+        {
+          "date": "2026-11-05T10:31:11.744957+00:00",
+          "outcome": "useful",
+          "q": "Why does react connect Image Asset Handling to App Navigation and Routing, Shared Form Components, App Dependencies, Product Catalog and UI, Shopping and Bottom Navigation, Orders and Location Services, Driver Map Tracking, Order Tracking Screens, Settings Screen, Admin Delivery Management, Screen Label Components, Privacy Policy Screen, Splash Onboarding One, Splash Onboarding Two, and Terms of Service Screen?"
+        }
+      ],
+      "score": 0.994292541,
+      "source_file": "src/components/OSMMap.tsx",
+      "status": "tentative",
+      "uses": 1
+    },
+    "src_screens_shop_trackorderscreen": {
+      "code_fingerprint": "a2d899abe94750acf331e5eab6620558011120da620f1ffbe2d10f6e431a0f13",
+      "label": "TrackOrderScreen.tsx",
+      "last": "2026-11-05T10:31:11.744957+00:00",
+      "provenance": [
+        {
+          "date": "2026-11-05T10:31:11.744957+00:00",
+          "outcome": "useful",
+          "q": "Why does react connect Image Asset Handling to App Navigation and Routing, Shared Form Components, App Dependencies, Product Catalog and UI, Shopping and Bottom Navigation, Orders and Location Services, Driver Map Tracking, Order Tracking Screens, Settings Screen, Admin Delivery Management, Screen Label Components, Privacy Policy Screen, Splash Onboarding One, Splash Onboarding Two, and Terms of Service Screen?"
+        }
+      ],
+      "score": 0.994292541,
+      "source_file": "src/screens/shop/TrackOrderScreen.tsx",
+      "status": "tentative",
+      "uses": 1
+    },
+    "src_screens_user_settingsscreen": {
+      "code_fingerprint": "525f8e26cf370a9e784eb714927fcae8c24fe24b04c8703b21e753592be448bb",
+      "label": "SettingsScreen.tsx",
+      "last": "2026-11-05T10:31:11.744957+00:00",
+      "provenance": [
+        {
+          "date": "2026-11-05T10:31:11.744957+00:00",
+          "outcome": "useful",
+          "q": "Why does react connect Image Asset Handling to App Navigation and Routing, Shared Form Components, App Dependencies, Product Catalog and UI, Shopping and Bottom Navigation, Orders and Location Services, Driver Map Tracking, Order Tracking Screens, Settings Screen, Admin Delivery Management, Screen Label Components, Privacy Policy Screen, Splash Onboarding One, Splash Onboarding Two, and Terms of Service Screen?"
+        }
+      ],
+      "score": 0.994292541,
+      "source_file": "src/screens/user/SettingsScreen.tsx",
+      "status": "tentative",
+      "uses": 1
+    }
+  },
+  "version": 1
+}
