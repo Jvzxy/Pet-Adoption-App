@@ -8,8 +8,6 @@ import {
   View,
 } from "react-native";
 
-// Safe import for Swipeable across React Native Gesture Handler versions
-import SwipeableComponent from "react-native-gesture-handler/ReanimatedSwipeable";
 import { radii } from "../../constants/theme";
 import BottomNavigation from "../../components/BottomNavigation";
 import { useAuth } from "../../services/AuthContext";
@@ -170,15 +168,7 @@ export default function CartScreen({ go, cartItems = [], setCartItems }: ScreenP
               </View>
             );
 
-            return SwipeableComponent ? (
-              // @ts-ignore
-              <SwipeableComponent
-                key={item.id}
-                renderRightActions={() => renderRightActions(item.id)}
-              >
-                {ItemContent}
-              </SwipeableComponent>
-            ) : (
+            return (
               <View key={item.id}>{ItemContent}</View>
             );
           })

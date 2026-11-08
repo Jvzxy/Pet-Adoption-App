@@ -101,70 +101,77 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     setLoading(true);
 
     const loadData = async () => {
-      const catalogResult = await supabase
-        .from('catalog_items')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (catalogResult.error) throw catalogResult.error;
-      if (!active || userIdRef.current !== (user?.id ?? null)) return;
+      try {
+        const catalogResult = await supabase
+          .from('catalog_items')
+          .select('*')
+          .order('created_at', { ascending: false });
 
-      setCatalogItems((catalogResult.data ?? []).map((row) => mapCatalogRow(row)));
-      if (!user) {
-        setFavorites([]);
-        setCartItemsState([]);
-        setLoading(false);
-        return;
+        if (catalogResult.error) {
+          console.warn('Could not load catalog from Supabase:', catalogResult.error.message);
+        } else if (active && userIdRef.current === (user?.id ?? null)) {
+          setCatalogItems((catalogResult.data ?? []).map((row) => mapCatalogRow(row)));
+        }
+
+        if (!user) {
+          if (active) {
+            setFavorites([]);
+            setCartItemsState([]);
+            setLoading(false);
+          }
+          return;
+        }
+
+        const [favoriteResult, cartResult] = await Promise.all([
+          supabase.from('favorites').select('catalog_item_id'),
+          supabase
+            .from('cart_items')
+            .select('catalog_item_id, variant, quantity, selected, catalog_items(*)'),
+        ]);
+
+        if (favoriteResult.error) {
+          console.warn('Could not load favorites:', favoriteResult.error.message);
+        } else if (active && userIdRef.current === user.id) {
+          setFavorites((favoriteResult.data ?? []).map((row) => row.catalog_item_id));
+        }
+
+        if (cartResult.error) {
+          console.warn('Could not load cart:', cartResult.error.message);
+        } else if (active && userIdRef.current === user.id) {
+          const loadedCart = (cartResult.data ?? []).flatMap((row) => {
+            const joined = row.catalog_items;
+            const product = (Array.isArray(joined) ? joined[0] : joined) as Record<string, unknown> | null;
+            if (!product || product.type !== 'product' || !product.available) return [];
+
+            const variants = Array.isArray(product.variations) ? product.variations : [];
+            const variantIndex = Math.max(0, variants.findIndex((item: Record<string, unknown>) => item.size === row.variant));
+            const selectedVariant = variants[variantIndex];
+            const price = selectedVariant ? Number(selectedVariant.price) : Number(product.price);
+
+            return [{
+              id: `${product.id}-${variantIndex}`,
+              title: String(product.name ?? ''),
+              subtitle: `Size: ${row.variant}`,
+              price,
+              image: String(product.image_url ?? ''),
+              selected: row.selected === true,
+              quantity: Number(row.quantity),
+            }];
+          });
+
+          cartRef.current = loadedCart;
+          setCartItemsState(loadedCart);
+        }
+      } catch (error) {
+        console.warn('Error during loadData:', error);
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
       }
-
-      const [favoriteResult, cartResult] = await Promise.all([
-        supabase.from('favorites').select('catalog_item_id'),
-        supabase
-          .from('cart_items')
-          .select('catalog_item_id, variant, quantity, selected, catalog_items(*)'),
-      ]);
-
-      const queryError = favoriteResult.error || cartResult.error;
-      if (queryError) throw queryError;
-      if (!active || userIdRef.current !== user.id) return;
-
-      setFavorites((favoriteResult.data ?? []).map((row) => row.catalog_item_id));
-
-      const loadedCart = (cartResult.data ?? []).flatMap((row) => {
-        const joined = row.catalog_items;
-        const product = (Array.isArray(joined) ? joined[0] : joined) as Record<string, unknown> | null;
-        if (!product || product.type !== 'product' || !product.available) return [];
-
-        const variants = Array.isArray(product.variations) ? product.variations : [];
-        const variantIndex = Math.max(0, variants.findIndex((item: Record<string, unknown>) => item.size === row.variant));
-        const selectedVariant = variants[variantIndex];
-        const price = selectedVariant ? Number(selectedVariant.price) : Number(product.price);
-
-        return [{
-          id: `${product.id}-${variantIndex}`,
-          title: String(product.name ?? ''),
-          subtitle: `Size: ${row.variant}`,
-          price,
-          image: String(product.image_url ?? ''),
-          selected: row.selected === true,
-          quantity: Number(row.quantity),
-        }];
-      });
-
-      cartRef.current = loadedCart;
-      setCartItemsState(loadedCart);
-      setLoading(false);
     };
 
-    void loadData().catch((error: unknown) => {
-      console.error('Could not load account data:', error);
-      if (active) {
-        setLoading(false);
-        Alert.alert(
-          'Account data unavailable',
-          error instanceof Error ? error.message : 'Could not load your account data from Supabase.',
-        );
-      }
-    });
+    void loadData();
 
     return () => {
       active = false;

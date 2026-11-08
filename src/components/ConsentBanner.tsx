@@ -69,7 +69,7 @@ export default function ConsentBanner({
 
   return (
     <View
-      style={[styles.positioner, { bottom: Math.max(insets.bottom, 12) }]}
+      style={[styles.positioner, { bottom: Math.max(insets?.bottom ?? 0, 12) }]}
       accessibilityViewIsModal
     >
       <View style={styles.card}>

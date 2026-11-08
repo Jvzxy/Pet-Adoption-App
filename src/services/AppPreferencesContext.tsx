@@ -6,6 +6,14 @@ import { useAuth } from './AuthContext';
 
 const STORAGE_KEY_PREFIX = '@pawfect/app-preferences:';
 
+function safeSetColorScheme(scheme: 'light' | 'dark') {
+  try {
+    Appearance.setColorScheme(scheme);
+  } catch {
+    // Appearance.setColorScheme is a no-op or unsupported on some Android environments
+  }
+}
+
 export interface AppColors {
   mint: string;
   white: string;
@@ -81,7 +89,7 @@ export function AppPreferencesProvider({ children }: { children: React.ReactNode
     setLoading(true);
     setDarkModeState(false);
     setBiometricEnabledState(false);
-    Appearance.setColorScheme('light');
+    safeSetColorScheme('light');
 
     const loadPreferences = async () => {
       if (accountId) {
@@ -91,7 +99,7 @@ export function AppPreferencesProvider({ children }: { children: React.ReactNode
           if (!active) return;
           setDarkModeState(preferences.darkMode === true);
           setBiometricEnabledState(preferences.biometricEnabled === true);
-          Appearance.setColorScheme(preferences.darkMode === true ? 'dark' : 'light');
+          safeSetColorScheme(preferences.darkMode === true ? 'dark' : 'light');
         }
       }
 
@@ -124,7 +132,7 @@ export function AppPreferencesProvider({ children }: { children: React.ReactNode
     await persist(accountId, enabled, biometricEnabled);
     if (activeAccountIdRef.current !== accountId) return;
     setDarkModeState(enabled);
-    Appearance.setColorScheme(enabled ? 'dark' : 'light');
+    safeSetColorScheme(enabled ? 'dark' : 'light');
   }, [accountId, biometricEnabled, persist]);
 
   const setBiometricEnabled = useCallback(async (enabled: boolean) => {
