@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useRef, useState, type ErrorInfo } from 'react';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import ConsentBanner from './src/components/ConsentBanner';
@@ -49,6 +49,61 @@ import type { PaymentMethod } from './src/services/paymentMethods';
 import { AuthProvider, useAuth } from './src/services/AuthContext';
 import { AppDataProvider, useAppData } from './src/services/AppDataContext';
 import { AppPreferencesProvider, useAppPreferences, type AppColors } from './src/services/AppPreferencesContext';
+
+/* ---------- Error Boundary ---------- */
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+class AppErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  ErrorBoundaryState
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error('AppErrorBoundary caught an error:', error, info.componentStack);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <View style={errorStyles.container}>
+          <Text style={errorStyles.emoji}>⚠️</Text>
+          <Text style={errorStyles.title}>Something went wrong</Text>
+          <ScrollView style={errorStyles.scroll}>
+            <Text style={errorStyles.message}>{this.state.error?.message}</Text>
+          </ScrollView>
+          <Pressable
+            style={errorStyles.button}
+            onPress={() => this.setState({ hasError: false, error: null })}
+          >
+            <Text style={errorStyles.buttonText}>Try Again</Text>
+          </Pressable>
+        </View>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+const errorStyles = StyleSheet.create({
+  container: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32, backgroundColor: '#A8DDD6' },
+  emoji: { fontSize: 48, marginBottom: 16 },
+  title: { fontSize: 22, fontWeight: '900', color: '#1C1C1E', marginBottom: 12 },
+  scroll: { maxHeight: 120, marginBottom: 20, width: '100%' },
+  message: { fontSize: 14, color: '#1C1C1E', textAlign: 'center', lineHeight: 20 },
+  button: { backgroundColor: '#1C1C1E', paddingHorizontal: 28, paddingVertical: 14, borderRadius: 24 },
+  buttonText: { color: '#FFFFFF', fontSize: 15, fontWeight: '800' },
+});
 
 function AdminRoute({
   go,
@@ -124,11 +179,13 @@ function DriverRoute({
 
 export default function App() {
   return (
-    <AuthProvider>
-      <AppPreferencesProvider>
-        <ThemedApp />
-      </AppPreferencesProvider>
-    </AuthProvider>
+    <AppErrorBoundary>
+      <AuthProvider>
+        <AppPreferencesProvider>
+          <ThemedApp />
+        </AppPreferencesProvider>
+      </AuthProvider>
+    </AppErrorBoundary>
   );
 }
 

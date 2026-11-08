@@ -507,29 +507,36 @@ const createStyles = (colors: AppColors) => StyleSheet.create({
     paddingRight: 20, 
   },
   categoryChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20, // Rounded pill shape for modern e-commerce feel
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 25,
     marginRight: 10,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
   },
   categoryChipSelected: {
-    backgroundColor: colors.ink || "#1C1C1E", // Solid dark background for selected
+    backgroundColor: colors.ink || "#1C1C1E",
   },
   categoryChipUnselected: {
-    backgroundColor: "transparent", // Blends into the main background
+    backgroundColor: colors.surface || "#FFFFFF",
+    borderWidth: 1.5,
+    borderColor: colors.border || "rgba(0,0,0,0.08)",
   },
   categoryChipText: {
     fontSize: 14,
     fontWeight: '700',
   },
   categoryChipTextSelected: {
-    color: colors.surface || "#FFFFFF", // White text on dark background
+    color: colors.surface || "#FFFFFF",
   },
   categoryChipTextUnselected: {
     color: colors.ink || "#000",
-    opacity: 0.6, // Muted look for unselected items
+    opacity: 0.7,
   },
   rowWrapper: { justifyContent: "space-between" },
   gridItem: {
