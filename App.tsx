@@ -19,6 +19,7 @@ import Splash2Screen from './src/screens/auth/Splash2Screen';
 import Splash3Screen from './src/screens/auth/Splash3Screen';
 import AdminAddCatScreen from './src/screens/admin/AdminAddCatScreen';
 import AdminPetsScreen from './src/screens/admin/AdminPetsScreen';
+import AdminProductsScreen from './src/screens/admin/AdminProductsScreen';
 import AddProductScreen from './src/screens/admin/AddProductScreen'; 
 import AdminDeliveriesScreen from './src/screens/admin/AdminDeliveriesScreen';
 import AdminAdoptionsScreen from './src/screens/admin/AdminAdoptionsScreen';
@@ -307,6 +308,11 @@ function AppRouter() {
         {screen === 'adminPets' && (
           <AdminRoute go={go}>
             <AdminPetsScreen go={go} />
+          </AdminRoute>
+        )}
+        {screen === 'adminProducts' && (
+          <AdminRoute go={go}>
+            <AdminProductsScreen go={go} />
           </AdminRoute>
         )}
         {screen === 'adminAddProduct' && (

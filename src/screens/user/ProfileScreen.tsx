@@ -181,6 +181,10 @@ export default function ProfileScreen({ go }: ScreenProps) {
               <Text style={styles.adminToolButtonText}>Manage pet availability</Text>
               <AngleRightIcon width={12} height={12} fill={colors.ink} />
             </Pressable>
+            <Pressable style={styles.adminToolButton} onPress={() => go('adminProducts')}>
+              <Text style={styles.adminToolButtonText}>Manage product availability</Text>
+              <AngleRightIcon width={12} height={12} fill={colors.ink} />
+            </Pressable>
             <Pressable style={styles.adminToolButton} onPress={() => go('adminAddProduct')}>
               <Text style={styles.adminToolButtonText}>Add a product</Text>
               <AngleRightIcon width={12} height={12} fill={colors.ink} />
