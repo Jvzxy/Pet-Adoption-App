@@ -1094,11 +1094,43 @@ $$;
 revoke all on function public.create_store_order(jsonb, double precision, double precision, text, text) from public, anon;
 grant execute on function public.create_store_order(jsonb, double precision, double precision, text, text) to authenticated;
 
+create table if not exists public.business_details (
+  id int primary key default 1 check (id = 1),
+  entity_name text not null,
+  privacy_contact text not null,
+  address text not null
+);
+
+alter table public.business_details enable row level security;
+grant select on table public.business_details to anon, authenticated;
+grant update on table public.business_details to authenticated;
+
+drop policy if exists "Anyone can read business details" on public.business_details;
+create policy "Anyone can read business details"
+  on public.business_details for select
+  using (true);
+
+drop policy if exists "Admins can update business details" on public.business_details;
+create policy "Admins can update business details"
+  on public.business_details for update
+  to authenticated
+  using ((select public.is_admin()))
+  with check ((select public.is_admin()));
+
+insert into public.business_details (id, entity_name, privacy_contact, address)
+values (
+  1,
+  'Forever Home Pet Adoption LLC',
+  'privacy@foreverhomeapp.com',
+  '123 Rescue Way, Suite 100, Pet City, PC 90210'
+)
+on conflict (id) do nothing;
+
 do $$
 declare
   table_name text;
 begin
-  foreach table_name in array array['catalog_items', 'favorites', 'cart_items', 'adoption_applications', 'conversations', 'messages', 'notifications', 'orders', 'users', 'delivery_locations']
+  foreach table_name in array array['catalog_items', 'favorites', 'cart_items', 'adoption_applications', 'conversations', 'messages', 'notifications', 'orders', 'users', 'delivery_locations', 'business_details']
   loop
     if not exists (
       select 1 from pg_publication_tables
