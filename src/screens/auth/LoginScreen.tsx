@@ -106,6 +106,7 @@ export default function LoginScreen({ go }: ScreenProps) {
             />
           )}
 
+          {/* TODO: Implement Google Sign-In later
           <Pressable
             style={({ pressed }) => [
               styles.googleBtn,
@@ -119,6 +120,7 @@ export default function LoginScreen({ go }: ScreenProps) {
             />
             <Text style={styles.googleText}>Continue with Google</Text>
           </Pressable>
+          */}
 
           <Pressable
             onPress={() => go('loginSignup')}
