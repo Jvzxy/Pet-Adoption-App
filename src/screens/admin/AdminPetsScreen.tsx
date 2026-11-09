@@ -37,7 +37,6 @@ export default function AdminPetsScreen({ go }: ScreenProps) {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Could not load pet availability:', error.message);
       setLoadError(error.message);
       setLoading(false);
       return;
@@ -64,7 +63,6 @@ export default function AdminPetsScreen({ go }: ScreenProps) {
     setBusyId(null);
 
     if (error) {
-      console.error('Could not update pet availability:', error.message);
       Alert.alert('Availability not updated', error.message);
       return;
     }
@@ -73,28 +71,47 @@ export default function AdminPetsScreen({ go }: ScreenProps) {
     try {
       await refreshCatalog();
     } catch (refreshError) {
-      console.error('Pet status was saved, but the catalog could not be refreshed:', refreshError);
-      Alert.alert(
-        'Status saved',
-        'The pet availability was updated, but the app catalog could not refresh. Reopen this screen or retry the catalog refresh.',
-      );
+      console.error(refreshError);
     }
+  };
+
+  const deletePet = (id: string, name: string) => {
+    Alert.alert('Delete Pet', `Are you sure you want to permanently delete ${name}?`, [
+      { text: 'Cancel', style: 'cancel' },
+      { 
+        text: 'Delete', 
+        style: 'destructive', 
+        onPress: async () => {
+          setBusyId(id);
+          const { error } = await supabase.from('catalog_items').delete().eq('id', id);
+          setBusyId(null);
+
+          if (error) {
+            Alert.alert('Error deleting pet', error.message);
+            return;
+          }
+
+          setPets((prev) => prev.filter(p => p.id !== id));
+          refreshCatalog();
+        }
+      }
+    ]);
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Pressable onPress={() => go('profile')} hitSlop={10} accessibilityRole="button" accessibilityLabel="Back to profile">
+        <Pressable onPress={() => go('profile')} hitSlop={10}>
           <AngleLeftIcon width={20} height={20} fill={colors.ink} />
         </Pressable>
         <Text style={styles.headerTitle}>Pet Availability</Text>
-        <Pressable onPress={() => void loadPets()} accessibilityRole="button">
+        <Pressable onPress={() => void loadPets()}>
           <Text style={styles.refresh}>Refresh</Text>
         </Pressable>
       </View>
 
       <Text style={styles.helper}>
-        Unavailable pets are hidden from customers and can’t receive new adoption applications.
+        Manage pets. Unavailable pets are hidden from customers and can’t receive new adoption applications.
       </Text>
 
       {loading ? (
@@ -116,33 +133,42 @@ export default function AdminPetsScreen({ go }: ScreenProps) {
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
             <View style={styles.card}>
-              {item.image_url ? (
-                <Image source={{ uri: item.image_url }} style={styles.petImage} />
-              ) : (
-                <View style={[styles.petImage, styles.imagePlaceholder]}>
-                  <Text style={styles.placeholderText}>No photo</Text>
+              <View style={styles.cardMain}>
+                {item.image_url ? (
+                  <Image source={{ uri: item.image_url }} style={styles.petImage} />
+                ) : (
+                  <View style={[styles.petImage, styles.imagePlaceholder]}>
+                    <Text style={styles.placeholderText}>No photo</Text>
+                  </View>
+                )}
+                <View style={styles.petInfo}>
+                  <Text style={styles.petName} numberOfLines={1}>{item.name}</Text>
+                  <Text style={styles.breed} numberOfLines={1}>{item.breed || 'Breed not specified'}</Text>
+                  <Text style={[styles.status, item.available ? styles.available : styles.unavailable]}>
+                    {item.available ? 'Available' : 'Unavailable'}
+                  </Text>
                 </View>
-              )}
-              <View style={styles.petInfo}>
-                <Text style={styles.petName} numberOfLines={1}>{item.name}</Text>
-                <Text style={styles.breed} numberOfLines={1}>{item.breed || 'Breed not specified'}</Text>
-                <Text style={[styles.status, item.available ? styles.available : styles.unavailable]}>
-                  {item.available ? 'Available' : 'Unavailable'}
-                </Text>
               </View>
-              <Pressable
-                style={[styles.actionButton, item.available ? styles.markUnavailable : styles.markAvailable]}
-                accessibilityRole="button"
-                accessibilityLabel={`${item.available ? 'Mark' : 'Make'} ${item.name} ${item.available ? 'unavailable' : 'available'}`}
-                disabled={busyId === item.id}
-                onPress={() => void toggleAvailability(item)}
-              >
-                <Text style={styles.actionText}>
-                  {busyId === item.id
-                    ? 'Saving...'
-                    : item.available ? 'Mark unavailable' : 'Mark available'}
-                </Text>
-              </Pressable>
+
+              <View style={styles.actionRow}>
+                <Pressable
+                  style={[styles.actionButton, item.available ? styles.markUnavailable : styles.markAvailable]}
+                  disabled={busyId === item.id}
+                  onPress={() => void toggleAvailability(item)}
+                >
+                  <Text style={styles.actionText}>
+                    {busyId === item.id ? 'Saving...' : item.available ? 'Mark unavailable' : 'Mark available'}
+                  </Text>
+                </Pressable>
+
+                <Pressable
+                  style={[styles.actionButton, styles.deleteBtn]}
+                  disabled={busyId === item.id}
+                  onPress={() => deletePet(item.id, item.name)}
+                >
+                  <Text style={[styles.actionText, { color: '#FFFFFF' }]}>Delete</Text>
+                </Pressable>
+              </View>
             </View>
           )}
         />
@@ -153,25 +179,13 @@ export default function AdminPetsScreen({ go }: ScreenProps) {
 
 const createStyles = (colors: AppColors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background, paddingTop: 52 },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingBottom: 14,
-  },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing.lg, paddingBottom: 14 },
   headerTitle: { color: colors.ink, fontSize: 17, fontWeight: '900' },
   refresh: { color: colors.ink, fontSize: 12, fontWeight: '700' },
   helper: { color: colors.textMuted, fontSize: 13, lineHeight: 19, paddingHorizontal: spacing.lg, marginBottom: 16 },
   list: { paddingHorizontal: spacing.lg, paddingBottom: 32, gap: 12 },
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: radii.md,
-    padding: 12,
-    gap: 12,
-  },
+  card: { backgroundColor: colors.surface, borderRadius: radii.md, padding: 12, gap: 12 },
+  cardMain: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   petImage: { width: 64, height: 64, borderRadius: radii.sm },
   imagePlaceholder: { alignItems: 'center', justifyContent: 'center', backgroundColor: colors.cardBg },
   placeholderText: { color: colors.textMuted, fontSize: 10 },
@@ -181,9 +195,11 @@ const createStyles = (colors: AppColors) => StyleSheet.create({
   status: { fontSize: 11, fontWeight: '800', marginTop: 5 },
   available: { color: '#2E7D32' },
   unavailable: { color: colors.red },
-  actionButton: { paddingHorizontal: 12, paddingVertical: 10, borderRadius: radii.pill },
+  actionRow: { flexDirection: 'row', gap: 8, marginTop: 4 },
+  actionButton: { flex: 1, paddingVertical: 10, borderRadius: radii.pill, alignItems: 'center' },
   markUnavailable: { backgroundColor: colors.isDark ? '#6A3838' : '#F6D6D6' },
   markAvailable: { backgroundColor: colors.mint },
+  deleteBtn: { backgroundColor: '#D32F2F', flex: 0.5 }, // Smaller delete button
   actionText: { color: colors.ink, fontSize: 11, fontWeight: '800' },
   message: { color: colors.textMuted, textAlign: 'center', marginTop: 30, paddingHorizontal: 24 },
   error: { color: colors.red, textAlign: 'center', marginTop: 30, paddingHorizontal: 24 },

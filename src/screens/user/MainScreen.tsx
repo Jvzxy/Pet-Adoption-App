@@ -14,7 +14,10 @@ import { radii, spacing } from "../../constants/theme";
 import BottomNavigation from "../../components/BottomNavigation";
 import { useAppData } from "../../services/AppDataContext";
 import { useAuth } from "../../services/AuthContext";
-import { useAppPreferences, type AppColors } from "../../services/AppPreferencesContext";
+import {
+  useAppPreferences,
+  type AppColors,
+} from "../../services/AppPreferencesContext";
 
 // Image Imports
 import cat3Img from "../../images/Cats/Cat3.png";
@@ -98,7 +101,10 @@ const ListHeader = React.memo(
             <Text style={styles.heroText}>
               LIVE.{"\n"}LOVE.{"\n"}SHOP.
             </Text>
-            <Pressable style={styles.adoptBtn} onPress={() => go("explorePets")}>
+            <Pressable
+              style={styles.adoptBtn}
+              onPress={() => go("explorePets")}
+            >
               <Text style={styles.adoptBtnText}>Explore Now ➔</Text>
             </Pressable>
           </View>
@@ -135,14 +141,18 @@ const ListHeader = React.memo(
                 key={cat}
                 style={[
                   styles.categoryChip,
-                  isSelected ? styles.categoryChipSelected : styles.categoryChipUnselected,
+                  isSelected
+                    ? styles.categoryChipSelected
+                    : styles.categoryChipUnselected,
                 ]}
                 onPress={() => setSelectedCategory(cat)}
               >
                 <Text
                   style={[
                     styles.categoryChipText,
-                    isSelected ? styles.categoryChipTextSelected : styles.categoryChipTextUnselected,
+                    isSelected
+                      ? styles.categoryChipTextSelected
+                      : styles.categoryChipTextUnselected,
                   ]}
                 >
                   {cat}
@@ -153,7 +163,7 @@ const ListHeader = React.memo(
         </ScrollView>
       </View>
     );
-  }
+  },
 );
 
 export default function MainScreen({
@@ -169,27 +179,37 @@ export default function MainScreen({
   const { catalogItems, loading } = useAppData();
   const { logout } = useAuth();
 
-  const STORE_ITEMS: DisplayItem[] = catalogItems.filter((item) => item.available).map((item) => {
-    const isProduct = item.type === "product";
-    return {
-      id: item.id,
-      name: item.name,
-      category: isProduct ? item.category || "Product" : "Pets",
-      priceTag: isProduct 
-        ? item.price 
-        : (!item.price || item.price.toLowerCase() === "free" ? "Free Adoption" : item.price),
-      subText: isProduct ? item.description : `Age: ${item.age}`,
-      imageUri: item.imageUri,
-      isPet: !isProduct,
-    };
-  });
+  const STORE_ITEMS: DisplayItem[] = catalogItems
+    .filter((item: any) => {
+      // Must be available AND (if it's a product, stock must be greater than 0 or undefined for backward compatibility)
+      const hasStock = item.stock === undefined || item.stock > 0;
+      return item.available && (item.type === "pet" || hasStock);
+    })
+    .map((item) => {
+      const isProduct = item.type === "product";
+      return {
+        id: item.id,
+        name: item.name,
+        category: isProduct ? item.category || "Product" : "Pets",
+        priceTag: isProduct
+          ? item.price
+          : !item.price || item.price.toLowerCase() === "free"
+            ? "Free Adoption"
+            : item.price,
+        subText: isProduct ? item.description : `Age: ${item.age}`,
+        imageUri: item.imageUri,
+        isPet: !isProduct,
+      };
+    });
 
   const filteredItems = STORE_ITEMS.filter((item) => {
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = 
-      selectedCategory === "All" || 
+    const matchesSearch = item.name
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+    const matchesCategory =
+      selectedCategory === "All" ||
       item.category.toLowerCase() === selectedCategory.toLowerCase();
-      
+
     return matchesSearch && matchesCategory;
   });
 
@@ -263,9 +283,11 @@ export default function MainScreen({
               style={styles.logoutButton}
               onPress={() => {
                 setIsSidebarOpen(false);
-                void logout().then(() => go("login")).catch((error: unknown) => {
-                  console.error("Could not sign out:", error);
-                });
+                void logout()
+                  .then(() => go("login"))
+                  .catch((error: unknown) => {
+                    console.error("Could not sign out:", error);
+                  });
               }}
             >
               <LogoutIcon width={20} height={20} fill="#D32F2F" />
@@ -352,7 +374,10 @@ export default function MainScreen({
                 </Text>
 
                 <View style={styles.priceRow}>
-                  <Text style={[styles.priceText, { flex: 1, paddingRight: 4 }]} numberOfLines={1}>
+                  <Text
+                    style={[styles.priceText, { flex: 1, paddingRight: 4 }]}
+                    numberOfLines={1}
+                  >
                     {item.priceTag}
                   </Text>
                   <View style={styles.actionBtn}>
@@ -372,328 +397,346 @@ export default function MainScreen({
   );
 }
 
-const createStyles = (colors: AppColors) => StyleSheet.create({
-  fillMint: { flex: 1, backgroundColor: colors.background },
-  topBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: spacing.lg || 24,
-    paddingTop: 60,
-    paddingBottom: 20,
-  },
-  topIconMenu: { fontSize: 24, color: colors.ink || "#000", fontWeight: "bold" },
-  titleContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  textColumn: { alignItems: "flex-start", justifyContent: "center" },
-  logo: { width: 26, height: 26, marginRight: 6, tintColor: colors.ink || "#000" },
-  titleText: {
-    fontSize: 18,
-    fontWeight: "900",
-    color: colors.ink || "#000",
-    letterSpacing: 0.5,
-  },
-  subtitleText: {
-    fontSize: 9,
-    fontWeight: "800",
-    color: colors.ink || "#000",
-    letterSpacing: 0.5,
-    marginTop: 1,
-  },
-  rightIcons: { flexDirection: "row", alignItems: "center", gap: 16 },
-  listContent: { paddingHorizontal: spacing.lg || 20, paddingBottom: 110 },
-  headerWrapper: { marginBottom: 8 },
-  searchBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: colors.surface,
-    height: 48,
-    borderRadius: radii.pill || 24,
-    paddingHorizontal: 20,
-    marginBottom: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  searchInput: {
-    flex: 1,
-    color: colors.ink || "#000",
-    fontSize: 13,
-    fontWeight: "600",
-  },
-  heroCard: {
-    flexDirection: "row",
-    backgroundColor: colors.isDark ? '#27272A' : '#1C1C1E', // Modern e-commerce slate dark
-    borderRadius: 24,
-    height: 165,
-    overflow: "hidden",
-    marginBottom: 20,
-    paddingLeft: 24,
-    alignItems: "center",
-    justifyContent: "space-between",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 4,
-  },
-  heroTextContainer: { flex: 1, justifyContent: "center" },
-  heroBadge: {
-    fontSize: 9,
-    fontWeight: "900",
-    color: colors.isDark ? '#B2DFDB' : colors.mint,
-    letterSpacing: 1,
-    marginBottom: 4,
-  },
-  heroText: {
-    fontSize: 22,
-    fontWeight: "900",
-    lineHeight: 26,
-    color: '#FFFFFF',
-    marginBottom: 12,
-  },
-  adoptBtn: {
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: radii.pill || 20,
-    alignSelf: "flex-start",
-  },
-  adoptBtnText: { fontSize: 11, fontWeight: "900", color: '#000000' },
-  heroImageWrapper: {
-    width: 140,
-    height: "100%",
-    justifyContent: "center",
-    alignItems: "center",
-    position: "relative",
-  },
-  heroCircle: {
-    width: 115,
-    height: 115,
-    borderRadius: 57.5,
-    backgroundColor: colors.mint || "#A8DDD6",
-    position: "absolute",
-    right: 12,
-  },
-  heroCatImage: {
-    width: 130,
-    height: 150,
-    position: "absolute",
-    bottom: 0,
-    right: 5,
-  },
-  gridHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  gridTitle: { fontSize: 17, fontWeight: "900", color: colors.ink || "#000" },
-  gridSeeAll: { 
-    fontSize: 13, 
-    fontWeight: "700", 
-    color: colors.ink || "#000",
-    opacity: 0.6,
-  },
-  categoriesScroll: {
-    marginBottom: 20,
-  },
-  categoriesContent: {
-    paddingRight: 20, 
-  },
-  categoryChip: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 25,
-    marginRight: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  categoryChipSelected: {
-    backgroundColor: colors.ink || "#1C1C1E",
-  },
-  categoryChipUnselected: {
-    backgroundColor: colors.surface || "#FFFFFF",
-    borderWidth: 1.5,
-    borderColor: colors.border || "rgba(0,0,0,0.08)",
-  },
-  categoryChipText: {
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  categoryChipTextSelected: {
-    color: colors.surface || "#FFFFFF",
-  },
-  categoryChipTextUnselected: {
-    color: colors.ink || "#000",
-    opacity: 0.7,
-  },
-  rowWrapper: { justifyContent: "space-between" },
-  gridItem: {
-    width: "48%",
-    backgroundColor: colors.surface,
-    borderRadius: 20,
-    padding: 10,
-    marginBottom: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    elevation: 3,
-  },
-  gridImageContainer: {
-    width: "100%",
-    height: 115,
-    borderRadius: 14,
-    marginBottom: 10,
-    backgroundColor: colors.background,
-    justifyContent: "center",
-    alignItems: "center",
-    overflow: "hidden",
-    position: "relative",
-  },
-  categoryBadge: {
-    position: "absolute",
-    top: 8,
-    left: 8,
-    backgroundColor: "rgba(0,0,0,0.6)",
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    borderRadius: 6,
-    zIndex: 2,
-  },
-  categoryBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 8,
-    fontWeight: "900",
-    letterSpacing: 0.5,
-  },
-  cardFavoriteIcon: {
-    position: "absolute",
-    top: 8,
-    right: 8,
-    backgroundColor: colors.surface,
-    padding: 6,
-    borderRadius: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
-    zIndex: 2,
-  },
-  catImage: { width: "100%", height: "100%" },
-  gridMetaContainer: { paddingHorizontal: 2 },
-  gridName: { fontSize: 13, fontWeight: "900", color: colors.ink || "#000" },
-  gridSub: {
-    fontSize: 10,
-    fontWeight: "600",
-    color: colors.textMuted,
-    marginTop: 2,
-    marginBottom: 8,
-  },
-  priceRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: 2,
-  },
-  priceText: {
-    fontSize: 13,
-    fontWeight: "900",
-    color: colors.ink || "#000",
-  },
-  actionBtn: {
-    backgroundColor: colors.mint || "#A8DDD6",
-    width: 24,
-    height: 24,
-    borderRadius: 8,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  actionBtnText: {
-    color: colors.ink || "#000",
-    fontSize: 12,
-    fontWeight: "900",
-  },
-  emptyContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 40,
-  },
-  emptyEmoji: { fontSize: 36, marginBottom: 8 },
-  emptyText: {
-    fontSize: 14,
-    fontWeight: "800",
-    color: colors.ink || "#000",
-    opacity: 0.5,
-  },
-  modalOverlay: {
-    flex: 1,
-    flexDirection: "row",
-    backgroundColor: "rgba(0,0,0,0.4)",
-  },
-  backdrop: { flex: 1 },
-  sidebar: {
-    position: "absolute",
-    top: 0,
-    bottom: 0,
-    left: 0,
-    width: "75%",
-    backgroundColor: colors.surface,
-    paddingTop: 60,
-    paddingHorizontal: 24,
-    paddingBottom: 40,
-    justifyContent: "space-between",
-    shadowColor: "#000",
-    shadowOffset: { width: 4, height: 0 },
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    elevation: 10,
-  },
-  sidebarHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 36,
-  },
-  sidebarTitle: { fontSize: 20, fontWeight: "900", color: colors.ink || "#000" },
-  sidebarSub: {
-    fontSize: 10,
-    fontWeight: "800",
-    color: colors.textMuted || "rgba(0,0,0,0.4)",
-    letterSpacing: 0.5,
-  },
-  closeBtn: { fontSize: 22, fontWeight: "bold", color: colors.ink || "#000" },
-  menuList: { gap: 12 },
-  sidebarItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-  },
-  sidebarItemText: { fontSize: 15, fontWeight: "700", color: colors.ink || "#000" },
-  logoutButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
-    paddingVertical: 14,
-    paddingHorizontal: 12,
-    borderTopWidth: 1,
-    borderColor: colors.border,
-    marginTop: "auto",
-  },
-  logoutText: { fontSize: 15, fontWeight: "800", color: colors.red },
-});
+const createStyles = (colors: AppColors) =>
+  StyleSheet.create({
+    fillMint: { flex: 1, backgroundColor: colors.background },
+    topBar: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: spacing.lg || 24,
+      paddingTop: 60,
+      paddingBottom: 20,
+    },
+    topIconMenu: {
+      fontSize: 24,
+      color: colors.ink || "#000",
+      fontWeight: "bold",
+    },
+    titleContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    textColumn: { alignItems: "flex-start", justifyContent: "center" },
+    logo: {
+      width: 26,
+      height: 26,
+      marginRight: 6,
+      tintColor: colors.ink || "#000",
+    },
+    titleText: {
+      fontSize: 18,
+      fontWeight: "900",
+      color: colors.ink || "#000",
+      letterSpacing: 0.5,
+    },
+    subtitleText: {
+      fontSize: 9,
+      fontWeight: "800",
+      color: colors.ink || "#000",
+      letterSpacing: 0.5,
+      marginTop: 1,
+    },
+    rightIcons: { flexDirection: "row", alignItems: "center", gap: 16 },
+    listContent: { paddingHorizontal: spacing.lg || 20, paddingBottom: 110 },
+    headerWrapper: { marginBottom: 8 },
+    searchBar: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: colors.surface,
+      height: 48,
+      borderRadius: radii.pill || 24,
+      paddingHorizontal: 20,
+      marginBottom: 20,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 8,
+      elevation: 3,
+    },
+    searchInput: {
+      flex: 1,
+      color: colors.ink || "#000",
+      fontSize: 13,
+      fontWeight: "600",
+    },
+    heroCard: {
+      flexDirection: "row",
+      backgroundColor: colors.isDark ? "#27272A" : "#1C1C1E", // Modern e-commerce slate dark
+      borderRadius: 24,
+      height: 165,
+      overflow: "hidden",
+      marginBottom: 20,
+      paddingLeft: 24,
+      alignItems: "center",
+      justifyContent: "space-between",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.1,
+      shadowRadius: 12,
+      elevation: 4,
+    },
+    heroTextContainer: { flex: 1, justifyContent: "center" },
+    heroBadge: {
+      fontSize: 9,
+      fontWeight: "900",
+      color: colors.isDark ? "#B2DFDB" : colors.mint,
+      letterSpacing: 1,
+      marginBottom: 4,
+    },
+    heroText: {
+      fontSize: 22,
+      fontWeight: "900",
+      lineHeight: 26,
+      color: "#FFFFFF",
+      marginBottom: 12,
+    },
+    adoptBtn: {
+      backgroundColor: "#FFFFFF",
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: radii.pill || 20,
+      alignSelf: "flex-start",
+    },
+    adoptBtnText: { fontSize: 11, fontWeight: "900", color: "#000000" },
+    heroImageWrapper: {
+      width: 140,
+      height: "100%",
+      justifyContent: "center",
+      alignItems: "center",
+      position: "relative",
+    },
+    heroCircle: {
+      width: 115,
+      height: 115,
+      borderRadius: 57.5,
+      backgroundColor: colors.mint || "#A8DDD6",
+      position: "absolute",
+      right: 12,
+    },
+    heroCatImage: {
+      width: 130,
+      height: 150,
+      position: "absolute",
+      bottom: 0,
+      right: 5,
+    },
+    gridHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 12,
+    },
+    gridTitle: { fontSize: 17, fontWeight: "900", color: colors.ink || "#000" },
+    gridSeeAll: {
+      fontSize: 13,
+      fontWeight: "700",
+      color: colors.ink || "#000",
+      opacity: 0.6,
+    },
+    categoriesScroll: {
+      marginBottom: 20,
+    },
+    categoriesContent: {
+      paddingRight: 20,
+    },
+    categoryChip: {
+      paddingHorizontal: 20,
+      paddingVertical: 10,
+      borderRadius: 25,
+      marginRight: 10,
+      justifyContent: "center",
+      alignItems: "center",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.06,
+      shadowRadius: 6,
+      elevation: 2,
+    },
+    categoryChipSelected: {
+      backgroundColor: colors.ink || "#1C1C1E",
+    },
+    categoryChipUnselected: {
+      backgroundColor: colors.surface || "#FFFFFF",
+      borderWidth: 1.5,
+      borderColor: colors.border || "rgba(0,0,0,0.08)",
+    },
+    categoryChipText: {
+      fontSize: 14,
+      fontWeight: "700",
+    },
+    categoryChipTextSelected: {
+      color: colors.surface || "#FFFFFF",
+    },
+    categoryChipTextUnselected: {
+      color: colors.ink || "#000",
+      opacity: 0.7,
+    },
+    rowWrapper: { justifyContent: "space-between" },
+    gridItem: {
+      width: "48%",
+      backgroundColor: colors.surface,
+      borderRadius: 20,
+      padding: 10,
+      marginBottom: 16,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.06,
+      shadowRadius: 10,
+      elevation: 3,
+    },
+    gridImageContainer: {
+      width: "100%",
+      height: 115,
+      borderRadius: 14,
+      marginBottom: 10,
+      backgroundColor: colors.background,
+      justifyContent: "center",
+      alignItems: "center",
+      overflow: "hidden",
+      position: "relative",
+    },
+    categoryBadge: {
+      position: "absolute",
+      top: 8,
+      left: 8,
+      backgroundColor: "rgba(0,0,0,0.6)",
+      paddingHorizontal: 6,
+      paddingVertical: 3,
+      borderRadius: 6,
+      zIndex: 2,
+    },
+    categoryBadgeText: {
+      color: "#FFFFFF",
+      fontSize: 8,
+      fontWeight: "900",
+      letterSpacing: 0.5,
+    },
+    cardFavoriteIcon: {
+      position: "absolute",
+      top: 8,
+      right: 8,
+      backgroundColor: colors.surface,
+      padding: 6,
+      borderRadius: 12,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 3,
+      elevation: 2,
+      zIndex: 2,
+    },
+    catImage: { width: "100%", height: "100%" },
+    gridMetaContainer: { paddingHorizontal: 2 },
+    gridName: { fontSize: 13, fontWeight: "900", color: colors.ink || "#000" },
+    gridSub: {
+      fontSize: 10,
+      fontWeight: "600",
+      color: colors.textMuted,
+      marginTop: 2,
+      marginBottom: 8,
+    },
+    priceRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginTop: 2,
+    },
+    priceText: {
+      fontSize: 13,
+      fontWeight: "900",
+      color: colors.ink || "#000",
+    },
+    actionBtn: {
+      backgroundColor: colors.mint || "#A8DDD6",
+      width: 24,
+      height: 24,
+      borderRadius: 8,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    actionBtnText: {
+      color: colors.ink || "#000",
+      fontSize: 12,
+      fontWeight: "900",
+    },
+    emptyContainer: {
+      alignItems: "center",
+      justifyContent: "center",
+      paddingVertical: 40,
+    },
+    emptyEmoji: { fontSize: 36, marginBottom: 8 },
+    emptyText: {
+      fontSize: 14,
+      fontWeight: "800",
+      color: colors.ink || "#000",
+      opacity: 0.5,
+    },
+    modalOverlay: {
+      flex: 1,
+      flexDirection: "row",
+      backgroundColor: "rgba(0,0,0,0.4)",
+    },
+    backdrop: { flex: 1 },
+    sidebar: {
+      position: "absolute",
+      top: 0,
+      bottom: 0,
+      left: 0,
+      width: "75%",
+      backgroundColor: colors.surface,
+      paddingTop: 60,
+      paddingHorizontal: 24,
+      paddingBottom: 40,
+      justifyContent: "space-between",
+      shadowColor: "#000",
+      shadowOffset: { width: 4, height: 0 },
+      shadowOpacity: 0.2,
+      shadowRadius: 10,
+      elevation: 10,
+    },
+    sidebarHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 36,
+    },
+    sidebarTitle: {
+      fontSize: 20,
+      fontWeight: "900",
+      color: colors.ink || "#000",
+    },
+    sidebarSub: {
+      fontSize: 10,
+      fontWeight: "800",
+      color: colors.textMuted || "rgba(0,0,0,0.4)",
+      letterSpacing: 0.5,
+    },
+    closeBtn: { fontSize: 22, fontWeight: "bold", color: colors.ink || "#000" },
+    menuList: { gap: 12 },
+    sidebarItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 16,
+      paddingVertical: 12,
+      paddingHorizontal: 12,
+      borderRadius: 12,
+    },
+    sidebarItemText: {
+      fontSize: 15,
+      fontWeight: "700",
+      color: colors.ink || "#000",
+    },
+    logoutButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 14,
+      paddingVertical: 14,
+      paddingHorizontal: 12,
+      borderTopWidth: 1,
+      borderColor: colors.border,
+      marginTop: "auto",
+    },
+    logoutText: { fontSize: 15, fontWeight: "800", color: colors.red },
+  });

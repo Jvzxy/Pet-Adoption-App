@@ -14,7 +14,7 @@ export default function TermsOfServiceScreen({ go }: ScreenProps) {
   return (
     <View style={styles.container}>
       <View style={styles.topBar}>
-        <Pressable onPress={() => go('settings')} style={styles.backBtn} hitSlop={10}>
+        <Pressable onPress={() => go('legal')} style={styles.backBtn} hitSlop={10}>
           <AngleLeftIcon width={18} height={18} fill={colors.ink} />
         </Pressable>
         <Text style={styles.headerTitle}>Terms of Service</Text>
@@ -49,8 +49,6 @@ const createStyles = (colors: AppColors) => StyleSheet.create({
   topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 60, paddingBottom: 24, paddingHorizontal: 24 },
   backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.5)', alignItems: 'center', justifyContent: 'center' },
   headerTitle: { fontSize: 18, fontWeight: '900', color: colors.ink || '#000' },
-  
-  // Minimalist White Sheet Design for Readability
   sheetContainer: { 
     flex: 1, 
     backgroundColor: colors.surface,

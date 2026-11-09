@@ -140,9 +140,6 @@ where lower(legacy.username) = lower(auth_user.email)
     where current_profile.id = auth_user.id
   );
 
--- After creating the intended administrator account, promote it from the SQL Editor:
--- update public.users set role = 'admin' where lower(username) = lower('admin@example.com');
-
 create or replace function public.is_admin()
 returns boolean
 language sql
@@ -204,13 +201,31 @@ create table if not exists public.orders (
     check (delivery_latitude between -90 and 90),
   delivery_longitude double precision not null
     check (delivery_longitude between -180 and 180),
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  payment_method text not null default 'cod',
+  payment_status text not null default 'pending'
+    check (payment_status in ('pending', 'paid', 'refunded')),
+  delivery_address text not null default '',
+  xendit_invoice_id text,
+  xendit_invoice_url text
 );
+
+alter table public.orders drop constraint if exists orders_payment_method_check;
+update public.orders
+set payment_method = 'online'
+where payment_method not in ('cod', 'xendit_card', 'xendit_gcash', 'xendit_maya');
+alter table public.orders
+  add constraint orders_payment_method_check
+  check (payment_method in ('cod', 'online', 'xendit_card', 'xendit_gcash', 'xendit_maya'));
+
+alter table public.orders
+  drop column if exists paymongo_checkout_session_id,
+  drop column if exists paymongo_checkout_url;
 
 alter table public.orders enable row level security;
 revoke all on table public.orders from anon, authenticated;
 grant select on table public.orders to authenticated;
-grant insert (customer_id, title, items, price, delivery_latitude, delivery_longitude)
+grant insert (customer_id, title, items, price, delivery_latitude, delivery_longitude, payment_method, payment_status, delivery_address)
   on table public.orders to authenticated;
 
 drop policy if exists "Customers drivers and admins can read orders" on public.orders;
@@ -378,40 +393,6 @@ grant execute on function public.assign_delivery_driver(uuid, uuid) to authentic
 grant execute on function public.update_delivery_location(uuid, double precision, double precision, double precision) to authenticated;
 grant execute on function public.update_delivery_status(uuid, text) to authenticated;
 
-do $$
-begin
-  if not exists (
-    select 1 from pg_publication_tables
-    where pubname = 'supabase_realtime'
-      and schemaname = 'public'
-      and tablename = 'orders'
-  ) then
-    alter publication supabase_realtime add table public.orders;
-  end if;
-
-  if not exists (
-    select 1 from pg_publication_tables
-    where pubname = 'supabase_realtime'
-      and schemaname = 'public'
-      and tablename = 'delivery_locations'
-  ) then
-    alter publication supabase_realtime add table public.delivery_locations;
-  end if;
-
-  if not exists (
-    select 1 from pg_publication_tables
-    where pubname = 'supabase_realtime'
-      and schemaname = 'public'
-      and tablename = 'users'
-  ) then
-    alter publication supabase_realtime add table public.users;
-  end if;
-end;
-$$;
-
--- Promote each delivery account after it has signed up:
--- update public.users set role = 'driver' where lower(username) = lower('driver@example.com');
-
 create or replace function public.is_staff()
 returns boolean
 language sql
@@ -446,6 +427,7 @@ create table if not exists public.catalog_items (
   gender text,
   location text,
   price numeric(12, 2) not null default 0 check (price >= 0),
+  stock integer not null default 0,
   description text not null default '',
   image_url text not null default '',
   image_urls text[] not null default '{}',
@@ -464,11 +446,12 @@ alter table public.catalog_items enable row level security;
 revoke all on table public.catalog_items from anon, authenticated;
 grant select on table public.catalog_items to anon, authenticated;
 alter table public.catalog_items
-  add column if not exists image_urls text[] not null default '{}';
+  add column if not exists image_urls text[] not null default '{}',
+  add column if not exists stock integer not null default 0;
 
-grant insert (type, category, name, breed, age, gender, location, price, description, image_url, image_urls, weight, height, health, traits, variations, created_by)
+grant insert (type, category, name, breed, age, gender, location, price, stock, description, image_url, image_urls, weight, height, health, traits, variations, created_by)
   on table public.catalog_items to authenticated;
-grant update (type, category, name, breed, age, gender, location, price, description, image_url, image_urls, weight, height, health, traits, variations, available)
+grant update (type, category, name, breed, age, gender, location, price, stock, description, image_url, image_urls, weight, height, health, traits, variations, available)
   on table public.catalog_items to authenticated;
 grant delete on table public.catalog_items to authenticated;
 
@@ -971,26 +954,6 @@ create trigger adoption_notify_applicant
   after update of status on public.adoption_applications
   for each row execute function public.notify_adoption_status_change();
 
-alter table public.orders
-  add column if not exists payment_method text not null default 'cod',
-  add column if not exists payment_status text not null default 'pending'
-    check (payment_status in ('pending', 'paid', 'refunded')),
-  add column if not exists delivery_address text not null default '',
-  add column if not exists xendit_invoice_id text,
-  add column if not exists xendit_invoice_url text;
-
-alter table public.orders drop constraint if exists orders_payment_method_check;
-update public.orders
-set payment_method = 'online'
-where payment_method not in ('cod', 'xendit_card', 'xendit_gcash', 'xendit_maya');
-alter table public.orders
-  add constraint orders_payment_method_check
-  check (payment_method in ('cod', 'online', 'xendit_card', 'xendit_gcash', 'xendit_maya'));
-
-alter table public.orders
-  drop column if exists paymongo_checkout_session_id,
-  drop column if exists paymongo_checkout_url;
-
 create or replace function public.notify_payment_status_change()
 returns trigger
 language plpgsql
@@ -1135,7 +1098,7 @@ do $$
 declare
   table_name text;
 begin
-  foreach table_name in array array['catalog_items', 'favorites', 'cart_items', 'adoption_applications', 'conversations', 'messages', 'notifications', 'orders']
+  foreach table_name in array array['catalog_items', 'favorites', 'cart_items', 'adoption_applications', 'conversations', 'messages', 'notifications', 'orders', 'users', 'delivery_locations']
   loop
     if not exists (
       select 1 from pg_publication_tables

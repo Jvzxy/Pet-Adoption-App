@@ -40,6 +40,7 @@ export default function AddProductScreen({ go }: ScreenProps) {
     priceSmall: '',
     priceMedium: '',
     priceLarge: '',
+    stock: '1', // Added stock field
   });
   const [images, setImages] = useState<ImagePicker.ImagePickerAsset[]>([]);
 
@@ -75,6 +76,12 @@ export default function AddProductScreen({ go }: ScreenProps) {
   const handleAddProduct = async () => {
     if (!productForm.name.trim()) {
       Alert.alert("Missing Fields", "Please enter a product name.");
+      return;
+    }
+
+    const stockNum = parseInt(productForm.stock, 10);
+    if (isNaN(stockNum) || stockNum < 0) {
+      Alert.alert("Invalid Stock", "Please enter a valid stock amount.");
       return;
     }
 
@@ -128,6 +135,7 @@ export default function AddProductScreen({ go }: ScreenProps) {
         mimeType: image.mimeType,
       })), user.id);
       const imageUrl = imageUrls[0] ?? '';
+      
       const { error } = await supabase.from('catalog_items').insert({
         type: 'product',
         category: productForm.category,
@@ -137,6 +145,7 @@ export default function AddProductScreen({ go }: ScreenProps) {
         image_url: imageUrl,
         image_urls: imageUrls,
         variations,
+        stock: stockNum, // Insert stock value
         created_by: user.id,
       });
 
@@ -165,7 +174,6 @@ export default function AddProductScreen({ go }: ScreenProps) {
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         
-        {/* Image Picker Area */}
         <Text style={styles.inputLabel}>Product Photos (up to 10)</Text>
         <ScrollView horizontal contentContainerStyle={styles.imageList} showsHorizontalScrollIndicator={false}>
           {images.map((image, index) => (
@@ -174,8 +182,6 @@ export default function AddProductScreen({ go }: ScreenProps) {
               <Pressable
                 style={styles.removeImageButton}
                 onPress={() => setImages((current) => current.filter((_, itemIndex) => itemIndex !== index))}
-                accessibilityRole="button"
-                accessibilityLabel={`Remove product photo ${index + 1}`}
               >
                 <Text style={styles.removeImageText}>×</Text>
               </Pressable>
@@ -209,12 +215,22 @@ export default function AddProductScreen({ go }: ScreenProps) {
                 onPress={() => setProductForm({ ...productForm, category: cat as 'Toys' | 'Accessories' })}
                 style={[styles.catPill, productForm.category === cat && styles.catPillActive]}
               >
-                <Text style={[styles.catPillText, productForm.category === cat && styles.catPillTextActive]}>
-                  {cat}
-                </Text>
+                <Text style={[styles.catPillText, productForm.category === cat && styles.catPillTextActive]}>{cat}</Text>
               </Pressable>
             ))}
           </View>
+        </View>
+
+        <View style={styles.formGroup}>
+          <Text style={styles.inputLabel}>Initial Stock</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="0"
+            placeholderTextColor="rgba(0,0,0,0.3)"
+            keyboardType="number-pad"
+            value={productForm.stock}
+            onChangeText={(text) => setProductForm({ ...productForm, stock: text })}
+          />
         </View>
 
         <View style={styles.formGroup}>
@@ -224,17 +240,13 @@ export default function AddProductScreen({ go }: ScreenProps) {
               onPress={() => setProductForm({ ...productForm, pricingType: 'standard' })}
               style={[styles.catPill, productForm.pricingType === 'standard' && styles.catPillActive]}
             >
-              <Text style={[styles.catPillText, productForm.pricingType === 'standard' && styles.catPillTextActive]}>
-                Single Price
-              </Text>
+              <Text style={[styles.catPillText, productForm.pricingType === 'standard' && styles.catPillTextActive]}>Single Price</Text>
             </Pressable>
             <Pressable
               onPress={() => setProductForm({ ...productForm, pricingType: 'variants' })}
               style={[styles.catPill, productForm.pricingType === 'variants' && styles.catPillActive]}
             >
-              <Text style={[styles.catPillText, productForm.pricingType === 'variants' && styles.catPillTextActive]}>
-                By Size (S/M/L)
-              </Text>
+              <Text style={[styles.catPillText, productForm.pricingType === 'variants' && styles.catPillTextActive]}>By Size (S/M/L)</Text>
             </Pressable>
           </View>
         </View>
@@ -257,36 +269,15 @@ export default function AddProductScreen({ go }: ScreenProps) {
             <View style={styles.variantContainer}>
               <View style={styles.variantCol}>
                 <Text style={styles.variantLabel}>Small</Text>
-                <TextInput
-                  style={styles.variantInput}
-                  placeholder="0.00"
-                  placeholderTextColor="rgba(0,0,0,0.3)"
-                  keyboardType="decimal-pad"
-                  value={productForm.priceSmall}
-                  onChangeText={(text) => setProductForm({ ...productForm, priceSmall: text })}
-                />
+                <TextInput style={styles.variantInput} keyboardType="decimal-pad" value={productForm.priceSmall} onChangeText={(text) => setProductForm({ ...productForm, priceSmall: text })} />
               </View>
               <View style={styles.variantCol}>
                 <Text style={styles.variantLabel}>Medium</Text>
-                <TextInput
-                  style={styles.variantInput}
-                  placeholder="0.00"
-                  placeholderTextColor="rgba(0,0,0,0.3)"
-                  keyboardType="decimal-pad"
-                  value={productForm.priceMedium}
-                  onChangeText={(text) => setProductForm({ ...productForm, priceMedium: text })}
-                />
+                <TextInput style={styles.variantInput} keyboardType="decimal-pad" value={productForm.priceMedium} onChangeText={(text) => setProductForm({ ...productForm, priceMedium: text })} />
               </View>
               <View style={styles.variantCol}>
                 <Text style={styles.variantLabel}>Large</Text>
-                <TextInput
-                  style={styles.variantInput}
-                  placeholder="0.00"
-                  placeholderTextColor="rgba(0,0,0,0.3)"
-                  keyboardType="decimal-pad"
-                  value={productForm.priceLarge}
-                  onChangeText={(text) => setProductForm({ ...productForm, priceLarge: text })}
-                />
+                <TextInput style={styles.variantInput} keyboardType="decimal-pad" value={productForm.priceLarge} onChangeText={(text) => setProductForm({ ...productForm, priceLarge: text })} />
               </View>
             </View>
           </View>
@@ -318,7 +309,6 @@ const createStyles = (colors: AppColors) => StyleSheet.create({
   backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.5)', alignItems: 'center', justifyContent: 'center' },
   headerTitle: { fontSize: 18, fontWeight: '900', color: colors.ink || '#000' },
   scrollContent: { paddingHorizontal: 24, paddingBottom: 40 },
-  
   imageList: { gap: 10, paddingVertical: 4, marginBottom: 16 },
   imagePreviewItem: { width: 104, height: 104, borderRadius: radii.md || 16, overflow: 'hidden', position: 'relative' },
   thumbnail: { width: '100%', height: '100%', resizeMode: 'cover' },
@@ -326,32 +316,18 @@ const createStyles = (colors: AppColors) => StyleSheet.create({
   removeImageText: { color: '#FFFFFF', fontSize: 20, lineHeight: 22, fontWeight: '700' },
   addImageTile: { width: 104, height: 104, borderRadius: radii.md || 16, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center' },
   imagePickerText: { marginTop: 8, fontSize: 12, fontWeight: '700', color: colors.textMuted },
-
   formGroup: { backgroundColor: colors.surface, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 10, marginBottom: 12 },
   inputLabel: { fontSize: 10, fontWeight: '700', color: colors.textMuted, marginBottom: 2 },
   input: { fontSize: 14, fontWeight: '800', color: colors.ink, padding: 0 },
-  
   categoryRow: { flexDirection: 'row', gap: 10, marginTop: 6, marginBottom: 4 },
   catPill: { paddingVertical: 6, paddingHorizontal: 14, borderRadius: 20, backgroundColor: colors.cardBg, borderWidth: 1, borderColor: colors.border },
   catPillActive: { backgroundColor: colors.isDark ? colors.mint : colors.ink, borderColor: colors.ink },
   catPillText: { fontSize: 12, fontWeight: '700', color: colors.textMuted },
   catPillTextActive: { color: colors.isDark ? colors.ink : colors.white },
-
   variantContainer: { flexDirection: 'row', gap: 8, marginTop: 6 },
   variantCol: { flex: 1 },
   variantLabel: { fontSize: 10, color: 'rgba(0,0,0,0.5)', marginBottom: 4, fontWeight: '700' },
-  variantInput: {
-    backgroundColor: colors.cardBg,
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    fontSize: 13,
-    fontWeight: '800',
-    color: colors.ink,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-
+  variantInput: { backgroundColor: colors.cardBg, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, fontSize: 13, fontWeight: '800', color: colors.ink, borderWidth: 1, borderColor: colors.border },
   saveBtn: { backgroundColor: colors.ink, borderRadius: radii?.pill || 20, paddingVertical: 16, alignItems: 'center', marginTop: 16 },
   saveBtnText: { color: colors.white, fontSize: 14, fontWeight: '900' },
 });

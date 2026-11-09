@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Alert,
   Pressable,
@@ -6,14 +6,18 @@ import {
   StyleSheet,
   Text,
   View,
-} from 'react-native';
-import BrandHeader from '../../components/BrandHeader';
-import FieldInput from '../../components/FieldInput';
-import FieldLabel from '../../components/FieldLabel';
-import PillButton from '../../components/PillButton';
-import { radii, spacing } from '../../constants/theme';
-import { useAuth } from '../../services/AuthContext';
-import { useAppPreferences, type AppColors } from '../../services/AppPreferencesContext';
+} from "react-native";
+import BrandHeader from "../../components/BrandHeader";
+import FieldInput from "../../components/FieldInput";
+import FieldLabel from "../../components/FieldLabel";
+import PillButton from "../../components/PillButton";
+import { radii, spacing } from "../../constants/theme";
+import { useAuth } from "../../services/AuthContext";
+import {
+  useAppPreferences,
+  type AppColors,
+} from "../../services/AppPreferencesContext";
+import CheckIcon from "../../images/Icons/check-solid-full.svg";
 
 interface ScreenProps {
   go: (next: string) => void;
@@ -24,11 +28,11 @@ export default function SignUpScreen({ go }: ScreenProps) {
   const styles = createStyles(colors);
   const { signup } = useAuth();
 
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -36,23 +40,29 @@ export default function SignUpScreen({ go }: ScreenProps) {
     if (isSubmitting) return;
 
     if (!acceptedTerms) {
-      Alert.alert('Agreement required', 'Please agree to the Terms of Service and acknowledge the Privacy Policy to create an account.');
+      Alert.alert(
+        "Agreement required",
+        "Please agree to the Terms of Service and acknowledge the Privacy Policy to create an account.",
+      );
       return;
     }
 
     if (!firstName || !lastName || !email || !password || !confirmPassword) {
-      Alert.alert('Missing Fields', 'Please fill in all fields.');
+      Alert.alert("Missing Fields", "Please fill in all fields.");
       return;
     }
 
     // Enforce Gmail-only registration
-    if (!email.toLowerCase().endsWith('@gmail.com')) {
-      Alert.alert('Invalid Email', 'Please use a valid @gmail.com address to sign up.');
+    if (!email.toLowerCase().endsWith("@gmail.com")) {
+      Alert.alert(
+        "Invalid Email",
+        "Please use a valid @gmail.com address to sign up.",
+      );
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert('Password Mismatch', 'Passwords do not match.');
+      Alert.alert("Password Mismatch", "Passwords do not match.");
       return;
     }
 
@@ -62,19 +72,24 @@ export default function SignUpScreen({ go }: ScreenProps) {
     try {
       const result = await signup(email, password, fullName);
 
-      if (result.status === 'signedIn') {
-        Alert.alert('Success', 'Account created successfully!', [
-          { text: 'Continue', onPress: () => go('main') },
+      if (result.status === "signedIn") {
+        Alert.alert("Success", "Account created successfully!", [
+          { text: "Continue", onPress: () => go("main") },
         ]);
-      } else if (result.status === 'confirmationRequired') {
-        Alert.alert('Check your email', 'Confirm your email address, then log in with your new account.', [
-          { text: 'Go to Login', onPress: () => go('login') },
-        ]);
+      } else if (result.status === "confirmationRequired") {
+        Alert.alert(
+          "Check your email",
+          "Confirm your email address, then log in with your new account.",
+          [{ text: "Go to Login", onPress: () => go("login") }],
+        );
       } else {
-        Alert.alert('Sign Up Failed', result.message, [
-          { text: result.reason === 'alreadyExists' ? 'Go to Login' : 'OK', onPress: () => {
-            if (result.reason === 'alreadyExists') go('login');
-          } },
+        Alert.alert("Sign Up Failed", result.message, [
+          {
+            text: result.reason === "alreadyExists" ? "Go to Login" : "OK",
+            onPress: () => {
+              if (result.reason === "alreadyExists") go("login");
+            },
+          },
         ]);
       }
     } finally {
@@ -152,21 +167,27 @@ export default function SignUpScreen({ go }: ScreenProps) {
               accessibilityState={{ checked: acceptedTerms }}
               accessibilityLabel="I agree to the Terms of Service and acknowledge the Privacy Policy"
             >
-              {acceptedTerms && <Text style={styles.checkmark}>✓</Text>}
+              {acceptedTerms && (
+                <CheckIcon
+                  width={14}
+                  height={14}
+                  fill={colors.isDark ? colors.background : colors.white}
+                />
+              )}
             </Pressable>
             <Text style={styles.consentText}>
-              I agree to the{' '}
+              I agree to the{" "}
               <Text
                 style={styles.consentLink}
-                onPress={() => go('legal')}
+                onPress={() => go("legal")}
                 accessibilityRole="link"
               >
                 Terms of Service
-              </Text>
-              {' '}and acknowledge the{' '}
+              </Text>{" "}
+              and acknowledge the{" "}
               <Text
                 style={styles.consentLink}
-                onPress={() => go('legal')}
+                onPress={() => go("legal")}
                 accessibilityRole="link"
               >
                 Privacy Policy
@@ -177,20 +198,22 @@ export default function SignUpScreen({ go }: ScreenProps) {
 
           <View style={styles.buttonContainer}>
             <PillButton
-              title={isSubmitting ? 'CREATING ACCOUNT...' : 'SIGNUP'}
+              title={isSubmitting ? "CREATING ACCOUNT..." : "SIGNUP"}
               onPress={handleSignUp}
             />
           </View>
 
           <Pressable
-            onPress={() => go('login')}
+            onPress={() => go("login")}
             style={styles.navigationLinkContainer}
           >
-            <Text style={styles.switchLink}>Already have an account? Log in</Text>
+            <Text style={styles.switchLink}>
+              Already have an account? Log in
+            </Text>
           </Pressable>
 
           <Pressable
-            onPress={() => go('loginSignup')}
+            onPress={() => go("loginSignup")}
             style={styles.navigationLinkContainer}
           >
             <Text style={styles.backLink}>← Back to Welcome Screen</Text>
@@ -201,66 +224,95 @@ export default function SignUpScreen({ go }: ScreenProps) {
   );
 }
 
-const createStyles = (colors: AppColors) => StyleSheet.create({
-  fillMint: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  scrollPad: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: 50,
-    paddingBottom: spacing.xl,
-  },
-  headerContainer: {
-    paddingLeft: spacing.xs,
-    marginBottom: 16,
-  },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: 24,
-    paddingHorizontal: 20,
-    paddingVertical: 24,
-    marginTop: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 3,
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: '900',
-    letterSpacing: 0.5,
-    color: colors.ink,
-    marginBottom: 18,
-    textAlign: 'center',
-  },
-  fieldGroup: {
-    marginBottom: 12,
-  },
-  buttonContainer: {
-    marginTop: 16,
-    marginBottom: 14,
-  },
-  consentRow: { flexDirection: 'row', alignItems: 'flex-start', marginTop: 8, gap: 10 },
-  checkbox: { width: 22, height: 22, borderWidth: 1.5, borderColor: colors.textMuted, borderRadius: 5, alignItems: 'center', justifyContent: 'center', marginTop: 1 },
-  checkboxChecked: { backgroundColor: colors.ink, borderColor: colors.ink },
-  checkmark: { color: colors.isDark ? colors.background : colors.white, fontSize: 15, fontWeight: '900', lineHeight: 18 },
-  consentText: { flex: 1, color: colors.textMuted, fontSize: 13, lineHeight: 20 },
-  consentLink: { color: colors.ink, fontWeight: '800', textDecorationLine: 'underline' },
-  navigationLinkContainer: {
-    marginTop: 10,
-    alignItems: 'center',
-  },
-  switchLink: {
-    fontSize: 12,
-    color: colors.ink,
-    fontWeight: '700',
-    textDecorationLine: 'underline',
-  },
-  backLink: {
-    fontSize: 12,
-    color: colors.textMuted,
-    fontWeight: '600',
-  },
-});
+const createStyles = (colors: AppColors) =>
+  StyleSheet.create({
+    fillMint: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    scrollPad: {
+      paddingHorizontal: spacing.lg,
+      paddingTop: 50,
+      paddingBottom: spacing.xl,
+    },
+    headerContainer: {
+      paddingLeft: spacing.xs,
+      marginBottom: 16,
+    },
+    card: {
+      backgroundColor: colors.surface,
+      borderRadius: 24,
+      paddingHorizontal: 20,
+      paddingVertical: 24,
+      marginTop: 8,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.05,
+      shadowRadius: 10,
+      elevation: 3,
+    },
+    cardTitle: {
+      fontSize: 16,
+      fontWeight: "900",
+      letterSpacing: 0.5,
+      color: colors.ink,
+      marginBottom: 18,
+      textAlign: "center",
+    },
+    fieldGroup: {
+      marginBottom: 12,
+    },
+    buttonContainer: {
+      marginTop: 16,
+      marginBottom: 14,
+    },
+    consentRow: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      marginTop: 8,
+      gap: 10,
+    },
+    checkbox: {
+      width: 22,
+      height: 22,
+      borderWidth: 1.5,
+      borderColor: colors.textMuted,
+      borderRadius: 5,
+      alignItems: "center",
+      justifyContent: "center",
+      marginTop: 1,
+    },
+    checkboxChecked: { backgroundColor: colors.ink, borderColor: colors.ink },
+    checkmark: {
+      color: colors.isDark ? colors.background : colors.white,
+      fontSize: 15,
+      fontWeight: "900",
+      lineHeight: 18,
+    },
+    consentText: {
+      flex: 1,
+      color: colors.textMuted,
+      fontSize: 13,
+      lineHeight: 20,
+    },
+    consentLink: {
+      color: colors.ink,
+      fontWeight: "800",
+      textDecorationLine: "underline",
+    },
+    navigationLinkContainer: {
+      marginTop: 10,
+      alignItems: "center",
+    },
+    switchLink: {
+      fontSize: 12,
+      color: colors.ink,
+      fontWeight: "700",
+      textDecorationLine: "underline",
+    },
+    backLink: {
+      fontSize: 12,
+      color: colors.textMuted,
+      fontWeight: "600",
+    },
+  });
