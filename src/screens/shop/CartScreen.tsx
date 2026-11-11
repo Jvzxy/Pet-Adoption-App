@@ -16,6 +16,8 @@ import { useAppPreferences, type AppColors } from "../../services/AppPreferences
 // SVG Icon Imports
 import LocationIconSVG from "../../images/Icons/location-dot-solid-full.svg";
 import CheckIconSVG from "../../images/Icons/check-solid-full.svg";
+import { SkeletonRows } from "../../components/Skeleton";
+import { useAppData } from "../../services/AppDataContext";
 
 export interface CartItem {
   id: string;
@@ -38,6 +40,7 @@ export default function CartScreen({ go, cartItems = [], setCartItems }: ScreenP
   const styles = createStyles(colors);
   const [isEditing, setIsEditing] = useState(false);
   const { user } = useAuth();
+  const { loading } = useAppData();
 
   const toggleSelect = (id: string) => {
     setCartItems((prev) =>
@@ -112,7 +115,9 @@ export default function CartScreen({ go, cartItems = [], setCartItems }: ScreenP
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {cartItems.length === 0 ? (
+        {loading ? (
+          <SkeletonRows count={3} />
+        ) : cartItems.length === 0 ? (
           <Text style={styles.emptyCartText}>Your cart is empty.</Text>
         ) : (
           cartItems.map((item) => {

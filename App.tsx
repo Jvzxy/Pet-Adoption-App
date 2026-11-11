@@ -9,7 +9,7 @@ import {
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import ConsentBanner from "./src/components/ConsentBanner";
-import { Skeleton, SkeletonRows } from "./src/components/Skeleton";
+import { SkeletonRows } from "./src/components/Skeleton";
 
 // Screen Imports
 import CartScreen from "./src/screens/shop/CartScreen";
@@ -239,7 +239,7 @@ export default function App() {
 }
 
 function ThemedApp() {
-  const { colors, loading } = useAppPreferences();
+  const { colors } = useAppPreferences();
   const styles = createStyles(colors);
 
   return (
@@ -247,15 +247,6 @@ function ThemedApp() {
       <GestureHandlerRootView style={styles.container}>
         <AppDataProvider>
           <AppRouter />
-          {loading && (
-            <View style={[styles.preferenceLoading, StyleSheet.absoluteFill]}>
-              <View style={styles.startupSkeleton}>
-                <Skeleton width={104} height={104} radius={52} />
-                <Skeleton width={168} height={18} style={{ marginTop: 24 }} />
-                <Skeleton width={124} height={12} style={{ marginTop: 10 }} />
-              </View>
-            </View>
-          )}
         </AppDataProvider>
       </GestureHandlerRootView>
     </SafeAreaProvider>
@@ -487,13 +478,6 @@ function AppRouter() {
 const createStyles = (colors: AppColors) =>
   StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
-    preferenceLoading: {
-      flex: 1,
-      alignItems: "center",
-      justifyContent: "center",
-      backgroundColor: colors.background,
-    },
-    startupSkeleton: { flex: 1, alignItems: "center", justifyContent: "center" },
     accessMessage: {
       flex: 1,
       justifyContent: "center",

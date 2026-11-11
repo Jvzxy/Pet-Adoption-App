@@ -13,6 +13,7 @@ import { radii } from "../../constants/theme";
 import BottomNavigation from "../../components/BottomNavigation";
 import { useAppData } from "../../services/AppDataContext";
 import { useAppPreferences, type AppColors } from "../../services/AppPreferencesContext";
+import { SkeletonPetGrid } from "../../components/Skeleton";
 
 // SVG Icon Imports
 import ArrowLeftIcon from "../../images/Icons/arrow-left-solid-full.svg";
@@ -34,7 +35,7 @@ export default function FavoritesScreen({ go, favorites, toggleFavorite }: Scree
   const [selectedItemToRemove, setSelectedItemToRemove] = useState<any>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const { catalogItems } = useAppData();
+  const { catalogItems, loading } = useAppData();
 
   const favoriteCats = catalogItems.filter(
     cat => cat.type === 'pet' && cat.available && favorites.includes(cat.id),
@@ -141,7 +142,7 @@ export default function FavoritesScreen({ go, favorites, toggleFavorite }: Scree
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
-          <View style={styles.emptyContainer}>
+          loading ? <SkeletonPetGrid count={2} /> : <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>
               {favoriteCats.length === 0
                 ? 'No favorites yet'

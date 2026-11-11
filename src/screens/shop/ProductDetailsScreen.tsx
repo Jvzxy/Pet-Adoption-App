@@ -9,6 +9,7 @@ import { useAuth } from '../../services/AuthContext';
 import type { CartItem } from './CartScreen';
 // Corrected import path for ImageCarousel
 import ImageCarousel from '../../components/ImageCarousel'; 
+import { Skeleton } from '../../components/Skeleton';
 
 // SVG Icon Import
 import CheckIcon from '../../images/Icons/check-solid-full.svg';
@@ -21,7 +22,7 @@ interface ScreenProps {
 export default function ProductDetailsScreen({ go, productId }: ScreenProps) {
   const { colors } = useAppPreferences();
   const styles = createStyles(colors);
-  const { catalogItems, setCartItems } = useAppData();
+  const { catalogItems, setCartItems, loading } = useAppData();
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
   const [selectedVariation, setSelectedVariation] = useState<number>(0);
@@ -32,6 +33,18 @@ export default function ProductDetailsScreen({ go, productId }: ScreenProps) {
   const product = catalogItems.find((item) => item.id === productId && item.type === 'product');
 
   if (!product) {
+    if (loading) {
+      return (
+        <View style={[styles.fillWhite, { padding: 24, paddingTop: 72 }]}>
+          <Skeleton height={300} radius={24} />
+          <Skeleton width="72%" height={24} style={{ marginTop: 28 }} />
+          <Skeleton width="38%" height={18} style={{ marginTop: 12 }} />
+          <Skeleton width="100%" height={14} style={{ marginTop: 30 }} />
+          <Skeleton width="84%" height={14} style={{ marginTop: 10 }} />
+          <Skeleton width="100%" height={54} radius={28} style={{ marginTop: 32 }} />
+        </View>
+      );
+    }
     return (
       <View style={[styles.fillWhite, { justifyContent: 'center', alignItems: 'center' }]}>
         <Text style={{ fontSize: 16, fontWeight: '700', color: colors.ink, marginBottom: 20 }}>

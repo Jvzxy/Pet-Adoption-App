@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { Skeleton } from './Skeleton';
 import WebView, { WebViewMessageEvent } from 'react-native-webview';
 import type { WebViewErrorEvent } from 'react-native-webview/lib/WebViewTypes';
 
@@ -143,8 +144,8 @@ export default function OSMMap({ destination, driverLocation }: OSMMapProps) {
       />
       {!isReady && !loadError && (
         <View style={styles.loading}>
-          <ActivityIndicator size="large" color="#17211f" />
-          <Text style={styles.message}>Loading OpenStreetMap...</Text>
+          <Skeleton width="72%" height={18} />
+          <Skeleton width="48%" height={12} style={{ marginTop: 12 }} />
         </View>
       )}
       {loadError && (
