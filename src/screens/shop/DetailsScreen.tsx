@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { spacing } from '../../constants/theme';
 import { useAppData } from '../../services/AppDataContext';
 import { useAppPreferences, type AppColors } from '../../services/AppPreferencesContext';
-import { Skeleton } from '../../components/Skeleton';
+import { Skeleton, useSkeletonLoading } from '../../components/Skeleton';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -20,26 +20,21 @@ export default function DetailsScreen({ go, id }: DetailsProps) {
   const styles = createStyles(colors);
   const insets = useSafeAreaInsets();
   const { catalogItems, loading } = useAppData();
+  const showDetailsSkeleton = useSkeletonLoading(loading);
   const item = catalogItems.find((c) => c.id === id && c.type === 'pet' && c.available);
 
   if (!item) {
-    if (loading) {
+    if (loading && showDetailsSkeleton) {
       return (
-        <View style={[styles.fill, { padding: 24, paddingTop: 72 }]}>
-          <Skeleton height={280} radius={24} />
-          <Skeleton width="70%" height={24} style={{ marginTop: 28 }} />
-          <Skeleton width="48%" height={14} style={{ marginTop: 12 }} />
-          <View style={{ flexDirection: 'row', gap: 10, marginTop: 28 }}>
-            <Skeleton width="31%" height={84} radius={16} />
-            <Skeleton width="31%" height={84} radius={16} />
-            <Skeleton width="31%" height={84} radius={16} />
+        <View style={[styles.fill, styles.center]}>
+          <View style={{ width: '100%', padding: 24 }}>
+            <Skeleton height={280} radius={24} />
+            <Skeleton width="70%" height={24} style={{ marginTop: 28 }} />
           </View>
-          <Skeleton width="90%" height={14} style={{ marginTop: 30 }} />
-          <Skeleton width="78%" height={14} style={{ marginTop: 10 }} />
-          <Skeleton width="100%" height={52} radius={26} style={{ marginTop: 30 }} />
         </View>
       );
     }
+    if (loading) return null;
     return (
       <View style={[styles.fill, styles.center]}>
         <Text style={styles.errorText}>This pet is unavailable or no longer listed.</Text>

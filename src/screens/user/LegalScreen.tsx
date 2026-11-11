@@ -4,6 +4,7 @@ import { useAuth } from '../../services/AuthContext';
 import { useAppPreferences, type AppColors } from '../../services/AppPreferencesContext';
 import AngleLeftIcon from '../../images/Icons/angle-left-solid-full.svg';
 import { supabase } from '../../services/supabaseClient';
+import { SkeletonText, useSkeletonLoading } from '../../components/Skeleton';
 
 interface ScreenProps {
   go: (next: string) => void;
@@ -22,12 +23,13 @@ export default function LegalScreen({ go, returnTo = 'settings' }: ScreenProps) 
   const styles = createStyles(colors);
 
   const [details, setDetails] = useState<BusinessDetails>({
-    entity_name: 'Loading...',
-    privacy_contact: 'Loading...',
-    address: 'Loading...'
+    entity_name: '',
+    privacy_contact: '',
+    address: ''
   });
   
   const [loading, setLoading] = useState(true);
+  const showDetailsSkeleton = useSkeletonLoading(loading);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -186,7 +188,14 @@ export default function LegalScreen({ go, returnTo = 'settings' }: ScreenProps) 
                 </View>
               </View>
             ) : (
-              <View style={styles.card}>
+              loading ? (showDetailsSkeleton ? <View style={styles.card}>
+                <SkeletonText width="38%" height={11} />
+                <SkeletonText width="76%" height={17} style={{ marginTop: 10 }} />
+                <SkeletonText width="40%" height={11} style={{ marginTop: 24 }} />
+                <SkeletonText width="66%" height={17} style={{ marginTop: 10 }} />
+                <SkeletonText width="32%" height={11} style={{ marginTop: 24 }} />
+                <SkeletonText width="88%" height={17} style={{ marginTop: 10 }} />
+              </View> : null) : <View style={styles.card}>
                 <Text style={styles.label}>ENTITY NAME</Text>
                 <Text style={styles.value}>{details.entity_name}</Text>
                 <View style={styles.divider} />

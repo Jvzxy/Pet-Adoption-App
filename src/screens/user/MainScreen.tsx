@@ -177,7 +177,7 @@ export default function MainScreen({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const { catalogItems, loading } = useAppData();
+  const { catalogItems, loading, catalogError, refreshCatalog } = useAppData();
   const { logout } = useAuth();
 
   const STORE_ITEMS: DisplayItem[] = catalogItems
@@ -317,9 +317,8 @@ export default function MainScreen({
         ListEmptyComponent={loading ? <SkeletonPetGrid count={6} /> : (
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyEmoji}></Text>
-            <Text style={styles.emptyText}>
-              No items found in this category
-            </Text>
+            <Text style={styles.emptyText}>{catalogError ? 'The catalog could not be loaded.' : 'No items found in this category'}</Text>
+            {catalogError ? <Pressable onPress={() => void refreshCatalog().catch(() => undefined)}><Text style={styles.gridSeeAll}>Tap to try again</Text></Pressable> : null}
           </View>
         )}
         renderItem={({ item }) => {

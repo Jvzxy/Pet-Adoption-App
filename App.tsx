@@ -9,7 +9,7 @@ import {
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import ConsentBanner from "./src/components/ConsentBanner";
-import { SkeletonRows } from "./src/components/Skeleton";
+import { SkeletonProvider, SkeletonRows } from "./src/components/Skeleton";
 
 // Screen Imports
 import CartScreen from "./src/screens/shop/CartScreen";
@@ -245,9 +245,11 @@ function ThemedApp() {
   return (
     <SafeAreaProvider>
       <GestureHandlerRootView style={styles.container}>
-        <AppDataProvider>
-          <AppRouter />
-        </AppDataProvider>
+        <SkeletonProvider>
+          <AppDataProvider>
+            <AppRouter />
+          </AppDataProvider>
+        </SkeletonProvider>
       </GestureHandlerRootView>
     </SafeAreaProvider>
   );

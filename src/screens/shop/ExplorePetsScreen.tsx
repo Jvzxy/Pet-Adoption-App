@@ -17,7 +17,7 @@ interface ScreenProps {
 export default function ExplorePetsScreen({ go, favorites, toggleFavorite }: ScreenProps) {
   const { colors } = useAppPreferences();
   const styles = createStyles(colors);
-  const { catalogItems, loading } = useAppData();
+  const { catalogItems, loading, catalogError, refreshCatalog } = useAppData();
   const petItems = catalogItems.filter(item => item.type === 'pet' && item.available);
 
   return (
@@ -41,8 +41,9 @@ export default function ExplorePetsScreen({ go, favorites, toggleFavorite }: Scr
           <View style={styles.emptyContainer}>
               <Text style={styles.emptyEmoji}>No pets</Text>
             <Text style={styles.emptyText}>
-              No pets available right now.
+              {catalogError ? 'Pets could not be loaded.' : 'No pets available right now.'}
             </Text>
+            {catalogError ? <Pressable onPress={() => void refreshCatalog().catch(() => undefined)}><Text style={styles.emptyText}>Tap to try again</Text></Pressable> : null}
           </View>
         )}
         renderItem={({ item }) => {

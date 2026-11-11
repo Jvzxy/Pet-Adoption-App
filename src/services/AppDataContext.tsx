@@ -10,6 +10,10 @@ interface AppDataContextValue {
   favorites: string[];
   cartItems: CartItem[];
   loading: boolean;
+  accountDataLoading: boolean;
+  accountDataError: string | null;
+  catalogError: string | null;
+  refreshAccountData: () => void;
   refreshCatalog: () => Promise<void>;
   toggleFavorite: (id: string) => Promise<void>;
   setCartItems: React.Dispatch<React.SetStateAction<CartItem[]>>;
@@ -74,6 +78,12 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
   const [favorites, setFavorites] = useState<string[]>([]);
   const [cartItems, setCartItemsState] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [accountDataLoading, setAccountDataLoading] = useState(true);
+  const [accountDataError, setAccountDataError] = useState<string | null>(null);
+  const [catalogError, setCatalogError] = useState<string | null>(null);
+  const [accountRefreshVersion, setAccountRefreshVersion] = useState(0);
+  const refreshAccountData = useCallback(() => setAccountRefreshVersion((version) => version + 1), []);
+  const hasLoadedCatalog = useRef(false);
   const userIdRef = useRef<string | null>(null);
   const cartRef = useRef<CartItem[]>([]);
   const cartWriteQueue = useRef<Promise<void>>(Promise.resolve());
@@ -85,11 +95,14 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       .order('created_at', { ascending: false });
 
     if (error) {
+      setCatalogError(error.message);
       console.error('Could not load catalog:', error.message);
       throw error;
     }
 
     setCatalogItems((data ?? []).map((row) => mapCatalogRow(row)));
+    setCatalogError(null);
+    hasLoadedCatalog.current = true;
   }, []);
 
   useEffect(() => {
@@ -98,7 +111,9 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     cartRef.current = [];
     setCartItemsState([]);
     setFavorites([]);
-    setLoading(true);
+    setLoading(!hasLoadedCatalog.current);
+    setAccountDataLoading(true);
+    setAccountDataError(null);
 
     const loadData = async () => {
       try {
@@ -108,10 +123,14 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
           .order('created_at', { ascending: false });
 
         if (catalogResult.error) {
+          if (active) setCatalogError(catalogResult.error.message);
           console.warn('Could not load catalog from Supabase:', catalogResult.error.message);
         } else if (active && userIdRef.current === (user?.id ?? null)) {
+          setCatalogError(null);
           setCatalogItems((catalogResult.data ?? []).map((row) => mapCatalogRow(row)));
+          hasLoadedCatalog.current = true;
         }
+        if (active) setLoading(false);
 
         if (!user) {
           if (active) {
@@ -130,12 +149,14 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
         ]);
 
         if (favoriteResult.error) {
+          if (active) setAccountDataError(favoriteResult.error.message);
           console.warn('Could not load favorites:', favoriteResult.error.message);
         } else if (active && userIdRef.current === user.id) {
           setFavorites((favoriteResult.data ?? []).map((row) => row.catalog_item_id));
         }
 
         if (cartResult.error) {
+          if (active) setAccountDataError((current) => current ? `${current}; ${cartResult.error!.message}` : cartResult.error!.message);
           console.warn('Could not load cart:', cartResult.error.message);
         } else if (active && userIdRef.current === user.id) {
           const loadedCart = (cartResult.data ?? []).flatMap((row) => {
@@ -167,6 +188,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       } finally {
         if (active) {
           setLoading(false);
+          setAccountDataLoading(false);
         }
       }
     };
@@ -176,7 +198,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     return () => {
       active = false;
     };
-  }, [user]);
+  }, [accountRefreshVersion, user]);
 
   useEffect(() => {
     if (!user) return;
@@ -262,7 +284,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AppDataContext.Provider
-      value={{ catalogItems, favorites, cartItems, loading, refreshCatalog, toggleFavorite, setCartItems }}
+      value={{ catalogItems, favorites, cartItems, loading, accountDataLoading, accountDataError, catalogError, refreshAccountData, refreshCatalog, toggleFavorite, setCartItems }}
     >
       {children}
     </AppDataContext.Provider>

@@ -35,7 +35,8 @@ export default function FavoritesScreen({ go, favorites, toggleFavorite }: Scree
   const [selectedItemToRemove, setSelectedItemToRemove] = useState<any>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const { catalogItems, loading } = useAppData();
+  const { catalogItems, loading, accountDataLoading, accountDataError, refreshAccountData } = useAppData();
+  const favoritesLoading = loading || accountDataLoading;
 
   const favoriteCats = catalogItems.filter(
     cat => cat.type === 'pet' && cat.available && favorites.includes(cat.id),
@@ -142,12 +143,13 @@ export default function FavoritesScreen({ go, favorites, toggleFavorite }: Scree
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
-          loading ? <SkeletonPetGrid count={2} /> : <View style={styles.emptyContainer}>
+          favoritesLoading ? <SkeletonPetGrid count={2} /> : <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>
-              {favoriteCats.length === 0
+              {accountDataError ? 'Favorites could not be loaded.' : favoriteCats.length === 0
                 ? 'No favorites yet'
                 : 'No favorites match your search'}
             </Text>
+            {accountDataError ? <Pressable onPress={refreshAccountData}><Text style={styles.emptyText}>Tap to try again</Text></Pressable> : null}
           </View>
         }
       />

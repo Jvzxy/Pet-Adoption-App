@@ -40,7 +40,7 @@ export default function CartScreen({ go, cartItems = [], setCartItems }: ScreenP
   const styles = createStyles(colors);
   const [isEditing, setIsEditing] = useState(false);
   const { user } = useAuth();
-  const { loading } = useAppData();
+  const { accountDataLoading, accountDataError, refreshAccountData } = useAppData();
 
   const toggleSelect = (id: string) => {
     setCartItems((prev) =>
@@ -115,10 +115,12 @@ export default function CartScreen({ go, cartItems = [], setCartItems }: ScreenP
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {loading ? (
+        {accountDataLoading ? (
           <SkeletonRows count={3} />
         ) : cartItems.length === 0 ? (
-          <Text style={styles.emptyCartText}>Your cart is empty.</Text>
+          accountDataError ? (
+            <Pressable onPress={refreshAccountData}><Text style={styles.emptyCartText}>Your cart could not be loaded. Tap to try again.</Text></Pressable>
+          ) : <Text style={styles.emptyCartText}>Your cart is empty.</Text>
         ) : (
           cartItems.map((item) => {
             const ItemContent = (
