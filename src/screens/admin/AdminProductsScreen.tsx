@@ -5,6 +5,7 @@ import { useAppData } from '../../services/AppDataContext';
 import { useAppPreferences, type AppColors } from '../../services/AppPreferencesContext';
 import { supabase } from '../../services/supabaseClient';
 import AngleLeftIcon from '../../images/Icons/angle-left-solid-full.svg';
+import { SkeletonRows } from '../../components/Skeleton';
 
 interface ProductListing {
   id: string;
@@ -146,7 +147,7 @@ export default function AdminProductsScreen({ go }: ScreenProps) {
       </Text>
 
       {loading ? (
-        <Text style={styles.message}>Loading products...</Text>
+        <SkeletonRows count={5} />
       ) : loadError ? (
         <View>
           <Text style={styles.error}>{loadError}</Text>

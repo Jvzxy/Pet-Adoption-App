@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useAppPreferences, type AppColors } from '../../services/AppPreferencesContext';
+import { Skeleton, SkeletonRows } from '../../components/Skeleton';
 import { supabase } from '../../services/supabaseClient';
 import OSMMap from '../../components/OSMMap';
 
@@ -129,9 +130,9 @@ export default function TrackOrderScreen({ go, orderId }: ScreenProps) {
       </View>
 
       {loading ? (
-        <View style={styles.centerMessage}>
-          <ActivityIndicator size="large" color={colors.ink} />
-          <Text style={styles.messageText}>Loading order tracking...</Text>
+        <View style={{ padding: 24 }}>
+          <Skeleton height={220} radius={22} />
+          <SkeletonRows count={3} />
         </View>
       ) : errorMessage ? (
         <View style={styles.centerMessage}>

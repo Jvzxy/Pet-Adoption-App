@@ -4,6 +4,7 @@ import { radii, spacing } from '../../constants/theme';
 import { useAppPreferences, type AppColors } from '../../services/AppPreferencesContext';
 import { supabase } from '../../services/supabaseClient';
 import AngleLeftIcon from '../../images/Icons/angle-left-solid-full.svg';
+import { SkeletonRows } from '../../components/Skeleton';
 
 interface Application {
   id: string;
@@ -104,7 +105,7 @@ export default function AdminAdoptionsScreen({ go }: ScreenProps) {
       </View>
 
       {loading ? (
-        <Text style={styles.message}>Loading applications...</Text>
+        <SkeletonRows count={4} />
       ) : loadError ? (
         <Text style={styles.error}>{loadError}</Text>
       ) : applications.length === 0 ? (

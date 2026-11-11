@@ -10,6 +10,7 @@ import ArrowLeftIcon from '../../images/Icons/arrow-left-solid-full.svg';
 import CommentIcon from '../../images/Icons/comment-solid-full.svg';
 import BoxIcon from '../../images/Icons/box-solid-full.svg';
 import TagIcon from '../../images/Icons/tag-solid-full.svg';
+import { SkeletonRows } from '../../components/Skeleton';
 
 interface ScreenProps {
   go: (next: string) => void;
@@ -113,7 +114,7 @@ export default function NotificationScreen({ go }: ScreenProps) {
       </View>
 
       <ScrollView style={styles.scrollArea} contentContainerStyle={styles.scrollContent}>
-        {loading ? <Text style={styles.emptyText}>Loading notifications...</Text> : null}
+        {loading ? <SkeletonRows count={4} /> : null}
         {!loading && loadError ? <Text style={styles.errorText}>{loadError}</Text> : null}
         {!loading && !loadError && notifications.length === 0 ? (
           <Text style={styles.emptyText}>You do not have any notifications yet.</Text>

@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import * as Location from 'expo-location';
 import { useAppPreferences, type AppColors } from '../../services/AppPreferencesContext';
 import AngleLeftIcon from '../../images/Icons/angle-left-solid-full.svg';
 import { supabase } from '../../services/supabaseClient';
 import OSMMap from '../../components/OSMMap';
+import { Skeleton } from '../../components/Skeleton';
 
 interface ScreenProps {
   go: (next: string) => void;
@@ -147,9 +148,10 @@ export default function DriverMapScreen({ go, orderId }: ScreenProps) {
       </View>
 
       {loading ? (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={colors.ink} />
-          <Text style={styles.message}>Starting GPS sharing...</Text>
+        <View style={{ padding: 24 }}>
+          <Skeleton height={280} radius={22} />
+          <Skeleton width="68%" height={16} style={{ marginTop: 22 }} />
+          <Skeleton width="44%" height={12} style={{ marginTop: 12 }} />
         </View>
       ) : order ? (
         <View style={styles.content}>

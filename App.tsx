@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState, type ErrorInfo } from "react";
 import {
-  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -10,6 +9,7 @@ import {
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import ConsentBanner from "./src/components/ConsentBanner";
+import { Skeleton, SkeletonRows } from "./src/components/Skeleton";
 
 // Screen Imports
 import CartScreen from "./src/screens/shop/CartScreen";
@@ -158,9 +158,7 @@ function AdminRoute({
   if (loading) {
     return (
       <View style={styles.accessMessage}>
-        <Text style={styles.accessMessageText}>
-          Checking administrator access...
-        </Text>
+        <SkeletonRows count={3} />
       </View>
     );
   }
@@ -202,7 +200,7 @@ function DriverRoute({
   if (loading) {
     return (
       <View style={styles.accessMessage}>
-        <Text style={styles.accessMessageText}>Checking driver access...</Text>
+        <SkeletonRows count={3} />
       </View>
     );
   }
@@ -251,7 +249,11 @@ function ThemedApp() {
           <AppRouter />
           {loading && (
             <View style={[styles.preferenceLoading, StyleSheet.absoluteFill]}>
-              <ActivityIndicator size="large" color={colors.ink} />
+              <View style={styles.startupSkeleton}>
+                <Skeleton width={104} height={104} radius={52} />
+                <Skeleton width={168} height={18} style={{ marginTop: 24 }} />
+                <Skeleton width={124} height={12} style={{ marginTop: 10 }} />
+              </View>
             </View>
           )}
         </AppDataProvider>
@@ -491,6 +493,7 @@ const createStyles = (colors: AppColors) =>
       justifyContent: "center",
       backgroundColor: colors.background,
     },
+    startupSkeleton: { flex: 1, alignItems: "center", justifyContent: "center" },
     accessMessage: {
       flex: 1,
       justifyContent: "center",

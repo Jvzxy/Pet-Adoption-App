@@ -6,6 +6,7 @@ import { useAppData } from "../../services/AppDataContext";
 
 import AngleLeftIcon from "../../images/Icons/angle-left-solid-full.svg";
 import HeartIcon from "../../images/Icons/heart-regular-full.svg";
+import { SkeletonPetGrid } from "../../components/Skeleton";
 
 interface ScreenProps {
   go: (next: string, id?: string) => void;
@@ -36,14 +37,14 @@ export default function ExplorePetsScreen({ go, favorites, toggleFavorite }: Scr
         columnWrapperStyle={styles.rowWrapper}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
+        ListEmptyComponent={loading ? <SkeletonPetGrid count={6} /> : (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyEmoji}>{loading ? "…" : "No pets"}</Text>
+              <Text style={styles.emptyEmoji}>No pets</Text>
             <Text style={styles.emptyText}>
-              {loading ? "Loading available pets…" : "No pets available right now."}
+              No pets available right now.
             </Text>
           </View>
-        }
+        )}
         renderItem={({ item }) => {
           const isFavorite = favorites.includes(item.id);
           return (

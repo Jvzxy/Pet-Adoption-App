@@ -32,6 +32,7 @@ import HouseIcon from "../../images/Icons/house-solid-full.svg";
 import SearchIcon from "../../images/Icons/magnifying-glass-solid-full.svg";
 import LogoutIcon from "../../images/Icons/right-from-bracket-solid-full.svg";
 import UserIcon from "../../images/Icons/user-solid-full.svg";
+import { SkeletonPetGrid } from "../../components/Skeleton";
 
 interface ScreenProps {
   go: (next: string, id?: string) => void;
@@ -313,14 +314,14 @@ export default function MainScreen({
             go={go}
           />
         }
-        ListEmptyComponent={
+        ListEmptyComponent={loading ? <SkeletonPetGrid count={6} /> : (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyEmoji}>{loading ? "…" : ""}</Text>
+            <Text style={styles.emptyEmoji}></Text>
             <Text style={styles.emptyText}>
-              {loading ? "Loading catalog…" : "No items found in this category"}
+              No items found in this category
             </Text>
           </View>
-        }
+        )}
         renderItem={({ item }) => {
           const isFavorite = favorites.includes(item.id);
 

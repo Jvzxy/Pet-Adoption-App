@@ -6,6 +6,7 @@ import AngleLeftIcon from '../../images/Icons/angle-left-solid-full.svg';
 import ClipboardListIcon from '../../images/Icons/clipboard-list-solid-full.svg';
 import { useAuth } from '../../services/AuthContext';
 import { useAppPreferences, type AppColors } from '../../services/AppPreferencesContext';
+import { SkeletonRows } from '../../components/Skeleton';
 
 export interface Order {
   id: string;
@@ -88,9 +89,7 @@ export default function MyOrdersScreen({ go }: ScreenProps) {
       </View>
 
       {loadingOrders ? (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>Loading your orders...</Text>
-        </View>
+        <SkeletonRows count={4} />
       ) : loadError ? (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyTitle}>Orders unavailable</Text>

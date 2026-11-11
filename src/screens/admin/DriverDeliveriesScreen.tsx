@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useAppPreferences, type AppColors } from '../../services/AppPreferencesContext';
 import AngleLeftIcon from '../../images/Icons/angle-left-solid-full.svg';
+import { SkeletonRows } from '../../components/Skeleton';
 import { supabase } from '../../services/supabaseClient';
 import { useAuth } from '../../services/AuthContext';
 
@@ -110,7 +111,7 @@ export default function DriverDeliveriesScreen({ go }: ScreenProps) {
           </Pressable>
         </View>
         {loading ? (
-          <Text style={styles.infoText}>Loading your deliveries...</Text>
+          <SkeletonRows count={4} />
         ) : orders.length === 0 ? (
           <Text style={styles.infoText}>You have no active deliveries assigned to you.</Text>
         ) : orders.map((order) => (

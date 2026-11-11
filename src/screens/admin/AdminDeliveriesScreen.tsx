@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useAppPreferences, type AppColors } from '../../services/AppPreferencesContext';
 import AngleLeftIcon from '../../images/Icons/angle-left-solid-full.svg';
+import { SkeletonRows } from '../../components/Skeleton';
 import { supabase } from '../../services/supabaseClient';
 
 interface ScreenProps {
@@ -108,7 +109,7 @@ export default function AdminDeliveriesScreen({ go }: ScreenProps) {
 
       <ScrollView contentContainerStyle={styles.content}>
         {loading ? (
-          <Text style={styles.infoText}>Loading orders...</Text>
+          <SkeletonRows count={4} />
         ) : orders.length === 0 ? (
           <Text style={styles.infoText}>There are no active orders to assign.</Text>
         ) : drivers.length === 0 ? (

@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { radii, spacing } from '../../constants/theme';
 import { useAppPreferences, type AppColors } from '../../services/AppPreferencesContext';
+import { Skeleton, SkeletonRows } from '../../components/Skeleton';
 import BottomNavigation from '../../components/BottomNavigation';
 import { useAuth } from '../../services/AuthContext';
 import { supabase } from '../../services/supabaseClient';
@@ -314,7 +315,11 @@ export default function ChatScreen({ go }: ScreenProps) {
             <Text style={styles.stateHint}>Check that the latest supabase/schema.sql has been run, then refresh.</Text>
           </View>
         ) : loading ? (
-          <Text style={styles.statusText}>Loading messages...</Text>
+          <View style={{ padding: 20 }}>
+            <Skeleton width="68%" height={48} radius={18} style={{ marginBottom: 14 }} />
+            <Skeleton width="54%" height={48} radius={18} style={{ marginLeft: 'auto', marginBottom: 14 }} />
+            <SkeletonRows count={2} />
+          </View>
         ) : showingThread ? (
           <>
             <ScrollView style={styles.messageScroll} contentContainerStyle={styles.messageList}>
